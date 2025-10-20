@@ -4,9 +4,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug portfolio-api with Nx",
+      "name": "Debug performa-edu-api-gateway with Nx",
       "runtimeExecutable": "pnpm exec",
-      "runtimeArgs": ["nx", "serve", "portfolio-api"],
+      "runtimeArgs": ["nx", "serve", "performa-edu-api-gateway"],
       "env": {
         "NODE_OPTIONS": "--inspect=9229"
       },
@@ -15,9 +15,9 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/apps/portfolio-api/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/performa-edu-api-gateway/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
-    }
+    },
   ]
 }

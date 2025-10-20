@@ -11,19 +11,19 @@
 To run the dev server for your app, use:
 
 ```sh
-npx nx serve portfolio-api
+npx nx serve performa-edu-api-gateway
 ```
 
 To create a production bundle:
 
 ```sh
-npx nx build portfolio-api
+npx nx build performa-edu-api-gateway
 ```
 
 To see all available targets to run for a project, run:
 
 ```sh
-npx nx show project portfolio-api
+npx nx show project performa-edu-api-gateway
 ```
 
 These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
