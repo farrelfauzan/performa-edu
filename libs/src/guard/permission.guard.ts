@@ -42,7 +42,7 @@ export class PermissionsGuard implements CanActivate {
 
     const currentUser = context.switchToHttp().getRequest().user;
 
-    const roles: Role = currentUser?.roles || [];
+    const roles: Role[] = currentUser?.roles || [];
 
     const permissions: IAbility[] = flatMap(roles, 'permissions');
 
