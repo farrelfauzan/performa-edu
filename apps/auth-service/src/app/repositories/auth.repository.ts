@@ -55,21 +55,6 @@ export class AuthRepository implements IAuthRepository {
           OR: [{ email: identifier }, { username: identifier }],
           deletedAt: null,
         },
-        select: {
-          id: true,
-          email: true,
-          username: true,
-          UserOnRole: {
-            select: {
-              role: {
-                select: {
-                  permissions: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
       });
 
       return data;
