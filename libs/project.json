@@ -15,6 +15,41 @@
         "main": "libs/src/index.ts",
         "assets": ["libs/*.md"]
       }
+    },
+    "prisma-init": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma init --schema=libs/src/prisma/schema.prisma"
+      }
+    },
+    "prisma-install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm install @prisma/client",
+        "cwd": "."
+      }
+    },
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["prisma-install"],
+      "options": {
+        "command": "npx prisma generate --schema=schema.prisma",
+        "cwd": "libs/src/prisma"
+      }
+    },
+    "prisma-migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate dev --schema=schema.prisma",
+        "cwd": "libs/src/prisma"
+      }
+    },
+    "prisma-reset": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate reset --schema=schema.prisma --force",
+        "cwd": "libs/src/prisma"
+      }
     }
   }
 }

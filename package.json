@@ -1,21 +1,55 @@
 {
-  "name": "@portfolio/source",
+  "name": "@performa-edu/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "generate-proto-types": "npx protoc --ts_proto_out=./types/ ./proto/*.proto --ts_proto_opt=nestJs=true"
+  },
+  "nx": {
+    "targets": {
+      "generate-proto-types": {
+        "cache": true,
+        "inputs": [
+          "{workspaceRoot}/proto/*.proto"
+        ],
+        "outputs": [
+          "{workspaceRoot}/types"
+        ]
+      }
+    }
+  },
   "private": true,
   "dependencies": {
+    "@casl/ability": "^6.7.3",
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/jwt": "^11.0.1",
+    "@nestjs/microservices": "^11.1.9",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/swagger": "^11.2.3",
+    "@prisma/adapter-pg": "^7.0.1",
+    "@prisma/client": "^7.0.1",
+    "@prisma/client-runtime-utils": "^7.0.1",
     "@types/supertest": "^6.0.3",
     "axios": "^1.6.0",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
+    "dotenv": "^17.2.3",
+    "lodash": "^4.17.21",
+    "nestjs-cls": "^6.1.0",
+    "nestjs-zod": "^5.0.1",
     "next": "~15.2.4",
+    "pg": "^8.16.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "ts-proto": "^2.8.3",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
@@ -41,8 +75,11 @@
     "@swc/cli": "~0.6.0",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.21",
     "@types/node": "20.19.9",
+    "@types/pg": "^8.15.6",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "autoprefixer": "10.4.13",
@@ -60,6 +97,8 @@
     "nx": "21.6.4",
     "postcss": "8.4.38",
     "prettier": "^2.6.2",
+    "prisma": "^7.0.1",
+    "source-map-loader": "^5.0.0",
     "tailwindcss": "3.4.3",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",

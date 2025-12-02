@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@portfolio/libs": ["libs/src/index.ts"]
+      "@performa-edu/libs": ["libs/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
