@@ -6,12 +6,18 @@ import {
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
   LoginResponse,
+  RegisterAdminRequest,
+  RegisterAdminResponse,
 } from 'types/proto/auth-service';
 import { LoginDto } from './dtos/login.dto';
 import { GrpcErrorHandler } from '../common/grpc-error.handler';
 import { handleGrpcCall } from '../common/grpc-error.operator';
+import { LoginResponseDto } from './dtos/login-response.dto';
 
-@Controller('auth')
+@Controller({
+  version: '1',
+  path: 'auth',
+})
 export class AuthController implements OnModuleInit {
   private authService: AuthServiceClient;
 
@@ -28,11 +34,29 @@ export class AuthController implements OnModuleInit {
 
   @PublicRoute()
   @Post('login')
-  async login(@Body() options: LoginDto): Promise<LoginResponse> {
-    return handleGrpcCall(
+  async login(@Body() options: LoginDto): Promise<{
+    data: LoginResponseDto;
+  }> {
+    const response = await handleGrpcCall(
       this.authService.login(options),
       this.grpcErrorHandler,
       'Authentication failed'
     );
+    return {
+      data: response,
+    };
+  }
+
+  @PublicRoute()
+  @Post('register-admin')
+  async registerAdmin(@Body() options: RegisterAdminRequest): Promise<{
+    data: RegisterAdminResponse;
+  }> {
+    const response = await handleGrpcCall(
+      this.authService.registerAdmin(options),
+      this.grpcErrorHandler,
+      'Admin registration failed'
+    );
+    return { data: response };
   }
 }

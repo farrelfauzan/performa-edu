@@ -1,11 +1,20 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { AuthRepository } from './repositories/auth.repository';
-import { LoginRequest, LoginResponse } from 'types/proto/auth-service';
+import {
+  LoginRequest,
+  LoginResponse,
+  RegisterAdminRequest,
+  RegisterAdminResponse,
+  RegisterStudentRequest,
+  RegisterStudentResponse,
+  RegisterTeacherRequest,
+  RegisterTeacherResponse,
+} from 'types/proto/auth-service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Helper } from '@performa-edu/libs';
-import { TokenPayloadDto } from './dto/token';
+import { TokenPayloadDto } from './dto/token.dto';
 
 @Injectable()
 export class AuthService {
@@ -78,6 +87,11 @@ export class AuthService {
           id: user.id,
           username: user.username,
           email: user.email,
+          roles: userWithRoles.UserOnRole.map((ur) => ({
+            id: ur.role.id,
+            name: ur.role.name,
+            permissions: ur.role.permissions.map((p) => String(p)),
+          })),
         },
       };
     } catch (error) {
@@ -91,5 +105,59 @@ export class AuthService {
         message: 'Authentication failed',
       });
     }
+  }
+
+  async registerAdmin(
+    options: RegisterAdminRequest
+  ): Promise<RegisterAdminResponse> {
+    options.password = await this.helper.hashPassword(options.password);
+    const result = await this.authRepository.registerAdmin(options);
+    return {
+      ...result,
+      admin: {
+        ...result.admin,
+        createdAt: result.admin.createdAt.toISOString(),
+        updatedAt: result.admin.updatedAt.toISOString(),
+        deletedAt: result.admin.deletedAt
+          ? result.admin.deletedAt.toISOString()
+          : null,
+      },
+    };
+  }
+
+  async registerStudent(
+    options: RegisterStudentRequest
+  ): Promise<RegisterStudentResponse> {
+    options.password = await this.helper.hashPassword(options.password);
+    const result = await this.authRepository.registerStudent(options);
+    return {
+      ...result,
+      student: {
+        ...result.student,
+        createdAt: result.student.createdAt.toISOString(),
+        updatedAt: result.student.updatedAt.toISOString(),
+        deletedAt: result.student.deletedAt
+          ? result.student.deletedAt.toISOString()
+          : null,
+      },
+    };
+  }
+
+  async registerTeacher(
+    options: RegisterTeacherRequest
+  ): Promise<RegisterTeacherResponse> {
+    options.password = await this.helper.hashPassword(options.password);
+    const result = await this.authRepository.registerTeacher(options);
+    return {
+      ...result,
+      teacher: {
+        ...result.teacher,
+        createdAt: result.teacher.createdAt.toISOString(),
+        updatedAt: result.teacher.updatedAt.toISOString(),
+        deletedAt: result.teacher.deletedAt
+          ? result.teacher.deletedAt.toISOString()
+          : null,
+      },
+    };
   }
 }

@@ -1,6 +1,6 @@
 import { ClsServiceManager } from 'nestjs-cls';
 
-import { User } from '../prisma/generated/prisma-client';
+import { User } from '@prisma/client';
 
 export class ContextProvider {
   private static readonly nameSpace = 'request';

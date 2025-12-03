@@ -8,9 +8,12 @@ import { AuthController } from './auth/auth.controller';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { GrpcErrorHandler } from './common/grpc-error.handler';
-
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     ClientsModule.register([
       {
         name: AUTHSERVICE_PACKAGE_NAME,

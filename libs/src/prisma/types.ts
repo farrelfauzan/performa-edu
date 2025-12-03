@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient } from './generated/prisma-client';
-export { Prisma, PrismaClient } from './generated/prisma-client';
-export * as PrismaRuntime from './generated/prisma-client';
+import { Prisma, PrismaClient } from '@prisma/client';
+export { Prisma, PrismaClient } from '@prisma/client';
+export * as PrismaRuntime from '@prisma/client';
 
 export type ModelName = Prisma.ModelName;
 export type PrismaModelName = ModelName;

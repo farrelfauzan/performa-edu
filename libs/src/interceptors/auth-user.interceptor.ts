@@ -5,7 +5,7 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 
-import { User } from '../prisma/generated/prisma-client';
+import { User } from '@prisma/client';
 import { ContextProvider } from '../providers/context-providers';
 
 @Injectable()
