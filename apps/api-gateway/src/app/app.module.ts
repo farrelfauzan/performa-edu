@@ -25,23 +25,23 @@ import { ClsModule } from 'nestjs-cls';
       isGlobal: true,
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        privateKey:
-          configService.get<string>('JWT_PRIVATE_KEY') || 'your-secret-key',
-        publicKey:
-          configService.get<string>('JWT_PUBLIC_KEY') || 'your-secret-key',
-        signOptions: {
-          algorithm: 'RS256',
-          expiresIn: 86400, // 24 hours
-        },
-        verifyOptions: {
-          algorithms: ['RS256'],
-        },
-      }),
-    }),
+    // JwtModule.registerAsync({
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => ({
+    //     privateKey:
+    //       configService.get<string>('JWT_PRIVATE_KEY') || 'your-secret-key',
+    //     publicKey:
+    //       configService.get<string>('JWT_PUBLIC_KEY') || 'your-secret-key',
+    //     signOptions: {
+    //       algorithm: 'RS256',
+    //       expiresIn: 86400, // 24 hours
+    //     },
+    //     verifyOptions: {
+    //       algorithms: ['RS256'],
+    //     },
+    //   }),
+    // }),
     ClientsModule.register([
       {
         name: AUTHSERVICE_PACKAGE_NAME,

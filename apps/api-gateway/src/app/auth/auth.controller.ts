@@ -1,11 +1,20 @@
-import { Body, Controller, Inject, OnModuleInit, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  OnModuleInit,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { Auth, PublicRoute } from '@performa-edu/libs';
+import { Auth, AuthUser, PublicRoute } from '@performa-edu/libs';
 import {
   AUTH_SERVICE_NAME,
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
   LoginResponse,
+  ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
   RegisterStudentRequest,
@@ -16,6 +25,7 @@ import { GrpcErrorHandler } from '../common/grpc-error.handler';
 import { handleGrpcCall } from '../common/grpc-error.operator';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { AclAction, AclSubject } from 'libs/src/constant';
+import { LoggedUserDto, LoggedUserType } from './dtos/logged-user.dto';
 
 @Controller({
   version: '1',
@@ -50,7 +60,7 @@ export class AuthController implements OnModuleInit {
     };
   }
 
-  @PublicRoute()
+  @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
   @Post('register-admin')
   async registerAdmin(@Body() options: RegisterAdminRequest): Promise<{
     data: RegisterAdminResponse;
@@ -63,7 +73,7 @@ export class AuthController implements OnModuleInit {
     return { data: response };
   }
 
-  @PublicRoute()
+  @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
   @Post('register-student')
   async registerStudent(@Body() options: RegisterStudentRequest): Promise<{
     data: RegisterStudentResponse;
@@ -76,14 +86,17 @@ export class AuthController implements OnModuleInit {
     return { data: response };
   }
 
-  @Auth([
-    {
-      action: AclAction.MANAGE,
-      subject: AclSubject.ALL,
-    },
-  ])
-  @Post('profile')
-  async getProfile(): Promise<{ message: string }> {
-    return { message: 'This is a protected route' };
+  @Auth()
+  @Get('getMe')
+  async getProfile(@AuthUser() user: LoggedUserType): Promise<{
+    data: ProfileResponse;
+  }> {
+    const userId = user.userId;
+    const response = await handleGrpcCall(
+      this.authService.getMe({ userId }),
+      this.grpcErrorHandler,
+      'Fetching profile failed'
+    );
+    return { data: response };
   }
 }
