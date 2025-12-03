@@ -9,6 +9,7 @@ import {
   RegisterStudentResponseDto,
   RegisterTeacherResponseDto,
 } from '../dto/register-response.dto';
+import { ProfileResponseDto } from '../dto/profile.dto';
 
 export interface CreateUserData {
   email: string;
@@ -44,6 +45,9 @@ export interface IAuthRepository {
   ): Promise<RegisterTeacherResponseDto>;
   updateUser(id: string, data: UpdateUserData): Promise<User>;
   softDeleteUser(id: string): Promise<User>;
+
+  // Get Me
+  getMe(id: string): Promise<ProfileResponseDto>;
 
   // Role operations
   findRoleById(id: string): Promise<Role | null>;

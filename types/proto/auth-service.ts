@@ -121,6 +121,27 @@ export interface RegisterTeacherResponse {
   user: User | undefined;
 }
 
+export interface ProfileRequest {
+  userId: string;
+}
+
+export interface ProfileResponse {
+  id: string;
+  username: string;
+  email: string;
+  roles: Role[];
+  studentNumber?: string | undefined;
+  teacherNumber?: string | undefined;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  phoneNumber?: string | undefined;
+  address?: string | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
+  deletedAt?: string | undefined;
+  userId?: string | undefined;
+}
+
 export const AUTHSERVICE_PACKAGE_NAME = "authservice";
 
 export interface AuthServiceClient {
@@ -131,6 +152,8 @@ export interface AuthServiceClient {
   registerStudent(request: RegisterStudentRequest): Observable<RegisterStudentResponse>;
 
   registerTeacher(request: RegisterTeacherRequest): Observable<RegisterTeacherResponse>;
+
+  getMe(request: ProfileRequest): Observable<ProfileResponse>;
 }
 
 export interface AuthServiceController {
@@ -147,11 +170,13 @@ export interface AuthServiceController {
   registerTeacher(
     request: RegisterTeacherRequest,
   ): Promise<RegisterTeacherResponse> | Observable<RegisterTeacherResponse> | RegisterTeacherResponse;
+
+  getMe(request: ProfileRequest): Promise<ProfileResponse> | Observable<ProfileResponse> | ProfileResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["login", "registerAdmin", "registerStudent", "registerTeacher"];
+    const grpcMethods: string[] = ["login", "registerAdmin", "registerStudent", "registerTeacher", "getMe"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);

@@ -7,6 +7,7 @@ service AuthService {
     rpc RegisterAdmin(RegisterAdminRequest) returns (RegisterAdminResponse);
     rpc RegisterStudent(RegisterStudentRequest) returns (RegisterStudentResponse);
     rpc RegisterTeacher(RegisterTeacherRequest) returns (RegisterTeacherResponse);
+    rpc GetMe(ProfileRequest) returns (ProfileResponse);
 }
 
 
@@ -119,4 +120,25 @@ message RegisterStudentResponse {
 message RegisterTeacherResponse {
     Teacher teacher = 1;
     User user = 2;
+}
+
+message ProfileRequest {
+    string user_id = 1;
+}
+
+message ProfileResponse {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+    repeated Role roles = 4;
+    optional string student_number = 5;
+    optional string teacher_number = 6;
+    optional string first_name = 7;
+    optional string last_name = 8;
+    optional string phone_number = 9;
+    optional string address = 10;
+    optional string created_at = 11;
+    optional string updated_at = 12;
+    optional string deleted_at = 13;
+    optional string user_id = 14;
 }

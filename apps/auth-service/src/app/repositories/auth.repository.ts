@@ -3,7 +3,15 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService, User, Role, Prisma } from '@performa-edu/libs';
+import {
+  PrismaService,
+  User,
+  Role,
+  Prisma,
+  Student,
+  Teacher,
+  Admin,
+} from '@performa-edu/libs';
 import {
   IAuthRepository,
   CreateUserData,
@@ -20,6 +28,7 @@ import {
   RegisterStudentDto,
   RegisterTeacherDto,
 } from '../dto/register.dto';
+import { ProfileResponseDto } from '../dto/profile.dto';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
@@ -427,6 +436,92 @@ export class AuthRepository implements IAuthRepository {
         .filter((role) => role.deletedAt === null);
     } catch (error) {
       throw new Error(`Failed to get user roles: ${error.message}`);
+    }
+  }
+
+  async getMe(id: string): Promise<ProfileResponseDto> {
+    try {
+      let student: Student;
+      let teacher: Teacher;
+      let admin: Admin;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id, deletedAt: null },
+        include: {
+          UserOnRole: {
+            include: {
+              role: true,
+            },
+            where: {
+              role: {
+                deletedAt: null,
+              },
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const roles = user.UserOnRole.map((ur) => ur.role.name);
+
+      if (roles.includes('STUDENT')) {
+        student = await this.prisma.student.findFirst({
+          where: { userId: id, deletedAt: null },
+        });
+      }
+
+      if (roles.includes('TEACHER')) {
+        teacher = await this.prisma.teacher.findFirst({
+          where: { userId: id, deletedAt: null },
+        });
+      }
+
+      if (roles.includes('ADMIN')) {
+        admin = await this.prisma.admin.findFirst({
+          where: { userId: id, deletedAt: null },
+        });
+      }
+
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roles: user.UserOnRole.map((ur) => ({
+          id: ur.role.id,
+          name: ur.role.name,
+          permissions: ur.role.permissions.map((p) => String(p)),
+        })),
+        studentNumber: student ? student.studentNumber : null,
+        teacherNumber: teacher ? teacher.teacherNumber : null,
+        firstName: student
+          ? student.firstName
+          : teacher
+          ? teacher.firstName
+          : null,
+        lastName: student
+          ? student.lastName
+          : teacher
+          ? teacher.lastName
+          : null,
+        phoneNumber: student
+          ? student.phoneNumber
+          : teacher
+          ? teacher.phoneNumber
+          : null,
+        address: student ? student.address : teacher ? teacher.address : null,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        deletedAt: user.deletedAt,
+        userId: admin ? admin.userId : null,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to get profile: ${error.message}`);
     }
   }
 

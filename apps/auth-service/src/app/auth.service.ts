@@ -15,6 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Helper } from '@performa-edu/libs';
 import { TokenPayloadDto } from './dto/token.dto';
+import { ProfileResponseDto } from './dto/profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -159,5 +160,10 @@ export class AuthService {
           : null,
       },
     };
+  }
+
+  async getMe(id: string): Promise<ProfileResponseDto> {
+    const profile = await this.authRepository.getMe(id);
+    return profile;
   }
 }

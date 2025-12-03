@@ -4,6 +4,8 @@ import {
   AuthServiceControllerMethods,
   LoginRequest,
   LoginResponse,
+  ProfileRequest,
+  ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
   RegisterStudentRequest,
@@ -50,5 +52,15 @@ export class AuthController implements AuthServiceController {
     | Observable<RegisterTeacherResponse>
     | RegisterTeacherResponse {
     return this.authService.registerTeacher(request);
+  }
+
+  async getMe(request: ProfileRequest): Promise<ProfileResponse> {
+    const profile = await this.authService.getMe(request.userId);
+    return {
+      ...profile,
+      createdAt: profile.createdAt.toISOString(),
+      updatedAt: profile.updatedAt.toISOString(),
+      deletedAt: profile.deletedAt ? profile.deletedAt.toISOString() : null,
+    };
   }
 }
