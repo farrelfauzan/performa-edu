@@ -10,13 +10,18 @@ export enum AclAction {
 export enum AclSubject {
   ALL = 'All',
   USER = 'User',
-  DEPARTMENT = 'Department',
-  POSITION = 'Position',
   ROLE = 'Role',
-  COMPANY = 'Company',
-  EMPLOYEE = 'Employee',
   ATTENDANCE = 'Attendance',
-  LEAVE = 'Leave',
+  ACADEMIC_YEAR = 'AcademicYear',
+  SUBJECTS = 'Subjects',
+  CLASS = 'Class',
+  STUDENT = 'Student',
+  TEACHER = 'Teacher',
+  ADMIN = 'Admin',
+  EXAM = 'Exam',
+  ASSIGNMENT = 'Assignment',
+  GRADE = 'Grade',
+  REPORT = 'Report',
 }
 
 export type Permissions = Record<AclSubject, AclAction>;

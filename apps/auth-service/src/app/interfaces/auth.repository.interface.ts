@@ -1,4 +1,15 @@
 import { User, Role } from '@performa-edu/libs';
+import {
+  RegisterAdminDto,
+  RegisterStudentDto,
+  RegisterTeacherDto,
+} from '../dto/register.dto';
+import {
+  RegisterAdminResponseDto,
+  RegisterStudentResponseDto,
+  RegisterTeacherResponseDto,
+} from '../dto/register-response.dto';
+import { ProfileResponseDto } from '../dto/profile.dto';
 
 export interface CreateUserData {
   email: string;
@@ -25,9 +36,18 @@ export interface IAuthRepository {
   findUserByUsername(username: string): Promise<User | null>;
   findUserByEmailOrUsername(identifier: string): Promise<Partial<User> | null>;
   findUserWithRoles(id: string): Promise<UserWithRoles | null>;
-  createUser(data: CreateUserData): Promise<User>;
+  registerAdmin(data: RegisterAdminDto): Promise<RegisterAdminResponseDto>;
+  registerStudent(
+    data: RegisterStudentDto
+  ): Promise<RegisterStudentResponseDto>;
+  registerTeacher(
+    data: RegisterTeacherDto
+  ): Promise<RegisterTeacherResponseDto>;
   updateUser(id: string, data: UpdateUserData): Promise<User>;
   softDeleteUser(id: string): Promise<User>;
+
+  // Get Me
+  getMe(id: string): Promise<ProfileResponseDto>;
 
   // Role operations
   findRoleById(id: string): Promise<Role | null>;

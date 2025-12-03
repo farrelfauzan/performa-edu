@@ -3,13 +3,32 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService, User, Role } from '@performa-edu/libs';
+import {
+  PrismaService,
+  User,
+  Role,
+  Prisma,
+  Student,
+  Teacher,
+  Admin,
+} from '@performa-edu/libs';
 import {
   IAuthRepository,
   CreateUserData,
   UpdateUserData,
   UserWithRoles,
 } from '../interfaces/auth.repository.interface';
+import {
+  RegisterAdminResponseDto,
+  RegisterStudentResponseDto,
+  RegisterTeacherResponseDto,
+} from '../dto/register-response.dto';
+import {
+  RegisterAdminDto,
+  RegisterStudentDto,
+  RegisterTeacherDto,
+} from '../dto/register.dto';
+import { ProfileResponseDto } from '../dto/profile.dto';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
@@ -87,28 +106,213 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
-  async createUser(data: CreateUserData): Promise<User> {
+  async registerAdmin(
+    options: RegisterAdminDto
+  ): Promise<RegisterAdminResponseDto> {
     try {
-      // Check for existing email
-      const existingEmail = await this.isEmailTaken(data.email);
-      if (existingEmail) {
+      const emailTaken = await this.isEmailTaken(options.email);
+
+      if (emailTaken) {
         throw new ConflictException('Email already exists');
       }
 
-      // Check for existing username
-      const existingUsername = await this.isUsernameTaken(data.username);
-      if (existingUsername) {
+      const usernameTaken = await this.isUsernameTaken(options.username);
+
+      if (usernameTaken) {
         throw new ConflictException('Username already exists');
       }
 
-      return await this.prisma.user.create({
-        data,
+      const userPayload: Prisma.UserCreateInput = {
+        email: options.email,
+        username: options.username,
+        password: options.password,
+        UserOnRole: {
+          create: options.roleIds.map((roleId) => ({ roleId })),
+        },
+      };
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        const createUser = await tx.user.create({
+          data: userPayload,
+          include: {
+            UserOnRole: {
+              include: {
+                role: true,
+              },
+            },
+          },
+        });
+        const createAdmin = await tx.admin.create({
+          data: {
+            userId: createUser.id,
+            email: options.email,
+          },
+        });
+        return { createUser, createAdmin };
       });
+
+      return {
+        admin: result.createAdmin,
+        user: {
+          id: result.createUser.id,
+          username: result.createUser.username,
+          email: result.createUser.email,
+          roles: result.createUser.UserOnRole.map((ur) => ({
+            id: ur.role.id,
+            name: ur.role.name,
+            permissions: ur.role.permissions.map((p) => String(p)),
+          })),
+        },
+      };
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
       }
-      throw new Error(`Failed to create user: ${error.message}`);
+      throw new Error(`Failed to register admin: ${error.message}`);
+    }
+  }
+
+  async registerStudent(
+    data: RegisterStudentDto
+  ): Promise<RegisterStudentResponseDto> {
+    try {
+      const emailTaken = await this.isEmailTaken(data.email);
+
+      if (emailTaken) {
+        throw new ConflictException('Email already exists');
+      }
+
+      const usernameTaken = await this.isUsernameTaken(data.username);
+
+      if (usernameTaken) {
+        throw new ConflictException('Username already exists');
+      }
+
+      const userPayload: Prisma.UserCreateInput = {
+        email: data.email,
+        username: data.username,
+        password: data.password,
+        UserOnRole: {
+          create: data.roleIds.map((roleId) => ({ roleId })),
+        },
+      };
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        const createUser = await tx.user.create({
+          data: userPayload,
+          include: {
+            UserOnRole: {
+              include: {
+                role: true,
+              },
+            },
+          },
+        });
+        const createStudent = await tx.student.create({
+          data: {
+            userId: createUser.id,
+            username: data.username,
+            studentNumber: data.studentNumber,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phoneNumber: data.phoneNumber,
+            address: data.address,
+            email: data.email,
+          },
+        });
+        return { createUser, createStudent };
+      });
+
+      return {
+        student: result.createStudent,
+        user: {
+          id: result.createUser.id,
+          username: result.createUser.username,
+          email: result.createUser.email,
+          roles: result.createUser.UserOnRole.map((ur) => ({
+            id: ur.role.id,
+            name: ur.role.name,
+            permissions: ur.role.permissions.map((p) => String(p)),
+          })),
+        },
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new Error(`Failed to register student: ${error.message}`);
+    }
+  }
+
+  async registerTeacher(
+    data: RegisterTeacherDto
+  ): Promise<RegisterTeacherResponseDto> {
+    try {
+      const emailTaken = await this.isEmailTaken(data.email);
+
+      if (emailTaken) {
+        throw new ConflictException('Email already exists');
+      }
+
+      const usernameTaken = await this.isUsernameTaken(data.username);
+
+      if (usernameTaken) {
+        throw new ConflictException('Username already exists');
+      }
+
+      const userPayload: Prisma.UserCreateInput = {
+        email: data.email,
+        username: data.username,
+        password: data.password,
+        UserOnRole: {
+          create: data.roleIds.map((roleId) => ({ roleId })),
+        },
+      };
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        const createUser = await tx.user.create({
+          data: userPayload,
+          include: {
+            UserOnRole: {
+              include: {
+                role: true,
+              },
+            },
+          },
+        });
+        const createTeacher = await tx.teacher.create({
+          data: {
+            userId: createUser.id,
+            username: data.username,
+            teacherNumber: data.teacherNumber,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phoneNumber: data.phoneNumber,
+            address: data.address,
+            email: data.email,
+          },
+        });
+        return { createUser, createTeacher };
+      });
+
+      return {
+        teacher: result.createTeacher,
+        user: {
+          id: result.createUser.id,
+          username: result.createUser.username,
+          email: result.createUser.email,
+          roles: result.createUser.UserOnRole.map((ur) => ({
+            id: ur.role.id,
+            name: ur.role.name,
+            permissions: ur.role.permissions.map((p) => String(p)),
+          })),
+        },
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new Error(`Failed to register teacher: ${error.message}`);
     }
   }
 
@@ -232,6 +436,92 @@ export class AuthRepository implements IAuthRepository {
         .filter((role) => role.deletedAt === null);
     } catch (error) {
       throw new Error(`Failed to get user roles: ${error.message}`);
+    }
+  }
+
+  async getMe(id: string): Promise<ProfileResponseDto> {
+    try {
+      let student: Student;
+      let teacher: Teacher;
+      let admin: Admin;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id, deletedAt: null },
+        include: {
+          UserOnRole: {
+            include: {
+              role: true,
+            },
+            where: {
+              role: {
+                deletedAt: null,
+              },
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const roles = user.UserOnRole.map((ur) => ur.role.name);
+
+      if (roles.includes('STUDENT')) {
+        student = await this.prisma.student.findFirst({
+          where: { userId: id, deletedAt: null },
+        });
+      }
+
+      if (roles.includes('TEACHER')) {
+        teacher = await this.prisma.teacher.findFirst({
+          where: { userId: id, deletedAt: null },
+        });
+      }
+
+      if (roles.includes('ADMIN')) {
+        admin = await this.prisma.admin.findFirst({
+          where: { userId: id, deletedAt: null },
+        });
+      }
+
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roles: user.UserOnRole.map((ur) => ({
+          id: ur.role.id,
+          name: ur.role.name,
+          permissions: ur.role.permissions.map((p) => String(p)),
+        })),
+        studentNumber: student ? student.studentNumber : null,
+        teacherNumber: teacher ? teacher.teacherNumber : null,
+        firstName: student
+          ? student.firstName
+          : teacher
+          ? teacher.firstName
+          : null,
+        lastName: student
+          ? student.lastName
+          : teacher
+          ? teacher.lastName
+          : null,
+        phoneNumber: student
+          ? student.phoneNumber
+          : teacher
+          ? teacher.phoneNumber
+          : null,
+        address: student ? student.address : teacher ? teacher.address : null,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        deletedAt: user.deletedAt,
+        userId: admin ? admin.userId : null,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error(`Failed to get profile: ${error.message}`);
     }
   }
 

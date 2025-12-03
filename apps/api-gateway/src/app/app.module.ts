@@ -8,9 +8,40 @@ import { AuthController } from './auth/auth.controller';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { GrpcErrorHandler } from './common/grpc-error.handler';
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
+import { ClsModule } from 'nestjs-cls';
 @Module({
   imports: [
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        mount: true,
+      },
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    // JwtModule.registerAsync({
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => ({
+    //     privateKey:
+    //       configService.get<string>('JWT_PRIVATE_KEY') || 'your-secret-key',
+    //     publicKey:
+    //       configService.get<string>('JWT_PUBLIC_KEY') || 'your-secret-key',
+    //     signOptions: {
+    //       algorithm: 'RS256',
+    //       expiresIn: 86400, // 24 hours
+    //     },
+    //     verifyOptions: {
+    //       algorithms: ['RS256'],
+    //     },
+    //   }),
+    // }),
     ClientsModule.register([
       {
         name: AUTHSERVICE_PACKAGE_NAME,
@@ -26,6 +57,7 @@ import { GrpcErrorHandler } from './common/grpc-error.handler';
   providers: [
     AppService,
     GrpcErrorHandler,
+    JwtStrategy,
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,

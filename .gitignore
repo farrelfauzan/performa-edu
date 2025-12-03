@@ -52,3 +52,7 @@ out
 .env.local
 .env.*.local
 /generated/prisma
+/libs/src/prisma/generated/prisma-client
+
+*.key
+

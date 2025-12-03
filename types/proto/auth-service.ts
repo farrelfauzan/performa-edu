@@ -10,6 +10,57 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "authservice";
 
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+}
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  roles: Role[];
+}
+
+export interface Admin {
+  id: string;
+  userId: string;
+  email: string;
+  active: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
+}
+
+export interface Student {
+  id: string;
+  userId: string;
+  studentNumber: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  address: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
+}
+
+export interface Teacher {
+  id: string;
+  userId: string;
+  teacherNumber: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  address: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
+}
+
 export interface LoginRequest {
   usernameOrEmail: string;
   password: string;
@@ -21,25 +72,111 @@ export interface LoginResponse {
   user: User | undefined;
 }
 
-export interface User {
+export interface RegisterAdminRequest {
+  email: string;
+  username: string;
+  password: string;
+  roleIds: string[];
+  userId: string;
+}
+
+export interface RegisterStudentRequest {
+  email: string;
+  username: string;
+  password: string;
+  roleIds: string[];
+  userId: string;
+  studentNumber: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  address: string;
+}
+
+export interface RegisterTeacherRequest {
+  email: string;
+  username: string;
+  password: string;
+  roleIds: string[];
+  userId: string;
+  teacherNumber: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  address: string;
+}
+
+export interface RegisterAdminResponse {
+  admin: Admin | undefined;
+  user: User | undefined;
+}
+
+export interface RegisterStudentResponse {
+  student: Student | undefined;
+  user: User | undefined;
+}
+
+export interface RegisterTeacherResponse {
+  teacher: Teacher | undefined;
+  user: User | undefined;
+}
+
+export interface ProfileRequest {
+  userId: string;
+}
+
+export interface ProfileResponse {
   id: string;
   username: string;
   email: string;
+  roles: Role[];
+  studentNumber?: string | undefined;
+  teacherNumber?: string | undefined;
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  phoneNumber?: string | undefined;
+  address?: string | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
+  deletedAt?: string | undefined;
+  userId?: string | undefined;
 }
 
 export const AUTHSERVICE_PACKAGE_NAME = "authservice";
 
 export interface AuthServiceClient {
   login(request: LoginRequest): Observable<LoginResponse>;
+
+  registerAdmin(request: RegisterAdminRequest): Observable<RegisterAdminResponse>;
+
+  registerStudent(request: RegisterStudentRequest): Observable<RegisterStudentResponse>;
+
+  registerTeacher(request: RegisterTeacherRequest): Observable<RegisterTeacherResponse>;
+
+  getMe(request: ProfileRequest): Observable<ProfileResponse>;
 }
 
 export interface AuthServiceController {
   login(request: LoginRequest): Promise<LoginResponse> | Observable<LoginResponse> | LoginResponse;
+
+  registerAdmin(
+    request: RegisterAdminRequest,
+  ): Promise<RegisterAdminResponse> | Observable<RegisterAdminResponse> | RegisterAdminResponse;
+
+  registerStudent(
+    request: RegisterStudentRequest,
+  ): Promise<RegisterStudentResponse> | Observable<RegisterStudentResponse> | RegisterStudentResponse;
+
+  registerTeacher(
+    request: RegisterTeacherRequest,
+  ): Promise<RegisterTeacherResponse> | Observable<RegisterTeacherResponse> | RegisterTeacherResponse;
+
+  getMe(request: ProfileRequest): Promise<ProfileResponse> | Observable<ProfileResponse> | ProfileResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["login"];
+    const grpcMethods: string[] = ["login", "registerAdmin", "registerStudent", "registerTeacher", "getMe"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);

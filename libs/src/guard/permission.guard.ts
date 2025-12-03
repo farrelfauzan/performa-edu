@@ -16,7 +16,7 @@ import { flatMap, map } from 'lodash';
 
 import { PERMISSION_CHECKER_KEY } from '../decorators';
 import { type IAbility } from '../interfaces';
-import { Role } from '../prisma/generated/prisma-client';
+import { Role } from '@prisma/client';
 import { type AclActionValues, type AclSubjectValues } from '../types';
 import { AclSubject } from '../constant';
 
