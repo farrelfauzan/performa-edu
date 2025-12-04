@@ -2,6 +2,8 @@ import { Controller, Logger } from '@nestjs/common';
 import {
   AuthServiceController,
   AuthServiceControllerMethods,
+  BasicUserResponse,
+  GetUserByIdRequest,
   LoginRequest,
   LoginResponse,
   ProfileRequest,
@@ -15,6 +17,8 @@ import {
 } from 'types/proto/auth-service';
 import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
+import { GrpcMethod } from '@nestjs/microservices';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 @AuthServiceControllerMethods()
@@ -25,6 +29,16 @@ export class AuthController implements AuthServiceController {
 
   async login(request: LoginRequest): Promise<LoginResponse> {
     return await this.authService.login(request);
+  }
+
+  @GrpcMethod('AuthService', 'GetUserById')
+  async getUserById(request: GetUserByIdRequest): Promise<BasicUserResponse> {
+    const result = await this.authService.getUserById(request.id);
+    return {
+      id: result.data.id,
+      username: result.data.username,
+      email: result.data.email,
+    };
   }
 
   registerAdmin(

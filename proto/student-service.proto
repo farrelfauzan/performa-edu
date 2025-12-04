@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package studentservice;
+
+
+service StudentService {
+    rpc FindAllStudents(GetAllStudentsRequest) returns (GetAllStudentsResponse);
+    rpc FindStudentById(GetStudentByIdRequest) returns (StudentResponse);
+    rpc FindStudentByUserId(GetStudentByUserIdRequest) returns (StudentResponse);
+    rpc UpdateStudentById(UpdateStudentByIdRequest) returns (StudentResponse);
+    rpc DeleteStudentById(DeleteStudentByIdRequest) returns (DeleteStudentByIdResponse);
+}
+
+message PageMeta {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 count = 3;
+    optional int32 pageCount = 4;
+    optional bool hasPreviousPage = 5;
+    optional bool hasNextPage = 6;
+}
+
+enum Order {
+    ASC = 0;
+    DESC = 1;
+}
+
+message Filter {
+    map<string, string> values = 1;
+}
+
+message User {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+}
+
+message StudentResponse {
+    string id = 1;
+    string userId = 2;
+    string username = 3;
+    string firstName = 4;
+    string lastName = 5;
+    optional string address = 6;
+    User user = 7;
+    optional string studentNumber = 8;
+    optional string phoneNumber = 9;
+    string createdAt = 10;
+    string updatedAt = 11;
+    optional string deletedAt = 12;
+}
+
+message GetAllStudentsRequest {
+    optional int32 page = 1;
+    optional int32 pageSize = 2;
+    optional Order order = 3;
+    optional int32 skip = 4;
+    optional Filter filter = 5;
+    optional string sortBy = 6;
+    optional string query = 7;
+    optional string search = 10;
+}
+
+message GetAllStudentsResponse {
+    repeated StudentResponse students = 1;
+    PageMeta meta = 2;
+}
+
+message GetStudentByIdRequest {
+    string id = 1;
+}
+
+message GetStudentByUserIdRequest {
+    string user_id = 1;
+}
+
+message UpdateStudentByIdRequest {
+    optional string username = 2;
+    optional string firstName = 3;
+    optional string lastName = 4;
+    optional string address = 5;
+    optional string phoneNumber = 6;
+}
+
+message DeleteStudentByIdRequest {
+    string id = 1;
+}
+
+message DeleteStudentByIdResponse {
+    string message = 1;
+}
+
+
+
+
+
+
+

@@ -8,8 +8,18 @@ service AuthService {
     rpc RegisterStudent(RegisterStudentRequest) returns (RegisterStudentResponse);
     rpc RegisterTeacher(RegisterTeacherRequest) returns (RegisterTeacherResponse);
     rpc GetMe(ProfileRequest) returns (ProfileResponse);
+    rpc GetUserById(GetUserByIdRequest) returns (BasicUserResponse);
 }
 
+message BasicUserResponse {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+}
+
+message GetUserByIdRequest {
+    string id = 1;
+}
 
 message Role {
     string id = 1;

@@ -8,12 +8,17 @@ import {
   Req,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { Auth, AuthUser, PublicRoute } from '@performa-edu/libs';
+import {
+  Auth,
+  AuthUser,
+  GrpcErrorHandler,
+  handleGrpcCall,
+  PublicRoute,
+} from '@performa-edu/libs';
 import {
   AUTH_SERVICE_NAME,
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
-  LoginResponse,
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
@@ -21,8 +26,6 @@ import {
   RegisterStudentResponse,
 } from 'types/proto/auth-service';
 import { LoginDto } from './dtos/login.dto';
-import { GrpcErrorHandler } from '../common/grpc-error.handler';
-import { handleGrpcCall } from '../common/grpc-error.operator';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { AclAction, AclSubject } from 'libs/src/constant';
 import { LoggedUserDto, LoggedUserType } from './dtos/logged-user.dto';

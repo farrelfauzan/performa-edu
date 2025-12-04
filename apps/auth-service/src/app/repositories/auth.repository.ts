@@ -6,7 +6,6 @@ import {
 import {
   PrismaService,
   User,
-  Role,
   Prisma,
   Student,
   Teacher,
@@ -14,31 +13,35 @@ import {
 } from '@performa-edu/libs';
 import {
   IAuthRepository,
-  CreateUserData,
-  UpdateUserData,
   UserWithRoles,
 } from '../interfaces/auth.repository.interface';
 import {
   RegisterAdminResponseDto,
   RegisterStudentResponseDto,
   RegisterTeacherResponseDto,
-} from '../dto/register-response.dto';
+} from '../dtos/register-response.dto';
 import {
   RegisterAdminDto,
   RegisterStudentDto,
   RegisterTeacherDto,
-} from '../dto/register.dto';
-import { ProfileResponseDto } from '../dto/profile.dto';
+} from '../dtos/register.dto';
+import { ProfileResponseDto } from '../dtos/profile.dto';
+import { UserType } from '../dtos/user.dto';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   // User operations
-  async findUserById(id: string): Promise<User | null> {
+  async findUserById(id: string): Promise<UserType | null> {
     try {
       return await this.prisma.user.findUnique({
         where: { id, deletedAt: null },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+        },
       });
     } catch (error) {
       throw new Error(`Failed to find user by ID: ${error.message}`);
@@ -313,129 +316,6 @@ export class AuthRepository implements IAuthRepository {
         throw error;
       }
       throw new Error(`Failed to register teacher: ${error.message}`);
-    }
-  }
-
-  async updateUser(id: string, data: UpdateUserData): Promise<User> {
-    try {
-      const user = await this.findUserById(id);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // Check email uniqueness if email is being updated
-      if (data.email && data.email !== user.email) {
-        const emailTaken = await this.isEmailTaken(data.email, id);
-        if (emailTaken) {
-          throw new ConflictException('Email already exists');
-        }
-      }
-
-      // Check username uniqueness if username is being updated
-      if (data.username && data.username !== user.username) {
-        const usernameTaken = await this.isUsernameTaken(data.username, id);
-        if (usernameTaken) {
-          throw new ConflictException('Username already exists');
-        }
-      }
-
-      return await this.prisma.user.update({
-        where: { id },
-        data,
-      });
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ConflictException
-      ) {
-        throw error;
-      }
-      throw new Error(`Failed to update user: ${error.message}`);
-    }
-  }
-
-  async softDeleteUser(id: string): Promise<User> {
-    try {
-      const user = await this.findUserById(id);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      return await this.prisma.user.update({
-        where: { id },
-        data: { deletedAt: new Date() },
-      });
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new Error(`Failed to delete user: ${error.message}`);
-    }
-  }
-
-  // Role operations
-  async findRoleById(id: string): Promise<Role | null> {
-    try {
-      return await this.prisma.role.findUnique({
-        where: { id, deletedAt: null },
-      });
-    } catch (error) {
-      throw new Error(`Failed to find role by ID: ${error.message}`);
-    }
-  }
-
-  async findRoleByName(name: string): Promise<Role | null> {
-    try {
-      return await this.prisma.role.findUnique({
-        where: { name, deletedAt: null },
-      });
-    } catch (error) {
-      throw new Error(`Failed to find role by name: ${error.message}`);
-    }
-  }
-
-  async assignRoleToUser(userId: string, roleId: string): Promise<void> {
-    try {
-      await this.prisma.usersOnRoles.create({
-        data: {
-          userId,
-          roleId,
-        },
-      });
-    } catch (error) {
-      throw new Error(`Failed to assign role to user: ${error.message}`);
-    }
-  }
-
-  async removeRoleFromUser(userId: string, roleId: string): Promise<void> {
-    try {
-      await this.prisma.usersOnRoles.delete({
-        where: {
-          userId_roleId: {
-            userId,
-            roleId,
-          },
-        },
-      });
-    } catch (error) {
-      throw new Error(`Failed to remove role from user: ${error.message}`);
-    }
-  }
-
-  async getUserRoles(userId: string): Promise<Role[]> {
-    try {
-      const userRoles = await this.prisma.usersOnRoles.findMany({
-        where: { userId },
-        include: {
-          role: true,
-        },
-      });
-
-      return userRoles
-        .map((ur) => ur.role)
-        .filter((role) => role.deletedAt === null);
-    } catch (error) {
-      throw new Error(`Failed to get user roles: ${error.message}`);
     }
   }
 
