@@ -7,12 +7,13 @@ import { join } from 'path';
 import { AuthController } from './auth/auth.controller';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
-import { GrpcErrorHandler } from './common/grpc-error.handler';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { ClsModule } from 'nestjs-cls';
+import { StudentController } from './student/student.controller';
+import { STUDENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/student-service';
+import { GrpcErrorHandler } from '@performa-edu/libs';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -25,23 +26,6 @@ import { ClsModule } from 'nestjs-cls';
       isGlobal: true,
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    // JwtModule.registerAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService) => ({
-    //     privateKey:
-    //       configService.get<string>('JWT_PRIVATE_KEY') || 'your-secret-key',
-    //     publicKey:
-    //       configService.get<string>('JWT_PUBLIC_KEY') || 'your-secret-key',
-    //     signOptions: {
-    //       algorithm: 'RS256',
-    //       expiresIn: 86400, // 24 hours
-    //     },
-    //     verifyOptions: {
-    //       algorithms: ['RS256'],
-    //     },
-    //   }),
-    // }),
     ClientsModule.register([
       {
         name: AUTHSERVICE_PACKAGE_NAME,
@@ -49,11 +33,25 @@ import { ClsModule } from 'nestjs-cls';
         options: {
           package: AUTHSERVICE_PACKAGE_NAME,
           protoPath: join(__dirname, 'proto/auth-service.proto'),
+          url: `${process.env.AUTH_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.AUTH_SERVICE_GRPC_PORT || '50051'
+          }`,
+        },
+      },
+      {
+        name: STUDENTSERVICE_PACKAGE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          package: STUDENTSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/student-service.proto'),
+          url: `${process.env.STUDENT_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.STUDENT_SERVICE_GRPC_PORT || '50052'
+          }`,
         },
       },
     ]),
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, StudentController],
   providers: [
     AppService,
     GrpcErrorHandler,

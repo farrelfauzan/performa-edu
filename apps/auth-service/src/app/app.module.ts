@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './repositories/auth.repository';
 import { PrismaModule, Helper } from '@performa-edu/libs';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { PrismaModule, Helper } from '@performa-edu/libs';
       },
     }),
     PrismaModule,
+    HealthModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AuthRepository, Helper],

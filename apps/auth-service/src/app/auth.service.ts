@@ -13,9 +13,13 @@ import {
 } from 'types/proto/auth-service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Helper } from '@performa-edu/libs';
-import { TokenPayloadDto } from './dto/token.dto';
-import { ProfileResponseDto } from './dto/profile.dto';
+import {
+  Helper,
+  ProfileResponseDto,
+  TokenPayloadDto,
+  User,
+  UserType,
+} from '@performa-edu/libs';
 
 @Injectable()
 export class AuthService {
@@ -165,5 +169,12 @@ export class AuthService {
   async getMe(id: string): Promise<ProfileResponseDto> {
     const profile = await this.authRepository.getMe(id);
     return profile;
+  }
+
+  async getUserById(id: string): Promise<{
+    data: UserType;
+  }> {
+    const user = await this.authRepository.findUserById(id);
+    return { data: user };
   }
 }

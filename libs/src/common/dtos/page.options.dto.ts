@@ -2,14 +2,18 @@ import { z } from 'zod';
 import { Order } from '../../constant';
 import { createZodDto } from 'nestjs-zod';
 
-const pageOptionsSchema = z
+export const pageOptionsSchema = z
   .object({
-    order: z.enum(Order).optional().default(Order.ASC),
-    page: z.number().int().min(0).optional().default(0),
-    pageSize: z.number().int().min(1).max(100).optional().default(10),
-    skip: z.number().int().min(0).optional().default(0),
-    filter: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
-    sortBy: z.enum(['asc', 'desc']).optional(),
+    order: z.enum(Order).optional(),
+    page: z.number().int().min(0).optional(),
+    pageSize: z.number().int().min(1).max(100).optional(),
+    skip: z.number().int().min(0).optional(),
+    filter: z
+      .object({
+        values: z.record(z.string(), z.union([z.string(), z.number()])),
+      })
+      .optional(),
+    sortBy: z.string().optional(),
     query: z.string().optional(),
   })
   .meta({

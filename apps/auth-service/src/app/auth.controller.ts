@@ -2,6 +2,8 @@ import { Controller, Logger } from '@nestjs/common';
 import {
   AuthServiceController,
   AuthServiceControllerMethods,
+  BasicUserResponse,
+  GetUserByIdRequest,
   LoginRequest,
   LoginResponse,
   ProfileRequest,
@@ -14,7 +16,7 @@ import {
   RegisterTeacherResponse,
 } from 'types/proto/auth-service';
 import { AuthService } from './auth.service';
-import { Observable } from 'rxjs';
+import { GrpcMethod } from '@nestjs/microservices';
 
 @Controller('auth')
 @AuthServiceControllerMethods()
@@ -27,31 +29,32 @@ export class AuthController implements AuthServiceController {
     return await this.authService.login(request);
   }
 
-  registerAdmin(
+  @GrpcMethod('AuthService', 'GetUserById')
+  async getUserById(request: GetUserByIdRequest): Promise<BasicUserResponse> {
+    const result = await this.authService.getUserById(request.id);
+    return {
+      id: result.data.id,
+      username: result.data.username,
+      email: result.data.email,
+    };
+  }
+
+  async registerAdmin(
     request: RegisterAdminRequest
-  ):
-    | Promise<RegisterAdminResponse>
-    | Observable<RegisterAdminResponse>
-    | RegisterAdminResponse {
-    return this.authService.registerAdmin(request);
+  ): Promise<RegisterAdminResponse> {
+    return await this.authService.registerAdmin(request);
   }
 
-  registerStudent(
+  async registerStudent(
     request: RegisterStudentRequest
-  ):
-    | Promise<RegisterStudentResponse>
-    | Observable<RegisterStudentResponse>
-    | RegisterStudentResponse {
-    return this.authService.registerStudent(request);
+  ): Promise<RegisterStudentResponse> {
+    return await this.authService.registerStudent(request);
   }
 
-  registerTeacher(
+  async registerTeacher(
     request: RegisterTeacherRequest
-  ):
-    | Promise<RegisterTeacherResponse>
-    | Observable<RegisterTeacherResponse>
-    | RegisterTeacherResponse {
-    return this.authService.registerTeacher(request);
+  ): Promise<RegisterTeacherResponse> {
+    return await this.authService.registerTeacher(request);
   }
 
   async getMe(request: ProfileRequest): Promise<ProfileResponse> {

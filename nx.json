@@ -63,7 +63,7 @@
     },
     "build": {
       "options": {
-        "assets" : [
+        "assets": [
           {
             "glob": "*.proto",
             "input": "proto",

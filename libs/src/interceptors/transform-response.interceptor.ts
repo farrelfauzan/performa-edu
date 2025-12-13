@@ -18,6 +18,8 @@ export class TransformResponseInterceptor implements NestInterceptor {
       map((response) => {
         const { data, meta } = response;
 
+        console.log('TransformResponseInterceptor', response);
+
         return {
           statusCode: context.switchToHttp().getResponse().statusCode,
           data,

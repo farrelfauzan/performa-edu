@@ -10,6 +10,16 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "authservice";
 
+export interface BasicUserResponse {
+  id: string;
+  username: string;
+  email: string;
+}
+
+export interface GetUserByIdRequest {
+  id: string;
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -154,6 +164,8 @@ export interface AuthServiceClient {
   registerTeacher(request: RegisterTeacherRequest): Observable<RegisterTeacherResponse>;
 
   getMe(request: ProfileRequest): Observable<ProfileResponse>;
+
+  getUserById(request: GetUserByIdRequest): Observable<BasicUserResponse>;
 }
 
 export interface AuthServiceController {
@@ -172,11 +184,22 @@ export interface AuthServiceController {
   ): Promise<RegisterTeacherResponse> | Observable<RegisterTeacherResponse> | RegisterTeacherResponse;
 
   getMe(request: ProfileRequest): Promise<ProfileResponse> | Observable<ProfileResponse> | ProfileResponse;
+
+  getUserById(
+    request: GetUserByIdRequest,
+  ): Promise<BasicUserResponse> | Observable<BasicUserResponse> | BasicUserResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["login", "registerAdmin", "registerStudent", "registerTeacher", "getMe"];
+    const grpcMethods: string[] = [
+      "login",
+      "registerAdmin",
+      "registerStudent",
+      "registerTeacher",
+      "getMe",
+      "getUserById",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
