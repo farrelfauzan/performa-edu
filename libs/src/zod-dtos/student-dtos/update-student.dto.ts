@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 export const updateStudentSchema = z
   .object({
+    id: z.cuid(),
+    email: z.email().optional(),
     username: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),

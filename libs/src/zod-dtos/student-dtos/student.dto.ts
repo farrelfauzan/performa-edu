@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { userSchema } from '@performa-edu/auth-service/app/dtos/user.dto';
+import { userSchema } from '../auth-dtos';
 
 const studentSchema = z
   .object({
@@ -31,4 +31,4 @@ const studentSchema = z
     id: 'Student',
   });
 
-export type Student = z.infer<typeof studentSchema>;
+export type StudentType = z.infer<typeof studentSchema>;
