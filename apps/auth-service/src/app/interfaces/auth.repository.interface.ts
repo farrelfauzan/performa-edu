@@ -1,16 +1,15 @@
-import { User, Role } from '@performa-edu/libs';
 import {
+  User,
+  Role,
+  UserType,
   RegisterAdminDto,
-  RegisterStudentDto,
-  RegisterTeacherDto,
-} from '../dtos/register.dto';
-import {
   RegisterAdminResponseDto,
+  RegisterStudentDto,
   RegisterStudentResponseDto,
+  RegisterTeacherDto,
   RegisterTeacherResponseDto,
-} from '../dtos/register-response.dto';
-import { ProfileResponseDto } from '../dtos/profile.dto';
-import { UserType } from '../dtos/user.dto';
+  ProfileResponseDto,
+} from '@performa-edu/libs';
 
 export interface UserWithRoles extends User {
   UserOnRole: Array<{

@@ -62,7 +62,7 @@ message GetAllStudentsRequest {
 }
 
 message GetAllStudentsResponse {
-    repeated StudentResponse students = 1;
+    repeated StudentResponse data = 1;
     PageMeta meta = 2;
 }
 
@@ -75,11 +75,13 @@ message GetStudentByUserIdRequest {
 }
 
 message UpdateStudentByIdRequest {
+    string id = 1;
     optional string username = 2;
     optional string firstName = 3;
     optional string lastName = 4;
     optional string address = 5;
     optional string phoneNumber = 6;
+    optional string email = 7;
 }
 
 message DeleteStudentByIdRequest {

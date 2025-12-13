@@ -1,7 +1,6 @@
 import { PageMetaDto } from 'libs/src/common';
-import { GetAllStudentsDto } from '../dtos/get-all-students.dto';
 import { Student } from '@prisma/client';
-import { UpdateStudentDto } from '../dtos/update-student.dto';
+import { GetAllStudentsDto, UpdateStudentDto } from '@performa-edu/libs';
 
 export interface IStudentRepository {
   findAllStudents(options: GetAllStudentsDto): Promise<{

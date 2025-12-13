@@ -10,23 +10,21 @@ import {
   Student,
   Teacher,
   Admin,
+  UserType,
+  RegisterAdminDto,
+  RegisterAdminResponseDto,
+  RegisterStudentDto,
+  RegisterStudentResponseDto,
+  RegisterTeacherDto,
+  RegisterTeacherResponseDto,
+  ProfileResponseDto,
 } from '@performa-edu/libs';
 import {
   IAuthRepository,
   UserWithRoles,
 } from '../interfaces/auth.repository.interface';
-import {
-  RegisterAdminResponseDto,
-  RegisterStudentResponseDto,
-  RegisterTeacherResponseDto,
-} from '../dtos/register-response.dto';
-import {
-  RegisterAdminDto,
-  RegisterStudentDto,
-  RegisterTeacherDto,
-} from '../dtos/register.dto';
-import { ProfileResponseDto } from '../dtos/profile.dto';
-import { UserType } from '../dtos/user.dto';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
@@ -178,73 +176,69 @@ export class AuthRepository implements IAuthRepository {
   async registerStudent(
     data: RegisterStudentDto
   ): Promise<RegisterStudentResponseDto> {
-    try {
-      const emailTaken = await this.isEmailTaken(data.email);
+    const emailTaken = await this.isEmailTaken(data.email);
 
-      if (emailTaken) {
-        throw new ConflictException('Email already exists');
-      }
+    if (emailTaken) {
+      throw new RpcException({
+        code: status.FAILED_PRECONDITION,
+        message: 'Email already exists',
+      });
+    }
 
-      const usernameTaken = await this.isUsernameTaken(data.username);
+    const usernameTaken = await this.isUsernameTaken(data.username);
 
-      if (usernameTaken) {
-        throw new ConflictException('Username already exists');
-      }
+    if (usernameTaken) {
+      throw new RpcException(new ConflictException('Username already exists'));
+    }
 
-      const userPayload: Prisma.UserCreateInput = {
-        email: data.email,
-        username: data.username,
-        password: data.password,
-        UserOnRole: {
-          create: data.roleIds.map((roleId) => ({ roleId })),
-        },
-      };
+    const userPayload: Prisma.UserCreateInput = {
+      email: data.email,
+      username: data.username,
+      password: data.password,
+      UserOnRole: {
+        create: data.roleIds.map((roleId) => ({ roleId })),
+      },
+    };
 
-      const result = await this.prisma.$transaction(async (tx) => {
-        const createUser = await tx.user.create({
-          data: userPayload,
-          include: {
-            UserOnRole: {
-              include: {
-                role: true,
-              },
+    const result = await this.prisma.$transaction(async (tx) => {
+      const createUser = await tx.user.create({
+        data: userPayload,
+        include: {
+          UserOnRole: {
+            include: {
+              role: true,
             },
           },
-        });
-        const createStudent = await tx.student.create({
-          data: {
-            userId: createUser.id,
-            username: data.username,
-            studentNumber: data.studentNumber,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            phoneNumber: data.phoneNumber,
-            address: data.address,
-            email: data.email,
-          },
-        });
-        return { createUser, createStudent };
-      });
-
-      return {
-        student: result.createStudent,
-        user: {
-          id: result.createUser.id,
-          username: result.createUser.username,
-          email: result.createUser.email,
-          roles: result.createUser.UserOnRole.map((ur) => ({
-            id: ur.role.id,
-            name: ur.role.name,
-            permissions: ur.role.permissions.map((p) => String(p)),
-          })),
         },
-      };
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new Error(`Failed to register student: ${error.message}`);
-    }
+      });
+      const createStudent = await tx.student.create({
+        data: {
+          userId: createUser.id,
+          username: data.username,
+          studentNumber: data.studentNumber,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phoneNumber: data.phoneNumber,
+          address: data.address,
+          email: data.email,
+        },
+      });
+      return { createUser, createStudent };
+    });
+
+    return {
+      student: result.createStudent,
+      user: {
+        id: result.createUser.id,
+        username: result.createUser.username,
+        email: result.createUser.email,
+        roles: result.createUser.UserOnRole.map((ur) => ({
+          id: ur.role.id,
+          name: ur.role.name,
+          permissions: ur.role.permissions.map((p) => String(p)),
+        })),
+      },
+    };
   }
 
   async registerTeacher(

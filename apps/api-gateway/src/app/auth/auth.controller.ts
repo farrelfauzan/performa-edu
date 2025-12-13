@@ -13,6 +13,9 @@ import {
   AuthUser,
   GrpcErrorHandler,
   handleGrpcCall,
+  LoggedUserType,
+  LoginDto,
+  LoginResponseDto,
   PublicRoute,
 } from '@performa-edu/libs';
 import {
@@ -25,10 +28,7 @@ import {
   RegisterStudentRequest,
   RegisterStudentResponse,
 } from 'types/proto/auth-service';
-import { LoginDto } from './dtos/login.dto';
-import { LoginResponseDto } from './dtos/login-response.dto';
 import { AclAction, AclSubject } from 'libs/src/constant';
-import { LoggedUserDto, LoggedUserType } from './dtos/logged-user.dto';
 
 @Controller({
   version: '1',
@@ -76,7 +76,8 @@ export class AuthController implements OnModuleInit {
     return { data: response };
   }
 
-  @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
+  // @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
+  @PublicRoute()
   @Post('register-student')
   async registerStudent(@Body() options: RegisterStudentRequest): Promise<{
     data: RegisterStudentResponse;

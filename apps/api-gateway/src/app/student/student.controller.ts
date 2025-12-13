@@ -1,4 +1,13 @@
-import { Controller, Get, Inject, OnModuleInit, Param } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  OnModuleInit,
+  Param,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
   GetAllStudentsRequest,
@@ -7,7 +16,12 @@ import {
   STUDENTSERVICE_PACKAGE_NAME,
   StudentServiceClient,
 } from '@performa-edu/proto-types/student-service';
-import { GrpcErrorHandler, handleGrpcCall, PageMeta } from '@performa-edu/libs';
+import {
+  GrpcErrorHandler,
+  handleGrpcCall,
+  PageMeta,
+  UpdateStudentDto,
+} from '@performa-edu/libs';
 
 @Controller({
   version: '1',
@@ -28,7 +42,7 @@ export class StudentController implements OnModuleInit {
   }
 
   @Get()
-  async getAllStudents(@Param() options: GetAllStudentsRequest): Promise<{
+  async getAllStudents(@Query() options: GetAllStudentsRequest): Promise<{
     data: StudentResponse[];
     meta: PageMeta;
   }> {
@@ -37,9 +51,57 @@ export class StudentController implements OnModuleInit {
       this.grpcErrorHandler,
       'Failed to fetch students'
     );
+
     return {
-      data: response.students,
+      data: response.data || [],
       meta: response.meta,
     };
+  }
+
+  @Get(':id')
+  async getStudentById(@Param('id') id: string): Promise<StudentResponse> {
+    const response = await handleGrpcCall(
+      this.studentService.findStudentById({ id }),
+      this.grpcErrorHandler,
+      'Failed to fetch student by ID'
+    );
+    return response;
+  }
+
+  @Get('user/:userId')
+  async getStudentByUserId(
+    @Param('userId') userId: string
+  ): Promise<StudentResponse> {
+    const response = await handleGrpcCall(
+      this.studentService.findStudentByUserId({ userId }),
+      this.grpcErrorHandler,
+      'Failed to fetch student by user ID'
+    );
+    return response;
+  }
+
+  @Put(':id')
+  async updateStudentById(
+    @Param('id') id: string,
+    @Param() updateData: UpdateStudentDto
+  ): Promise<StudentResponse> {
+    const response = await handleGrpcCall(
+      this.studentService.updateStudentById({ id, ...updateData }),
+      this.grpcErrorHandler,
+      'Failed to update student by ID'
+    );
+    return response;
+  }
+
+  @Delete(':id')
+  async deleteStudentById(
+    @Param('id') id: string
+  ): Promise<{ message: string }> {
+    const response = await handleGrpcCall(
+      this.studentService.deleteStudentById({ id }),
+      this.grpcErrorHandler,
+      'Failed to delete student by ID'
+    );
+    return response;
   }
 }

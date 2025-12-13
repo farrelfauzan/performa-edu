@@ -67,7 +67,7 @@ export interface GetAllStudentsRequest {
 }
 
 export interface GetAllStudentsResponse {
-  students: StudentResponse[];
+  data: StudentResponse[];
   meta: PageMeta | undefined;
 }
 
@@ -80,11 +80,13 @@ export interface GetStudentByUserIdRequest {
 }
 
 export interface UpdateStudentByIdRequest {
+  id: string;
   username?: string | undefined;
   firstName?: string | undefined;
   lastName?: string | undefined;
   address?: string | undefined;
   phoneNumber?: string | undefined;
+  email?: string | undefined;
 }
 
 export interface DeleteStudentByIdRequest {

@@ -13,10 +13,13 @@ import {
 } from 'types/proto/auth-service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Helper, User } from '@performa-edu/libs';
-import { TokenPayloadDto } from './dtos/token.dto';
-import { ProfileResponseDto } from './dtos/profile.dto';
-import { UserType } from './dtos/user.dto';
+import {
+  Helper,
+  ProfileResponseDto,
+  TokenPayloadDto,
+  User,
+  UserType,
+} from '@performa-edu/libs';
 
 @Injectable()
 export class AuthService {

@@ -10,6 +10,7 @@ import {
   StudentResponse,
   StudentServiceController,
   StudentServiceControllerMethods,
+  UpdateStudentByIdRequest,
 } from '@performa-edu/proto-types/student-service';
 import { Observable } from 'rxjs';
 
@@ -23,7 +24,7 @@ export class StudentController implements StudentServiceController {
   ): Promise<GetAllStudentsResponse> {
     const result = await this.studentService.findAllStudents(request);
     return {
-      students: result.data.map((student) => ({
+      data: result.data.map((student) => ({
         ...student,
         createdAt: student.createdAt.toISOString(),
         updatedAt: student.updatedAt.toISOString(),
@@ -39,24 +40,44 @@ export class StudentController implements StudentServiceController {
     | Promise<DeleteStudentByIdResponse>
     | Observable<DeleteStudentByIdResponse>
     | DeleteStudentByIdResponse {
-    throw new Error('Method not implemented.');
+    return this.studentService.deleteStudentById(request.id);
   }
 
-  findStudentById(
+  async findStudentById(
     request: GetStudentByIdRequest
-  ): Promise<StudentResponse> | Observable<StudentResponse> | StudentResponse {
-    throw new Error('Method not implemented.');
+  ): Promise<StudentResponse> {
+    const result = await this.studentService.findStudentById(request.id);
+    return {
+      ...result.data,
+      createdAt: result.data.createdAt.toISOString(),
+      updatedAt: result.data.updatedAt.toISOString(),
+      deletedAt: result.data.deletedAt?.toISOString(),
+    };
   }
 
-  findStudentByUserId(
+  async findStudentByUserId(
     request: GetStudentByUserIdRequest
-  ): Promise<StudentResponse> | Observable<StudentResponse> | StudentResponse {
-    throw new Error('Method not implemented.');
+  ): Promise<StudentResponse> {
+    const result = await this.studentService.findStudentByUserId(
+      request.userId
+    );
+    return {
+      ...result.data,
+      createdAt: result.data.createdAt.toISOString(),
+      updatedAt: result.data.updatedAt.toISOString(),
+      deletedAt: result.data.deletedAt?.toISOString(),
+    };
   }
 
-  updateStudentById(
-    request: any
-  ): Promise<StudentResponse> | Observable<StudentResponse> | StudentResponse {
-    throw new Error('Method not implemented.');
+  async updateStudentById(
+    request: UpdateStudentByIdRequest
+  ): Promise<StudentResponse> {
+    const result = await this.studentService.updateStudentById(request);
+    return {
+      ...result.data,
+      createdAt: result.data.createdAt.toISOString(),
+      updatedAt: result.data.updatedAt.toISOString(),
+      deletedAt: result.data.deletedAt?.toISOString(),
+    };
   }
 }
