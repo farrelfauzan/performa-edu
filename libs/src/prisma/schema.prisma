@@ -62,22 +62,16 @@ model Admin {
   @@map("admins")
 }
 
-enum IdentificationType {
-  ID_CARD
-  PASSPORT
-  DRIVER_LICENSE
-}
-
 model Customer {
-  id                   String              @id @default(cuid())
-  userId               String              @unique @map("user_id")
-  uniqueId             String              @unique @map("unique_id")
-  fullName             String              @map("full_name")
-  phoneNumber          String              @map("phone_number") @db.VarChar(15)
-  dateOfBirth          DateTime?           @map("date_of_birth") @db.Date
-  createdAt            DateTime            @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime            @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt            DateTime?           @map("deleted_at") @db.Timestamptz
+  id          String    @id @default(cuid())
+  userId      String    @unique @map("user_id")
+  uniqueId    String    @unique @map("unique_id")
+  fullName    String    @map("full_name")
+  phoneNumber String    @map("phone_number") @db.VarChar(15)
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
   @@map("customers")
 }

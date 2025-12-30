@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuthRepository } from './repositories/auth.repository';
 import {
+  CreateUserRequest,
+  CreateUserResponse,
+  DeleteUserByIdRequest,
+  DeleteUserByIdResponse,
   LoginRequest,
   LoginResponse,
   RegisterAdminRequest,
@@ -111,5 +115,17 @@ export class AuthService {
     }
 
     return { data: user };
+  }
+
+  async createUser(options: CreateUserRequest): Promise<CreateUserResponse> {
+    const user = await this.authRepository.createUser(options);
+    return user;
+  }
+
+  async deleteUserById(
+    options: DeleteUserByIdRequest
+  ): Promise<DeleteUserByIdResponse> {
+    const result = await this.authRepository.deleteUserById(options);
+    return result;
   }
 }

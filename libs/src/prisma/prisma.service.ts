@@ -1,5 +1,4 @@
 import {
-  INestApplication,
   Injectable,
   Logger,
   OnModuleDestroy,

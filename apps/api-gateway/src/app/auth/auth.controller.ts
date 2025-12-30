@@ -11,6 +11,8 @@ import { ClientGrpc } from '@nestjs/microservices';
 import {
   Auth,
   AuthUser,
+  CreateCustomerDto,
+  CreateCustomerResponseDto,
   GrpcErrorHandler,
   handleGrpcCall,
   LoggedUserType,
@@ -19,6 +21,11 @@ import {
   PublicRoute,
 } from '@performa-edu/libs';
 import {
+  CUSTOMER_SERVICE_NAME,
+  CUSTOMERSERVICE_PACKAGE_NAME,
+  CustomerServiceClient,
+} from '@performa-edu/proto-types/customer-service';
+import {
   AUTH_SERVICE_NAME,
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
@@ -26,7 +33,6 @@ import {
   RegisterAdminRequest,
   RegisterAdminResponse,
 } from 'types/proto/auth-service';
-import { AclAction, AclSubject } from 'libs/src/constant';
 
 @Controller({
   version: '1',
@@ -34,16 +40,23 @@ import { AclAction, AclSubject } from 'libs/src/constant';
 })
 export class AuthController implements OnModuleInit {
   private authService: AuthServiceClient;
+  private customerService: CustomerServiceClient;
 
   constructor(
     @Inject(AUTHSERVICE_PACKAGE_NAME)
-    private client: ClientGrpc,
+    private authClient: ClientGrpc,
+    @Inject(CUSTOMERSERVICE_PACKAGE_NAME)
+    private customerClient: ClientGrpc,
     private readonly grpcErrorHandler: GrpcErrorHandler
   ) {}
 
   onModuleInit() {
     this.authService =
-      this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+      this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+    this.customerService =
+      this.customerClient.getService<CustomerServiceClient>(
+        CUSTOMER_SERVICE_NAME
+      );
   }
 
   @PublicRoute()
@@ -76,6 +89,60 @@ export class AuthController implements OnModuleInit {
       'Admin registration failed'
     );
     return { data: response };
+  }
+
+  @Post('register-customer')
+  async registerCustomer(@Body() options: CreateCustomerDto): Promise<{
+    data: CreateCustomerResponseDto;
+  }> {
+    let createdUserId: string | null = null;
+    try {
+      const { customer, user } = options;
+
+      const createUser = await handleGrpcCall(
+        this.authService.createUser({
+          username: user.username,
+          email: user.email,
+          password: user.password,
+          roleIds: user.roleIds,
+        }),
+        this.grpcErrorHandler,
+        'User creation failed'
+      );
+
+      createdUserId = createUser.id;
+
+      const createCustomer = await handleGrpcCall(
+        this.customerService.createCustomer({
+          ...customer,
+          userId: createUser.id,
+        }),
+        this.grpcErrorHandler,
+        'Customer creation failed'
+      );
+
+      return {
+        data: {
+          user: createUser,
+          customer: { ...createCustomer.customer, userId: createUser.id },
+        },
+      };
+    } catch (error) {
+      if (createdUserId) {
+        try {
+          await handleGrpcCall(
+            this.authService.deleteUserById({ id: createdUserId }),
+            this.grpcErrorHandler,
+            'Failed to rollback user creation'
+          );
+        } catch (rollbackError) {
+          console.error('Rollback failed:', rollbackError);
+        }
+      }
+
+      console.error('Register customer error:', error);
+      throw error;
+    }
   }
 
   @Auth()

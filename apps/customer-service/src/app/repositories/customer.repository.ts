@@ -13,6 +13,8 @@ import {
 import {
   CreateCustomerRequest,
   CreateCustomerResponse,
+  DeleteCustomerRequest,
+  DeleteCustomerResponse,
   GetAllCustomersRequest,
   UpdateCustomerRequest,
   UpdateCustomerResponse,
@@ -35,7 +37,9 @@ export class CustomerRepository implements ICustomerRepository {
         uniqueId: generateUniqueId('CUST'),
         fullName: options.fullName,
         phoneNumber: options.phoneNumber,
-        dateOfBirth: options.dateOfBirth,
+        ...(options.dateOfBirth
+          ? { dateOfBirth: new Date(options.dateOfBirth) }
+          : {}),
       },
     });
 
@@ -47,7 +51,7 @@ export class CustomerRepository implements ICustomerRepository {
   async getAllCustomers(
     options: GetAllCustomersRequest
   ): Promise<{ data: Customer[]; meta: PageMetaDto }> {
-    const searchFiled = ['email', 'fullName', 'phoneNumber'];
+    const searchFiled = ['fullName', 'phoneNumber'];
 
     const customers = await this.dynamicQueryBuilder.buildDynamicQuery(
       'Customer',
@@ -120,20 +124,26 @@ export class CustomerRepository implements ICustomerRepository {
     };
   }
 
-  async deleteCustomer(id: string): Promise<{ success: boolean }> {
+  async deleteCustomer(
+    options: DeleteCustomerRequest
+  ): Promise<DeleteCustomerResponse> {
     const customer = await this.prisma.findFirstActive<Customer>(
       this.prisma.customer,
       {
-        where: { id },
+        where: { id: options.id },
       }
     );
 
     if (!customer) {
-      CustomerNotFoundError(id);
+      CustomerNotFoundError(options.id);
     }
 
-    await this.prisma.softDelete<Customer>(this.prisma.customer, { id });
+    await this.prisma.softDelete<Customer>(this.prisma.customer, {
+      id: options.id,
+    });
 
-    return { success: true };
+    return {
+      message: 'Customer deleted successfully',
+    };
   }
 }

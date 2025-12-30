@@ -2,6 +2,8 @@ import { Customer, PageMetaDto } from '@performa-edu/libs';
 import {
   CreateCustomerRequest,
   CreateCustomerResponse,
+  DeleteCustomerRequest,
+  DeleteCustomerResponse,
   GetAllCustomersRequest,
   UpdateCustomerRequest,
   UpdateCustomerResponse,
@@ -23,5 +25,7 @@ export interface ICustomerRepository {
     id: string,
     options: UpdateCustomerRequest
   ): Promise<UpdateCustomerResponse>;
-  deleteCustomer(id: string): Promise<{ success: boolean }>;
+  deleteCustomer(
+    options: DeleteCustomerRequest
+  ): Promise<DeleteCustomerResponse>;
 }

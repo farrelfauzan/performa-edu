@@ -1,15 +1,27 @@
-import { Controller, Get, Inject, OnModuleInit } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  OnModuleInit,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
   Auth,
+  CreateCustomerDto,
   GetAllCustomerDto,
   GrpcErrorHandler,
   handleGrpcCall,
 } from '@performa-edu/libs';
 import {
+  CreateCustomerResponse,
+  CUSTOMER_SERVICE_NAME,
   CUSTOMERSERVICE_PACKAGE_NAME,
   CustomerServiceClient,
   GetAllCustomersResponse,
+  GetCustomerByIdResponse,
 } from '@performa-edu/proto-types/customer-service';
 import { AclAction, AclSubject } from 'libs/src/constant';
 
@@ -28,7 +40,7 @@ export class CustomerController implements OnModuleInit {
 
   onModuleInit() {
     this.customerService = this.client.getService<CustomerServiceClient>(
-      CUSTOMERSERVICE_PACKAGE_NAME
+      CUSTOMER_SERVICE_NAME
     );
   }
 
@@ -39,29 +51,43 @@ export class CustomerController implements OnModuleInit {
     },
   ])
   @Get()
-  async getCustomers(
-    options: GetAllCustomerDto
-  ): Promise<GetAllCustomersResponse> {
-    const convertedOptions = {
-      ...options,
-      filter: options.filter
-        ? {
-            ...options.filter,
-            values: Object.fromEntries(
-              Object.entries(options.filter.values || {}).map(
-                ([key, value]) => [key, String(value)]
-              )
-            ),
-          }
-        : undefined,
-    };
+  async getCustomers(@Query() options: GetAllCustomerDto): Promise<{
+    data: GetAllCustomersResponse['customers'];
+    meta: GetAllCustomersResponse['meta'];
+  }> {
+    try {
+      const result = await handleGrpcCall(
+        this.customerService.getAllCustomers(options),
+        this.grpcErrorHandler,
+        'Failed to fetch customers'
+      );
 
-    const result = await handleGrpcCall(
-      this.customerService.getAllCustomers(convertedOptions),
-      this.grpcErrorHandler,
-      'Failed to fetch customers'
-    );
+      return { data: result.customers || [], meta: result.meta };
+    } catch (error) {
+      throw error;
+    }
+  }
 
-    return result;
+  @Auth([
+    {
+      action: AclAction.READ,
+      subject: AclSubject.CUSTOMER,
+    },
+  ])
+  @Get(':id')
+  async getCustomerById(@Query('id') id: string): Promise<{
+    data: GetCustomerByIdResponse['customer'];
+  }> {
+    try {
+      const result = await handleGrpcCall(
+        this.customerService.getCustomerById({ id }),
+        this.grpcErrorHandler,
+        'Failed to fetch customer by ID'
+      );
+
+      return { data: result.customer };
+    } catch (error) {
+      throw error;
+    }
   }
 }

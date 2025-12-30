@@ -8,8 +8,26 @@ const prisma = new PrismaClient({
   }),
 });
 
-function createPermission(subject: AclSubject, action: AclAction): string {
-  return `${subject}:${action}`;
+interface Permission {
+  action: string;
+  subject: string;
+  condition?: Record<string, any>;
+  [key: string]: any;
+}
+
+function createPermission(
+  subject: AclSubject,
+  action: AclAction,
+  condition?: Record<string, any>
+): Permission {
+  const permission: Permission = {
+    action,
+    subject,
+  };
+  if (condition) {
+    permission.condition = condition;
+  }
+  return permission;
 }
 
 async function seedRoles() {
@@ -42,8 +60,8 @@ async function seedRoles() {
       permissions: [
         // Self management
         createPermission(AclSubject.USER, AclAction.READ),
-        createPermission(AclSubject.USER, AclAction.UPDATE),
         createPermission(AclSubject.USER, AclAction.VIEW),
+        createPermission(AclSubject.USER, AclAction.UPDATE, { id: '{{ id }}' }),
         // Access customer resources
         createPermission(AclSubject.CUSTOMER, AclAction.READ),
         createPermission(AclSubject.CUSTOMER, AclAction.VIEW),

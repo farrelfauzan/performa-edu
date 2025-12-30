@@ -13,6 +13,7 @@ import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { ClsModule } from 'nestjs-cls';
 import { GrpcErrorHandler } from '@performa-edu/libs';
 import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer-service';
+import { CustomerController } from './customer/customer.controller';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -50,7 +51,7 @@ import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer
       },
     ]),
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, CustomerController],
   providers: [
     AppService,
     GrpcErrorHandler,

@@ -3,7 +3,10 @@ import { CustomerService } from './customer.service';
 import {
   CreateCustomerRequest,
   CreateCustomerResponse,
+  CustomerServiceController,
   CustomerServiceControllerMethods,
+  DeleteCustomerRequest,
+  DeleteCustomerResponse,
   GetAllCustomersRequest,
   GetAllCustomersResponse,
   GetCustomerByIdRequest,
@@ -14,10 +17,10 @@ import {
 
 @Controller()
 @CustomerServiceControllerMethods()
-export class CustomerController {
+export class CustomerController implements CustomerServiceController {
   constructor(private readonly customerService: CustomerService) {}
 
-  async findAllCustomers(
+  async getAllCustomers(
     options: GetAllCustomersRequest
   ): Promise<GetAllCustomersResponse> {
     const result = await this.customerService.getAllCustomers(options);
@@ -48,8 +51,10 @@ export class CustomerController {
     return result;
   }
 
-  async deleteCustomer(options: { id: string }): Promise<{ success: boolean }> {
-    const result = await this.customerService.deleteCustomer(options.id);
+  async deleteCustomer(
+    options: DeleteCustomerRequest
+  ): Promise<DeleteCustomerResponse> {
+    const result = await this.customerService.deleteCustomer(options);
     return result;
   }
 }

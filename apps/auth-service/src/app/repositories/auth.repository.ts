@@ -24,6 +24,12 @@ import {
 } from '../errors/auth-errors';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
+import {
+  CreateUserRequest,
+  CreateUserResponse,
+  DeleteUserByIdRequest,
+  DeleteUserByIdResponse,
+} from '@performa-edu/proto-types/auth-service';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
@@ -115,6 +121,54 @@ export class AuthRepository implements IAuthRepository {
     }
   }
 
+  async createUser(options: CreateUserRequest): Promise<CreateUserResponse> {
+    const emailTaken = await this.isEmailTaken(options.email);
+
+    if (emailTaken) {
+      EmailAlreadyExistsError(options.email);
+    }
+
+    const usernameTaken = await this.isUsernameTaken(options.username);
+
+    if (usernameTaken) {
+      UsernameAlreadyExistsError(options.username);
+    }
+
+    const user = await this.prisma.user.create({
+      data: {
+        email: options.email,
+        username: options.username,
+        password: options.password,
+        active: 'ACTIVE',
+        UserOnRole: {
+          create: options.roleIds.map((roleId) => ({ roleId })),
+        },
+      },
+      include: {
+        UserOnRole: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      active: user.active,
+      roles: user.UserOnRole.map((ur) => ({
+        id: ur.role.id,
+        name: ur.role.name,
+        permissions: ur.role.permissions.map((p) => String(p)),
+      })),
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+      deletedAt: user.deletedAt ? user.deletedAt.toISOString() : null,
+    };
+  }
+
   async registerAdmin(
     options: RegisterAdminDto
   ): Promise<RegisterAdminResponseDto> {
@@ -173,6 +227,24 @@ export class AuthRepository implements IAuthRepository {
         })),
       },
     };
+  }
+
+  async deleteUserById(
+    options: DeleteUserByIdRequest
+  ): Promise<DeleteUserByIdResponse> {
+    const user = await this.prisma.findFirstActive<User>(this.prisma.user, {
+      where: { id: options.id },
+    });
+
+    if (!user) {
+      UserNotFoundError(options.id);
+    }
+
+    await this.prisma.softDelete(this.prisma.user, {
+      where: { id: options.id },
+    });
+
+    return { message: `User with ID ${options.id} has been deleted.` };
   }
 
   async getMe(id: string): Promise<ProfileResponseDto> {

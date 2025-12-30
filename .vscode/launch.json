@@ -8,7 +8,7 @@
       "runtimeExecutable": "pnpm exec",
       "runtimeArgs": ["nx", "serve", "api-gateway"],
       "env": {
-        "NODE_OPTIONS": "--inspect=9229"
+        "NODE_OPTIONS": "--inspect=9228"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

@@ -1,8 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CustomerRepository } from './repositories/customer.repository';
 import {
   CreateCustomerRequest,
   CreateCustomerResponse,
+  DeleteCustomerRequest,
+  DeleteCustomerResponse,
   GetAllCustomersRequest,
   GetAllCustomersResponse,
   GetCustomerByIdResponse,
@@ -16,13 +18,14 @@ import {
   transformResponse,
 } from '@performa-edu/libs';
 import {
+  AUTH_SERVICE_NAME,
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
 } from '@performa-edu/proto-types/auth-service';
 import { ClientGrpc } from '@nestjs/microservices';
 
 @Injectable()
-export class CustomerService {
+export class CustomerService implements OnModuleInit {
   private authService: AuthServiceClient;
   private readonly logger = new Logger(CustomerService.name);
 
@@ -34,9 +37,8 @@ export class CustomerService {
   ) {}
 
   onModuleInit() {
-    this.authService = this.client.getService<AuthServiceClient>(
-      AUTHSERVICE_PACKAGE_NAME
-    );
+    this.authService =
+      this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
   }
 
   async getAllCustomers(
@@ -99,7 +101,9 @@ export class CustomerService {
     return { customer: data.customer };
   }
 
-  async deleteCustomer(id: string): Promise<{ success: boolean }> {
-    return await this.customerRepository.deleteCustomer(id);
+  async deleteCustomer(
+    options: DeleteCustomerRequest
+  ): Promise<DeleteCustomerResponse> {
+    return await this.customerRepository.deleteCustomer(options);
   }
 }

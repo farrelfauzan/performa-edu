@@ -116,6 +116,32 @@ export interface ProfileResponse {
   userId?: string | undefined;
 }
 
+export interface CreateUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  roleIds: string[];
+}
+
+export interface CreateUserResponse {
+  id: string;
+  username: string;
+  email: string;
+  active: string;
+  roles: Role[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
+}
+
+export interface DeleteUserByIdRequest {
+  id: string;
+}
+
+export interface DeleteUserByIdResponse {
+  message: string;
+}
+
 export const AUTHSERVICE_PACKAGE_NAME = "authservice";
 
 /** The AuthService defines authentication and user management operations */
@@ -140,6 +166,14 @@ export interface AuthServiceClient {
   /** Retrieves basic user information by user ID */
 
   getUserById(request: GetUserByIdRequest): Observable<BasicUserResponse>;
+
+  /** Create a new user */
+
+  createUser(request: CreateUserRequest): Observable<CreateUserResponse>;
+
+  /** Delete user by ID */
+
+  deleteUserById(request: DeleteUserByIdRequest): Observable<DeleteUserByIdResponse>;
 }
 
 /** The AuthService defines authentication and user management operations */
@@ -170,11 +204,31 @@ export interface AuthServiceController {
   getUserById(
     request: GetUserByIdRequest,
   ): Promise<BasicUserResponse> | Observable<BasicUserResponse> | BasicUserResponse;
+
+  /** Create a new user */
+
+  createUser(
+    request: CreateUserRequest,
+  ): Promise<CreateUserResponse> | Observable<CreateUserResponse> | CreateUserResponse;
+
+  /** Delete user by ID */
+
+  deleteUserById(
+    request: DeleteUserByIdRequest,
+  ): Promise<DeleteUserByIdResponse> | Observable<DeleteUserByIdResponse> | DeleteUserByIdResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["login", "registerAdmin", "registerCustomer", "getMe", "getUserById"];
+    const grpcMethods: string[] = [
+      "login",
+      "registerAdmin",
+      "registerCustomer",
+      "getMe",
+      "getUserById",
+      "createUser",
+      "deleteUserById",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);

@@ -18,7 +18,7 @@ import { PERMISSION_CHECKER_KEY } from '../decorators';
 import { type IAbility } from '../interfaces';
 import { Role } from '@prisma/client';
 import { type AclActionValues, type AclSubjectValues } from '../types';
-import { AclSubject } from '../constant';
+import { AclAction, AclSubject } from '../constant';
 
 export type Abilities = [
   AclActionValues,
@@ -51,7 +51,10 @@ export class PermissionsGuard implements CanActivate {
     try {
       const ability = this.createAbility(Object(parsedUserPermissions));
 
-      if (ability.rules[0]?.subject === AclSubject.ALL) {
+      if (
+        ability.rules[0]?.subject === AclSubject.ALL &&
+        ability.rules[0]?.action === AclAction.MANAGE
+      ) {
         return true;
       }
 

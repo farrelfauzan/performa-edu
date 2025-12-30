@@ -6,6 +6,12 @@ import {
   RegisterAdminResponseDto,
   ProfileResponseDto,
 } from '@performa-edu/libs';
+import {
+  CreateUserRequest,
+  CreateUserResponse,
+  DeleteUserByIdRequest,
+  DeleteUserByIdResponse,
+} from '@performa-edu/proto-types/auth-service';
 
 export interface UserWithRoles extends User {
   UserOnRole: Array<{
@@ -21,6 +27,10 @@ export interface IAuthRepository {
   findUserByEmailOrUsername(identifier: string): Promise<Partial<User> | null>;
   findUserWithRoles(id: string): Promise<UserWithRoles | null>;
   registerAdmin(data: RegisterAdminDto): Promise<RegisterAdminResponseDto>;
+  createUser(options: CreateUserRequest): Promise<CreateUserResponse>;
+  deleteUserById(
+    options: DeleteUserByIdRequest
+  ): Promise<DeleteUserByIdResponse>;
 
   // Get Me
   getMe(id: string): Promise<ProfileResponseDto>;

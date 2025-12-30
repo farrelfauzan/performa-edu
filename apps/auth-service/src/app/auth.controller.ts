@@ -3,6 +3,10 @@ import {
   AuthServiceController,
   AuthServiceControllerMethods,
   BasicUserResponse,
+  CreateUserRequest,
+  CreateUserResponse,
+  DeleteUserByIdRequest,
+  DeleteUserByIdResponse,
   GetUserByIdRequest,
   LoginRequest,
   LoginResponse,
@@ -15,6 +19,7 @@ import {
 } from 'types/proto/auth-service';
 import { AuthService } from './auth.service';
 import { GrpcMethod } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
 
 @Controller('auth')
 @AuthServiceControllerMethods()
@@ -59,5 +64,20 @@ export class AuthController implements AuthServiceController {
     request: RegisterCustomerRequest
   ): Promise<RegisterCustomerResponse> {
     throw new Error('Method not implemented.');
+  }
+
+  createUser(
+    request: CreateUserRequest
+  ):
+    | Promise<CreateUserResponse>
+    | Observable<CreateUserResponse>
+    | CreateUserResponse {
+    return this.authService.createUser(request);
+  }
+
+  async deleteUserById(
+    request: DeleteUserByIdRequest
+  ): Promise<DeleteUserByIdResponse> {
+    return this.authService.deleteUserById(request);
   }
 }
