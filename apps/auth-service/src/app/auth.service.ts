@@ -76,7 +76,13 @@ export class AuthService {
         roles: userWithRoles.UserOnRole.map((ur) => ({
           id: ur.role.id,
           name: ur.role.name,
-          permissions: ur.role.permissions.map((p) => String(p)),
+          permissions: ur.role.permissions.map(
+            (p: { action: string; subject: string; condition?: string }) => ({
+              action: p.action,
+              subject: p.subject,
+              condition: p.condition || undefined,
+            })
+          ),
         })),
       },
     };
@@ -91,19 +97,17 @@ export class AuthService {
       ...result,
       admin: {
         ...result.admin,
-        createdAt: result.admin.createdAt.toISOString(),
-        updatedAt: result.admin.updatedAt.toISOString(),
-        deletedAt: result.admin.deletedAt
-          ? result.admin.deletedAt.toISOString()
-          : null,
+        createdAt: result.admin.createdAt,
+        updatedAt: result.admin.updatedAt,
+        deletedAt: result.admin.deletedAt || null,
       },
     };
   }
 
-  async getMe(id: string): Promise<ProfileResponseDto> {
-    const profile = await this.authRepository.getMe(id);
-    return profile;
-  }
+  // async getMe(id: string): Promise<ProfileResponseDto> {
+  //   const profile = await this.authRepository.getMe(id);
+  //   return profile;
+  // }
 
   async getUserById(id: string): Promise<{
     data: UserType;
@@ -118,6 +122,7 @@ export class AuthService {
   }
 
   async createUser(options: CreateUserRequest): Promise<CreateUserResponse> {
+    options.password = await this.helper.hashPassword(options.password);
     const user = await this.authRepository.createUser(options);
     return user;
   }

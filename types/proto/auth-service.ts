@@ -23,7 +23,13 @@ export interface GetUserByIdRequest {
 export interface Role {
   id: string;
   name: string;
-  permissions: string[];
+  permissions: Permissions[];
+}
+
+export interface Permissions {
+  action: string;
+  subject: string;
+  condition?: string | undefined;
 }
 
 export interface User {

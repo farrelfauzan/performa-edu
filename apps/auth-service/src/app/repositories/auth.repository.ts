@@ -1,15 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   PrismaService,
   User,
   Prisma,
   Admin,
   UserType,
-  RegisterAdminDto,
-  RegisterAdminResponseDto,
-  ProfileResponseDto,
-  Customer,
   generateUniqueId,
+  transformResponse,
 } from '@performa-edu/libs';
 import {
   IAuthRepository,
@@ -29,11 +26,17 @@ import {
   CreateUserResponse,
   DeleteUserByIdRequest,
   DeleteUserByIdResponse,
+  ProfileResponse,
+  RegisterAdminRequest,
+  RegisterAdminResponse,
 } from '@performa-edu/proto-types/auth-service';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
+  getMe(id: string): Promise<ProfileResponse> {
+    throw new Error('Method not implemented.');
+  }
 
   // User operations
   async findUserById(id: string): Promise<UserType | null> {
@@ -161,7 +164,17 @@ export class AuthRepository implements IAuthRepository {
       roles: user.UserOnRole.map((ur) => ({
         id: ur.role.id,
         name: ur.role.name,
-        permissions: ur.role.permissions.map((p) => String(p)),
+        permissions: ur.role.permissions.map(
+          (p: {
+            action: string;
+            subject: string;
+            condition?: string | undefined;
+          }) => ({
+            action: p.action,
+            subject: p.subject,
+            condition: p.condition,
+          })
+        ),
       })),
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
@@ -170,8 +183,8 @@ export class AuthRepository implements IAuthRepository {
   }
 
   async registerAdmin(
-    options: RegisterAdminDto
-  ): Promise<RegisterAdminResponseDto> {
+    options: RegisterAdminRequest
+  ): Promise<RegisterAdminResponse> {
     const emailTaken = await this.isEmailTaken(options.email);
 
     if (emailTaken) {
@@ -215,7 +228,7 @@ export class AuthRepository implements IAuthRepository {
     });
 
     return {
-      admin: result.createAdmin,
+      admin: transformResponse<Admin>(result.createAdmin),
       user: {
         id: result.createUser.id,
         username: result.createUser.username,
@@ -223,7 +236,17 @@ export class AuthRepository implements IAuthRepository {
         roles: result.createUser.UserOnRole.map((ur) => ({
           id: ur.role.id,
           name: ur.role.name,
-          permissions: ur.role.permissions.map((p) => String(p)),
+          permissions: ur.role.permissions.map(
+            (p: {
+              action: string;
+              subject: string;
+              condition?: string | undefined;
+            }) => ({
+              action: p.action,
+              subject: p.subject,
+              condition: p.condition,
+            })
+          ),
         })),
       },
     };
@@ -247,64 +270,74 @@ export class AuthRepository implements IAuthRepository {
     return { message: `User with ID ${options.id} has been deleted.` };
   }
 
-  async getMe(id: string): Promise<ProfileResponseDto> {
-    let admin: Admin;
-    let customer: Customer;
+  // async getMe(id: string): Promise<ProfileResponse> {
+  //   let admin: Admin;
+  //   let customer: Customer;
 
-    const user = await this.prisma.user.findUnique({
-      where: { id, deletedAt: null },
-      include: {
-        UserOnRole: {
-          include: {
-            role: true,
-          },
-          where: {
-            role: {
-              deletedAt: null,
-            },
-          },
-        },
-      },
-    });
+  //   const user = await this.prisma.user.findUnique({
+  //     where: { id, deletedAt: null },
+  //     include: {
+  //       UserOnRole: {
+  //         include: {
+  //           role: true,
+  //         },
+  //         where: {
+  //           role: {
+  //             deletedAt: null,
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+  //   if (!user) {
+  //     throw new NotFoundException('User not found');
+  //   }
 
-    const roles = user.UserOnRole.map((ur) => ur.role.name);
+  //   const roles = user.UserOnRole.map((ur) => ur.role.name);
 
-    if (roles.includes('ADMIN')) {
-      admin = await this.prisma.admin.findFirst({
-        where: { userId: id, deletedAt: null },
-      });
-    }
+  //   if (roles.includes('ADMIN')) {
+  //     admin = await this.prisma.admin.findFirst({
+  //       where: { userId: id, deletedAt: null },
+  //     });
+  //   }
 
-    if (roles.includes('CUSTOMER')) {
-      customer = await this.prisma.findFirstActive(this.prisma.customer, {
-        where: { userId: id },
-      });
-    }
+  //   if (roles.includes('CUSTOMER')) {
+  //     customer = await this.prisma.findFirstActive(this.prisma.customer, {
+  //       where: { userId: id },
+  //     });
+  //   }
 
-    return {
-      id: admin.id || customer.id,
-      username: user.username,
-      uniqueId: customer.uniqueId || admin.uniqueId,
-      email: user.email,
-      roles: user.UserOnRole.map((ur) => ({
-        id: ur.role.id,
-        name: ur.role.name,
-        permissions: ur.role.permissions.map((p) => String(p)),
-      })),
-      fullName: customer?.fullName || null,
-      dateOfBirth: customer?.dateOfBirth || null,
-      phoneNumber: customer?.phoneNumber || null,
-      address: null,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      deletedAt: user.deletedAt,
-      userId: user.id,
-    };
-  }
+  //   return {
+  //     id: admin.id || customer.id,
+  //     username: user.username,
+  //     uniqueId: customer.uniqueId || admin.uniqueId,
+  //     email: user.email,
+  //     roles: user.UserOnRole.map((ur) => ({
+  //       id: ur.role.id,
+  //       name: ur.role.name,
+  //       permissions: ur.role.permissions.map(
+  //         (p: {
+  //           action: string;
+  //           subject: string;
+  //           condition?: string | undefined;
+  //         }) => ({
+  //           action: p.action,
+  //           subject: p.subject,
+  //           condition: p.condition,
+  //         })
+  //       ),
+  //     })),
+  //     fullName: customer?.fullName || null,
+  //     dateOfBirth: customer?.dateOfBirth || null,
+  //     phoneNumber: customer?.phoneNumber || null,
+  //     address: null,
+  //     createdAt: user.createdAt,
+  //     updatedAt: user.updatedAt,
+  //     deletedAt: user.deletedAt,
+  //     userId: user.id,
+  //   };
+  // }
 
   // Validation methods
   async isEmailTaken(email: string, excludeUserId?: string): Promise<boolean> {
