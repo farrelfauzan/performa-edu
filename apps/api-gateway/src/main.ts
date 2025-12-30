@@ -7,7 +7,6 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { TransformResponseInterceptor } from '@performa-edu/libs';
 import { ConfigService } from '@nestjs/config';
-import { RpcExceptionFilter } from 'libs/src/error-handler/rpc-error-handler';
 
 async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -31,8 +30,6 @@ async function bootstrap(): Promise<NestFastifyApplication> {
     new ClassSerializerInterceptor(reflector),
     new TransformResponseInterceptor()
   );
-
-  app.useGlobalFilters(new RpcExceptionFilter());
 
   const configService = app.get(ConfigService);
 

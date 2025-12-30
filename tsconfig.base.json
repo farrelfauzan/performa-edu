@@ -18,7 +18,6 @@
       "@performa-edu/auth-service/*": ["apps/auth-service/src/*"],
       "@performa-edu/libs": ["libs/src/index.ts"],
       "@performa-edu/proto-types/*": ["types/proto/*"],
-      "@performa-edu/student-service/*": ["apps/student-service/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -51,6 +51,7 @@ model UsersOnRoles {
 // User Management Models
 model Admin {
   id        String       @id @default(cuid())
+  uniqueId  String       @unique @map("unique_id")
   userId    String       @unique @map("user_id")
   email     String       @unique
   active    ActiveStatus @default(ACTIVE)
@@ -61,36 +62,22 @@ model Admin {
   @@map("admins")
 }
 
-model Student {
-  id             String   @id @default(cuid())
-  userId         String   @unique @map("user_id")
-  studentNumber String   @unique @map("student_number")
-  username       String
-  email          String   @unique
-  firstName       String   @map("first_name")
-  lastName       String?  @map("last_name")
-  address        String?
-  phoneNumber    String?  @map("phone_number")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
-
-  @@map("students")
+enum IdentificationType {
+  ID_CARD
+  PASSPORT
+  DRIVER_LICENSE
 }
 
-model Teacher {
-  id             String   @id @default(cuid())
-  userId         String   @unique @map("user_id")
-  teacherNumber String   @unique @map("teacher_number")
-  username       String
-  firstName      String   @map("first_name")
-  lastName       String?  @map("last_name")
-  email          String   @unique
-  address        String?
-  phoneNumber    String?  @map("phone_number")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+model Customer {
+  id                   String              @id @default(cuid())
+  userId               String              @unique @map("user_id")
+  uniqueId             String              @unique @map("unique_id")
+  fullName             String              @map("full_name")
+  phoneNumber          String              @map("phone_number") @db.VarChar(15)
+  dateOfBirth          DateTime?           @map("date_of_birth") @db.Date
+  createdAt            DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt            DateTime?           @map("deleted_at") @db.Timestamptz
 
-  @@map("teachers")
+  @@map("customers")
 }

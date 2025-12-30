@@ -68,7 +68,7 @@ export class DynamicQueryBuilder {
     const modelDelegate = this.prisma[modelProp as keyof PrismaService] as any;
 
     const result = await this.prisma.$transaction([
-      modelDelegate.findMany({
+      modelDelegate.findManyActive({
         skip,
         take,
         where,

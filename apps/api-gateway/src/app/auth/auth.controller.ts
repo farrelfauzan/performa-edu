@@ -25,8 +25,6 @@ import {
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
-  RegisterStudentRequest,
-  RegisterStudentResponse,
 } from 'types/proto/auth-service';
 import { AclAction, AclSubject } from 'libs/src/constant';
 
@@ -53,17 +51,21 @@ export class AuthController implements OnModuleInit {
   async login(@Body() options: LoginDto): Promise<{
     data: LoginResponseDto;
   }> {
-    const response = await handleGrpcCall(
-      this.authService.login(options),
-      this.grpcErrorHandler,
-      'Authentication failed'
-    );
-    return {
-      data: response,
-    };
+    try {
+      const response = await handleGrpcCall(
+        this.authService.login(options),
+        this.grpcErrorHandler,
+        'Authentication failed'
+      );
+
+      return { data: response };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   }
 
-  @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
+  // @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
   @Post('register-admin')
   async registerAdmin(@Body() options: RegisterAdminRequest): Promise<{
     data: RegisterAdminResponse;
@@ -72,20 +74,6 @@ export class AuthController implements OnModuleInit {
       this.authService.registerAdmin(options),
       this.grpcErrorHandler,
       'Admin registration failed'
-    );
-    return { data: response };
-  }
-
-  // @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
-  @PublicRoute()
-  @Post('register-student')
-  async registerStudent(@Body() options: RegisterStudentRequest): Promise<{
-    data: RegisterStudentResponse;
-  }> {
-    const response = await handleGrpcCall(
-      this.authService.registerStudent(options),
-      this.grpcErrorHandler,
-      'Student registration failed'
     );
     return { data: response };
   }

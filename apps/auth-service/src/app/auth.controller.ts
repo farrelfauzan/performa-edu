@@ -10,10 +10,8 @@ import {
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
-  RegisterStudentRequest,
-  RegisterStudentResponse,
-  RegisterTeacherRequest,
-  RegisterTeacherResponse,
+  RegisterCustomerRequest,
+  RegisterCustomerResponse,
 } from 'types/proto/auth-service';
 import { AuthService } from './auth.service';
 import { GrpcMethod } from '@nestjs/microservices';
@@ -45,25 +43,21 @@ export class AuthController implements AuthServiceController {
     return await this.authService.registerAdmin(request);
   }
 
-  async registerStudent(
-    request: RegisterStudentRequest
-  ): Promise<RegisterStudentResponse> {
-    return await this.authService.registerStudent(request);
-  }
-
-  async registerTeacher(
-    request: RegisterTeacherRequest
-  ): Promise<RegisterTeacherResponse> {
-    return await this.authService.registerTeacher(request);
-  }
-
   async getMe(request: ProfileRequest): Promise<ProfileResponse> {
-    const profile = await this.authService.getMe(request.userId);
-    return {
-      ...profile,
-      createdAt: profile.createdAt.toISOString(),
-      updatedAt: profile.updatedAt.toISOString(),
-      deletedAt: profile.deletedAt ? profile.deletedAt.toISOString() : null,
-    };
+    // const profile = await this.authService.getMe(request.userId);
+    // return {
+    //   ...profile,
+    //   createdAt: profile.createdAt.toISOString(),
+    //   updatedAt: profile.updatedAt.toISOString(),
+    //   deletedAt: profile.deletedAt ? profile.deletedAt.toISOString() : null,
+    // };
+
+    throw new Error('Method not implemented.');
+  }
+
+  async registerCustomer(
+    request: RegisterCustomerRequest
+  ): Promise<RegisterCustomerResponse> {
+    throw new Error('Method not implemented.');
   }
 }

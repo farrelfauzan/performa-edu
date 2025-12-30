@@ -4,10 +4,6 @@ import {
   UserType,
   RegisterAdminDto,
   RegisterAdminResponseDto,
-  RegisterStudentDto,
-  RegisterStudentResponseDto,
-  RegisterTeacherDto,
-  RegisterTeacherResponseDto,
   ProfileResponseDto,
 } from '@performa-edu/libs';
 
@@ -25,12 +21,6 @@ export interface IAuthRepository {
   findUserByEmailOrUsername(identifier: string): Promise<Partial<User> | null>;
   findUserWithRoles(id: string): Promise<UserWithRoles | null>;
   registerAdmin(data: RegisterAdminDto): Promise<RegisterAdminResponseDto>;
-  registerStudent(
-    data: RegisterStudentDto
-  ): Promise<RegisterStudentResponseDto>;
-  registerTeacher(
-    data: RegisterTeacherDto
-  ): Promise<RegisterTeacherResponseDto>;
 
   // Get Me
   getMe(id: string): Promise<ProfileResponseDto>;

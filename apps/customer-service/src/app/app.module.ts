@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
-import { StudentController } from './student.controller';
-import { StudentService } from './student.service';
-import { StudentRepository } from './repositories/student.repository';
+import { CustomerController } from './customer.controller';
+import { CustomerService } from './customer.service';
+import { DynamicQueryBuilder, PrismaModule } from '@performa-edu/libs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AUTHSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/auth-service';
 import { join } from 'path';
-import {
-  DynamicQueryBuilder,
-  GrpcErrorHandler,
-  PrismaModule,
-} from '@performa-edu/libs';
+import { CustomerRepository } from './repositories/customer.repository';
 
 @Module({
   imports: [
@@ -26,12 +22,7 @@ import {
       },
     ]),
   ],
-  controllers: [StudentController],
-  providers: [
-    StudentService,
-    StudentRepository,
-    GrpcErrorHandler,
-    DynamicQueryBuilder,
-  ],
+  controllers: [CustomerController],
+  providers: [CustomerService, CustomerRepository, DynamicQueryBuilder],
 })
 export class AppModule {}

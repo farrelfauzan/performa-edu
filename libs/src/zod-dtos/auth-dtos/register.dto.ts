@@ -22,26 +22,6 @@ const RegisterSchema = z.object({
 
 export const RegisterAdminSchema = RegisterSchema;
 
-export const RegisterStudentSchema = RegisterSchema.extend({
-  studentNumber: z.string().min(1, 'Student number is required'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-});
-
-export const RegisterTeacherSchema = RegisterSchema.extend({
-  teacherNumber: z.string().min(1, 'Teacher number is required'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-});
-
 export class RegisterAdminDto extends createZodDto(RegisterAdminSchema) {}
-export class RegisterStudentDto extends createZodDto(RegisterStudentSchema) {}
-export class RegisterTeacherDto extends createZodDto(RegisterTeacherSchema) {}
 
 export type RegisterAdminType = z.infer<typeof RegisterAdminSchema>;
-export type RegisterStudentType = z.infer<typeof RegisterStudentSchema>;
-export type RegisterTeacherType = z.infer<typeof RegisterTeacherSchema>;

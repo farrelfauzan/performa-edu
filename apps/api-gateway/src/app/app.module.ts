@@ -11,9 +11,8 @@ import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { ClsModule } from 'nestjs-cls';
-import { StudentController } from './student/student.controller';
-import { STUDENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/student-service';
 import { GrpcErrorHandler } from '@performa-edu/libs';
+import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer-service';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -39,19 +38,19 @@ import { GrpcErrorHandler } from '@performa-edu/libs';
         },
       },
       {
-        name: STUDENTSERVICE_PACKAGE_NAME,
+        name: CUSTOMERSERVICE_PACKAGE_NAME,
         transport: Transport.GRPC,
         options: {
-          package: STUDENTSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/student-service.proto'),
-          url: `${process.env.STUDENT_SERVICE_GRPC_HOST || 'localhost'}:${
-            process.env.STUDENT_SERVICE_GRPC_PORT || '50052'
+          package: CUSTOMERSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/customer-service.proto'),
+          url: `${process.env.CUSTOMER_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.CUSTOMER_SERVICE_GRPC_PORT || '50052'
           }`,
         },
       },
     ]),
   ],
-  controllers: [AppController, AuthController, StudentController],
+  controllers: [AppController, AuthController],
   providers: [
     AppService,
     GrpcErrorHandler,

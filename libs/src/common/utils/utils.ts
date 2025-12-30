@@ -21,3 +21,35 @@ export function cleanGrpcErrorMessage(message: string): string {
   const match = message.match(/^\d+\s+\w+:\s*(.+)$/);
   return match ? match[1] : message;
 }
+
+export function generateUniqueId(prefix: string): string {
+  const timestamp = Date.now().toString(36);
+  const randomString = Math.random().toString(36).substring(2, 8);
+  return `${prefix}_${timestamp}_${randomString}`;
+}
+
+export function transformResponse<T>(data: T) {
+  const transformDateToString = (obj: any): any => {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+    if (obj instanceof Date) {
+      return obj.toISOString();
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(transformDateToString);
+    }
+    if (typeof obj === 'object') {
+      const transformedObj: any = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          transformedObj[key] = transformDateToString(obj[key]);
+        }
+      }
+      return transformedObj;
+    }
+    return obj;
+  };
+
+  return transformDateToString(data);
+}
