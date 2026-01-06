@@ -7,17 +7,13 @@ import {
   DeleteUserByIdResponse,
   LoginRequest,
   LoginResponse,
+  ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
 } from 'types/proto/auth-service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import {
-  Helper,
-  ProfileResponseDto,
-  TokenPayloadDto,
-  UserType,
-} from '@performa-edu/libs';
+import { Helper, TokenPayloadDto, UserType } from '@performa-edu/libs';
 import { InvalidPasswordError, UserNotFoundError } from './errors/auth-errors';
 
 @Injectable()
@@ -104,10 +100,11 @@ export class AuthService {
     };
   }
 
-  // async getMe(id: string): Promise<ProfileResponseDto> {
-  //   const profile = await this.authRepository.getMe(id);
-  //   return profile;
-  // }
+  async getMe(id: string): Promise<ProfileResponse> {
+    console.log('AuthService.getMe called with id:', id);
+    const profile = await this.authRepository.getMe(id);
+    return profile;
+  }
 
   async getUserById(id: string): Promise<{
     data: UserType;

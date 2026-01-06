@@ -49,15 +49,8 @@ export class AuthController implements AuthServiceController {
   }
 
   async getMe(request: ProfileRequest): Promise<ProfileResponse> {
-    // const profile = await this.authService.getMe(request.userId);
-    // return {
-    //   ...profile,
-    //   createdAt: profile.createdAt.toISOString(),
-    //   updatedAt: profile.updatedAt.toISOString(),
-    //   deletedAt: profile.deletedAt ? profile.deletedAt.toISOString() : null,
-    // };
-
-    throw new Error('Method not implemented.');
+    const profile = await this.authService.getMe(request.userId);
+    return profile;
   }
 
   async registerCustomer(
@@ -78,6 +71,6 @@ export class AuthController implements AuthServiceController {
   async deleteUserById(
     request: DeleteUserByIdRequest
   ): Promise<DeleteUserByIdResponse> {
-    return this.authService.deleteUserById(request);
+    return await this.authService.deleteUserById(request);
   }
 }

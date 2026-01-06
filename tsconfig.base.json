@@ -15,11 +15,11 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@performa-edu/auth-service/*": ["apps/auth-service/src/*"],
       "@performa-edu/api-gateway/*": ["apps/api-gateway/src/*"],
+      "@performa-edu/auth-service/*": ["apps/auth-service/src/*"],
       "@performa-edu/customer-service/*": ["apps/customer-service/src/*"],
       "@performa-edu/libs": ["libs/src/index.ts"],
-      "@performa-edu/proto-types/*": ["types/proto/*"],
+      "@performa-edu/proto-types/*": ["types/proto/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

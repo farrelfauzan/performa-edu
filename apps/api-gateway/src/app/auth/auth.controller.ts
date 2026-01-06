@@ -5,7 +5,6 @@ import {
   Inject,
   OnModuleInit,
   Post,
-  Req,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import {

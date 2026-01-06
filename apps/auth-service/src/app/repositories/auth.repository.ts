@@ -7,6 +7,7 @@ import {
   UserType,
   generateUniqueId,
   transformResponse,
+  Customer,
 } from '@performa-edu/libs';
 import {
   IAuthRepository,
@@ -34,9 +35,6 @@ import {
 @Injectable()
 export class AuthRepository implements IAuthRepository {
   constructor(private readonly prisma: PrismaService) {}
-  getMe(id: string): Promise<ProfileResponse> {
-    throw new Error('Method not implemented.');
-  }
 
   // User operations
   async findUserById(id: string): Promise<UserType | null> {
@@ -270,74 +268,80 @@ export class AuthRepository implements IAuthRepository {
     return { message: `User with ID ${options.id} has been deleted.` };
   }
 
-  // async getMe(id: string): Promise<ProfileResponse> {
-  //   let admin: Admin;
-  //   let customer: Customer;
+  async getMe(id: string): Promise<ProfileResponse> {
+    let admin: Admin;
+    let customer: Customer;
 
-  //   const user = await this.prisma.user.findUnique({
-  //     where: { id, deletedAt: null },
-  //     include: {
-  //       UserOnRole: {
-  //         include: {
-  //           role: true,
-  //         },
-  //         where: {
-  //           role: {
-  //             deletedAt: null,
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
+    const user = await this.prisma.user.findUnique({
+      where: { id, deletedAt: null },
+      include: {
+        UserOnRole: {
+          include: {
+            role: true,
+          },
+          where: {
+            role: {
+              deletedAt: null,
+            },
+          },
+        },
+      },
+    });
 
-  //   if (!user) {
-  //     throw new NotFoundException('User not found');
-  //   }
+    if (!user) {
+      UserNotFoundError(id);
+    }
 
-  //   const roles = user.UserOnRole.map((ur) => ur.role.name);
+    const roles = user.UserOnRole.map((ur) => ur.role.name);
 
-  //   if (roles.includes('ADMIN')) {
-  //     admin = await this.prisma.admin.findFirst({
-  //       where: { userId: id, deletedAt: null },
-  //     });
-  //   }
+    if (roles.includes('ADMIN')) {
+      admin = await this.prisma.findFirstActive<Admin>(this.prisma.admin, {
+        where: { userId: id },
+      });
+    }
 
-  //   if (roles.includes('CUSTOMER')) {
-  //     customer = await this.prisma.findFirstActive(this.prisma.customer, {
-  //       where: { userId: id },
-  //     });
-  //   }
+    if (roles.includes('CUSTOMER')) {
+      customer = await this.prisma.findFirstActive<Customer>(
+        this.prisma.customer,
+        {
+          where: { userId: id },
+        }
+      );
+    }
 
-  //   return {
-  //     id: admin.id || customer.id,
-  //     username: user.username,
-  //     uniqueId: customer.uniqueId || admin.uniqueId,
-  //     email: user.email,
-  //     roles: user.UserOnRole.map((ur) => ({
-  //       id: ur.role.id,
-  //       name: ur.role.name,
-  //       permissions: ur.role.permissions.map(
-  //         (p: {
-  //           action: string;
-  //           subject: string;
-  //           condition?: string | undefined;
-  //         }) => ({
-  //           action: p.action,
-  //           subject: p.subject,
-  //           condition: p.condition,
-  //         })
-  //       ),
-  //     })),
-  //     fullName: customer?.fullName || null,
-  //     dateOfBirth: customer?.dateOfBirth || null,
-  //     phoneNumber: customer?.phoneNumber || null,
-  //     address: null,
-  //     createdAt: user.createdAt,
-  //     updatedAt: user.updatedAt,
-  //     deletedAt: user.deletedAt,
-  //     userId: user.id,
-  //   };
-  // }
+    return {
+      id: roles.includes('CUSTOMER')
+        ? customer.id
+        : roles.includes('ADMIN')
+        ? admin.id
+        : null,
+      username: user.username,
+      uniqueId: customer.uniqueId || admin.uniqueId,
+      email: user.email,
+      active: user.active,
+      roles: user.UserOnRole.map((ur) => ({
+        id: ur.role.id,
+        name: ur.role.name,
+        permissions: ur.role.permissions.map(
+          (p: {
+            action: string;
+            subject: string;
+            condition?: string | undefined;
+          }) => ({
+            action: p.action,
+            subject: p.subject,
+          })
+        ),
+      })),
+      fullName: customer?.fullName || null,
+      dateOfBirth: customer?.dateOfBirth.toISOString() || null,
+      phoneNumber: customer?.phoneNumber || null,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+      deletedAt: user.deletedAt?.toISOString() ?? null,
+      userId: user.id,
+    };
+  }
 
   // Validation methods
   async isEmailTaken(email: string, excludeUserId?: string): Promise<boolean> {
