@@ -89,6 +89,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.21",
+    "@types/multer": "^2.0.0",
     "@types/node": "20.19.9",
     "@types/pg": "^8.15.6",
     "@types/react": "19.0.0",
