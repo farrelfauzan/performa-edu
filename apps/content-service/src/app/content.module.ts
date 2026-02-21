@@ -9,6 +9,7 @@ import {
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { ContentRepository } from './repositories/content.repository';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { ContentRepository } from './repositories/content.repository';
         transport: Transport.GRPC,
         options: {
           package: CONTENTSERVICE_PACKAGE_NAME,
-          protoPath: __dirname + '/../../proto/content-service.proto',
+          protoPath: join(process.cwd(), 'proto/content-service.proto'),
           url: `${process.env.CONTENT_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.CONTENT_SERVICE_GRPC_PORT || '50053'
           }`,
