@@ -79,9 +79,10 @@ message Content {
     string body = 4;
     ContentStatus status = 5;
     optional string published_at = 6;
-    string created_at = 7;
-    string updated_at = 8;
-    optional string deleted_at = 9;
+    repeated ContentMedia content_medias = 7;
+    string created_at = 8;
+    string updated_at = 9;
+    optional string deleted_at = 10;
 }
 
 message GetAllContentsRequest {

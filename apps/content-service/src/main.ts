@@ -22,6 +22,11 @@ async function bootstrap() {
         package: [CONTENTSERVICE_PACKAGE_NAME],
         protoPath: [join(process.cwd(), 'proto/content-service.proto')],
         url: `${grpcHost}:${grpcPort}`,
+        loader: {
+          defaults: true,
+          arrays: true,
+          objects: true,
+        },
       },
     }
   );

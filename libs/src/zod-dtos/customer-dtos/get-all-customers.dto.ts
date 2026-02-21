@@ -1,5 +1,5 @@
 import z from 'zod';
-import { pageOptionsSchema } from 'libs/src/common';
+import { pageOptionsSchema } from '../../common';
 import { createZodDto } from 'nestjs-zod/dto';
 
 export const GetAllCustomersSchema = pageOptionsSchema.extend({

@@ -53,6 +53,12 @@ async function seedRoles() {
         createPermission(AclSubject.CUSTOMER, AclAction.UPDATE),
         createPermission(AclSubject.CUSTOMER, AclAction.DELETE),
         createPermission(AclSubject.CUSTOMER, AclAction.VIEW),
+        // Content management
+        createPermission(AclSubject.CONTENT, AclAction.CREATE),
+        createPermission(AclSubject.CONTENT, AclAction.READ),
+        createPermission(AclSubject.CONTENT, AclAction.UPDATE),
+        createPermission(AclSubject.CONTENT, AclAction.DELETE),
+        createPermission(AclSubject.CONTENT, AclAction.VIEW),
       ],
     },
     {
@@ -65,6 +71,11 @@ async function seedRoles() {
         // Access customer resources
         createPermission(AclSubject.CUSTOMER, AclAction.READ),
         createPermission(AclSubject.CUSTOMER, AclAction.VIEW),
+        createPermission(AclSubject.CONTENT, AclAction.READ),
+        createPermission(AclSubject.CONTENT, AclAction.VIEW),
+        createPermission(AclSubject.CONTENT, AclAction.CREATE),
+        createPermission(AclSubject.CONTENT, AclAction.UPDATE),
+        createPermission(AclSubject.CONTENT, AclAction.DELETE),
       ],
     },
   ];

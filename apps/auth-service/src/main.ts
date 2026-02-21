@@ -25,6 +25,11 @@ async function bootstrap() {
           join(process.cwd(), 'proto/auth-service.proto'),
           join(process.cwd(), 'proto/auth-service-health.proto'),
         ],
+        loader: {
+          defaults: true,
+          arrays: true,
+          objects: true,
+        },
         url: `${grpcHost}:${grpcPort}`,
         onLoadPackageDefinition: (pkg, server) => {
           // Initialize health check implementation

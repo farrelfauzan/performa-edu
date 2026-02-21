@@ -13,7 +13,9 @@ import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { ClsModule } from 'nestjs-cls';
 import { GrpcErrorHandler } from '@performa-edu/libs';
 import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer-service';
+import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { CustomerController } from './customer/customer.controller';
+import { ContentController } from './content/content.controller';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -49,9 +51,25 @@ import { CustomerController } from './customer/customer.controller';
           }`,
         },
       },
+      {
+        name: CONTENTSERVICE_PACKAGE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          package: CONTENTSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/content-service.proto'),
+          url: `${process.env.CONTENT_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.CONTENT_SERVICE_GRPC_PORT || '50053'
+          }`,
+        },
+      },
     ]),
   ],
-  controllers: [AppController, AuthController, CustomerController],
+  controllers: [
+    AppController,
+    AuthController,
+    CustomerController,
+    ContentController,
+  ],
   providers: [
     AppService,
     GrpcErrorHandler,

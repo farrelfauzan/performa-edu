@@ -19,33 +19,32 @@ import {
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
-  async getAllContents(options: GetAllContentsRequest): Promise<{
-    data: GetAllContentsResponse['contents'];
-    meta: GetAllContentsResponse['pageMeta'];
-  }> {
+  async getAllContents(
+    options: GetAllContentsRequest
+  ): Promise<GetAllContentsResponse> {
     const { data, meta } = await this.contentService.getAllContents(options);
-    return { data, meta };
+    return { contents: data, pageMeta: meta };
   }
 
-  async getContentById(options: GetContentByIdRequest): Promise<{
-    data: GetContentByIdResponse['content'];
-  }> {
+  async getContentById(
+    options: GetContentByIdRequest
+  ): Promise<GetContentByIdResponse> {
     const { data } = await this.contentService.getContentById(options);
-    return { data };
+    return { content: data, media: [] };
   }
 
-  async createContent(options: CreateContentRequest): Promise<{
-    data: CreateContentResponse['content'];
-  }> {
+  async createContent(
+    options: CreateContentRequest
+  ): Promise<CreateContentResponse> {
     const { data } = await this.contentService.createContent(options);
-    return { data };
+    return { content: data };
   }
 
-  async updateContent(options: UpdateContentRequest): Promise<{
-    data: UpdateContentResponse['content'];
-  }> {
+  async updateContent(
+    options: UpdateContentRequest
+  ): Promise<UpdateContentResponse> {
     const { data } = await this.contentService.updateContent(options);
-    return { data };
+    return { content: data };
   }
 
   async deleteContent(

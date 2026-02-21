@@ -14,6 +14,7 @@ import {
 } from '@performa-edu/proto-types/content-service';
 import {
   Content,
+  ContentWithMedia,
   DynamicQueryBuilder,
   PageMeta,
   PrismaService,
@@ -39,6 +40,9 @@ export class ContentRepository implements IContentRepository {
         where: {
           deletedAt: null,
         },
+        include: {
+          contentMedias: true,
+        },
       }
     );
 
@@ -49,7 +53,7 @@ export class ContentRepository implements IContentRepository {
     };
 
     return {
-      data: transformResponse<Content[]>(content.data),
+      data: transformResponse<ContentWithMedia[]>(content.data),
       meta,
     };
   }
