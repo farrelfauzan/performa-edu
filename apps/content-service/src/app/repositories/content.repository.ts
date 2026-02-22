@@ -14,6 +14,7 @@ import {
 } from '@performa-edu/proto-types/content-service';
 import {
   Content,
+  ContentStatusEnum,
   ContentWithMedia,
   DynamicQueryBuilder,
   PageMeta,
@@ -83,7 +84,7 @@ export class ContentRepository implements IContentRepository {
         userId: options.userId,
         title: options.title,
         body: options.body,
-        status: 'PUBLISHED',
+        status: Object.values(ContentStatusEnum)[options.status],
       },
     });
 

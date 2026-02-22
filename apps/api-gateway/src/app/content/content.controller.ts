@@ -19,11 +19,12 @@ import {
   GrpcErrorHandler,
   handleGrpcCall,
   LoggedUserType,
+  ProtoHelper,
   UpdateContentDto,
 } from '@performa-edu/libs';
-import { ContentHelper } from '../helpers/content.helpers';
 import { AclAction, AclSubject } from 'libs/src/constant';
 import {
+  Content,
   CONTENT_SERVICE_NAME,
   CONTENTSERVICE_PACKAGE_NAME,
   ContentServiceClient,
@@ -65,7 +66,13 @@ export class ContentController implements OnModuleInit {
     );
 
     return {
-      data: ContentHelper.toJSONMany(result.contents),
+      data: ProtoHelper.normalizeMany<Content>(result.contents, {
+        defaults: {
+          contentMedias: [],
+          deletedAt: null,
+          publishedAt: null,
+        },
+      }),
       meta: result.pageMeta,
     };
   }
@@ -81,12 +88,15 @@ export class ContentController implements OnModuleInit {
       'Failed to fetch content by ID'
     );
 
-    // Normalize content - proto3 omits empty arrays and undefined optional fields
-    const normalizedContent = ContentHelper.toJSON(result.content);
-
     return {
       data: {
-        content: normalizedContent,
+        content: ProtoHelper.normalize<Content>(result.content, {
+          defaults: {
+            contentMedias: [],
+            deletedAt: null,
+            publishedAt: null,
+          },
+        }),
         media: result.media || [],
       },
     };
@@ -110,10 +120,15 @@ export class ContentController implements OnModuleInit {
       'Failed to create content'
     );
 
-    // Normalize content - proto3 omits empty arrays and undefined optional fields
-    const normalizedContent = ContentHelper.toJSON(result.content);
-
-    return { data: normalizedContent };
+    return {
+      data: ProtoHelper.normalize<Content>(result.content, {
+        defaults: {
+          contentMedias: [],
+          deletedAt: null,
+          publishedAt: null,
+        },
+      }),
+    };
   }
 
   @Auth([{ action: AclAction.UPDATE, subject: AclSubject.CONTENT }])
@@ -134,10 +149,15 @@ export class ContentController implements OnModuleInit {
       'Failed to update content'
     );
 
-    // Normalize content - proto3 omits empty arrays and undefined optional fields
-    const normalizedContent = ContentHelper.toJSON(result.content);
-
-    return { data: normalizedContent };
+    return {
+      data: ProtoHelper.normalize<Content>(result.content, {
+        defaults: {
+          contentMedias: [],
+          deletedAt: null,
+          publishedAt: null,
+        },
+      }),
+    };
   }
 
   @Auth([{ action: AclAction.DELETE, subject: AclSubject.CONTENT }])

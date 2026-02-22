@@ -27,7 +27,6 @@ export const CreateCustomerResponseSchema = z
     }),
     customer: z.object({
       id: z.string(),
-      userId: z.string().min(1, 'User ID is required'),
       uniqueId: z.string().min(1, 'Unique ID is required'),
       fullName: z.string().min(1, 'Full name is required'),
       phoneNumber: z.string().min(1, 'Phone number is required'),

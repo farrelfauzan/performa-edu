@@ -12,11 +12,9 @@ import {
 import { ClientGrpc } from '@nestjs/microservices';
 import {
   Auth,
-  DefaultsSchema,
   GetAllCustomerDto,
   GrpcErrorHandler,
   handleGrpcCall,
-  NestedDefaults,
   ProtoHelper,
   UpdateCustomerDto,
 } from '@performa-edu/libs';
@@ -28,33 +26,9 @@ import {
   DeleteCustomerResponse,
   GetAllCustomersResponse,
   GetCustomerByIdResponse,
-  Role,
   UpdateCustomerResponse,
-  User,
 } from '@performa-edu/proto-types/customer-service';
 import { AclAction, AclSubject } from 'libs/src/constant';
-
-const roleDefaults: DefaultsSchema<Role> = {
-  permissions: [],
-};
-
-const userDefaults: DefaultsSchema<User> = {
-  roles: [],
-};
-
-const userNested: NestedDefaults<User> = {
-  roles: { defaults: roleDefaults },
-};
-
-const customerDefaults: DefaultsSchema<Customer> = {
-  dateOfBirth: null,
-  user: null,
-  deletedAt: null,
-};
-
-const customerNested: NestedDefaults<Customer> = {
-  user: { defaults: userDefaults, nested: userNested },
-};
 
 @Controller({
   version: '1',
@@ -94,8 +68,11 @@ export class CustomerController implements OnModuleInit {
 
     return {
       data: ProtoHelper.normalizeMany<Customer>(result.customers, {
-        defaults: customerDefaults,
-        nested: customerNested,
+        defaults: {
+          deletedAt: null,
+          dateOfBirth: null,
+          user: null,
+        },
       }),
       meta: result.meta,
     };
@@ -119,8 +96,11 @@ export class CustomerController implements OnModuleInit {
 
     return {
       data: ProtoHelper.normalize<Customer>(result.customer, {
-        defaults: customerDefaults,
-        nested: customerNested,
+        defaults: {
+          deletedAt: null,
+          dateOfBirth: null,
+          user: null,
+        },
       }),
     };
   }
@@ -149,8 +129,11 @@ export class CustomerController implements OnModuleInit {
 
     return {
       data: ProtoHelper.normalize<Customer>(result.customer, {
-        defaults: customerDefaults,
-        nested: customerNested,
+        defaults: {
+          deletedAt: null,
+          dateOfBirth: null,
+          user: null,
+        },
       }),
     };
   }
