@@ -13,7 +13,6 @@ export function handleGrpcError<T>(
     source.pipe(
       catchError((error) => {
         errorHandler.handleGrpcError(error, defaultMessage);
-        return throwError(() => error); // This line won't be reached due to the throw above
       })
     );
 }

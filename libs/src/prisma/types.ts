@@ -61,3 +61,8 @@ export type IncludeInput<N extends ModelName = ModelName> =
   'include' extends keyof FindManyArgs<N>
     ? NonNullable<FindManyArgs<N>['include']>
     : never;
+
+// Content types with relations
+export type ContentWithMedia = Prisma.ContentGetPayload<{
+  include: { contentMedias: true };
+}>;

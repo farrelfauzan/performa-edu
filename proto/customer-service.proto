@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package customerservice;
+
+// Customer Service Definition
+service CustomerService {
+    // Customer CRUD Operations
+    rpc CreateCustomer(CreateCustomerRequest) returns (CreateCustomerResponse);
+    // Retrieve a customer by their unique ID
+    rpc GetCustomerById(GetCustomerByIdRequest) returns (GetCustomerByIdResponse);
+    // Update an existing customer's information
+    rpc UpdateCustomer(UpdateCustomerRequest) returns (UpdateCustomerResponse);
+    // Delete a customer by their unique ID
+    rpc DeleteCustomer(DeleteCustomerRequest) returns (DeleteCustomerResponse);
+    // Retrieve all customers with optional pagination, filtering, and sorting
+    rpc GetAllCustomers(GetAllCustomersRequest) returns (GetAllCustomersResponse);
+}
+
+enum Order {
+    ASC = 0;
+    DESC = 1;
+}
+
+message Filter {
+    map<string, string> values = 1;
+}
+
+message PageMeta {
+    int32 page = 1;
+    int32 page_size = 2;
+    int32 count = 3;
+    optional int32 page_count = 4;
+    optional bool has_previous_page = 5;
+    optional bool has_next_page = 6;
+}
+
+message Role {
+    string id = 1;
+    string name = 2;
+    repeated string permissions = 3;
+}
+
+message User {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+    repeated Role roles = 4;
+}
+
+message Customer {
+    string id = 1;
+    string unique_id = 2;
+    string full_name = 3;
+    string phone_number = 4;
+    optional string date_of_birth = 5;
+    optional User user = 6;
+    string created_at = 7;
+    string updated_at = 8;
+    optional string deleted_at = 9;
+}
+
+message CreateCustomerRequest {
+    string user_id = 1;
+    string full_name = 2;
+    string phone_number = 3;
+    optional string date_of_birth = 4;
+}
+
+message CreateCustomerResponse {
+    Customer customer = 1;
+}
+
+message GetCustomerByIdRequest {
+    string id = 1;
+}
+
+message GetCustomerByIdResponse {
+    Customer customer = 1;
+}
+
+message UpdateCustomerRequest {
+    string id = 1;
+    optional string full_name = 2;
+    optional string phone_number = 3;
+    optional string date_of_birth = 4;
+}
+
+message UpdateCustomerResponse {
+    Customer customer = 1;
+}
+
+message DeleteCustomerRequest {
+    string id = 1;
+}
+
+message DeleteCustomerResponse {
+    string message = 1;
+}
+
+message GetAllCustomersRequest {
+    optional int32 page = 1;
+    optional int32 page_size = 2;
+    optional Order order = 3;
+    optional int32 skip = 4;
+    optional Filter filter = 5;
+    optional string sort_by = 6;
+    optional string query = 7;
+    optional string search = 8;
+}
+
+message GetAllCustomersResponse {
+    repeated Customer customers = 1;
+    PageMeta meta = 2;
+}
+

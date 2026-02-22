@@ -8,8 +8,26 @@ const prisma = new PrismaClient({
   }),
 });
 
-function createPermission(subject: AclSubject, action: AclAction): string {
-  return `${subject}:${action}`;
+interface Permission {
+  action: string;
+  subject: string;
+  condition?: Record<string, any>;
+  [key: string]: any;
+}
+
+function createPermission(
+  subject: AclSubject,
+  action: AclAction,
+  condition?: Record<string, any>
+): Permission {
+  const permission: Permission = {
+    action,
+    subject,
+  };
+  if (condition) {
+    permission.condition = condition;
+  }
+  return permission;
 }
 
 async function seedRoles() {
@@ -29,92 +47,35 @@ async function seedRoles() {
         // User management
         createPermission(AclSubject.USER, AclAction.READ),
         createPermission(AclSubject.USER, AclAction.VIEW),
-        // Student management
-        createPermission(AclSubject.STUDENT, AclAction.CREATE),
-        createPermission(AclSubject.STUDENT, AclAction.READ),
-        createPermission(AclSubject.STUDENT, AclAction.UPDATE),
-        createPermission(AclSubject.STUDENT, AclAction.DELETE),
-        createPermission(AclSubject.STUDENT, AclAction.VIEW),
-        // Teacher management
-        createPermission(AclSubject.TEACHER, AclAction.CREATE),
-        createPermission(AclSubject.TEACHER, AclAction.READ),
-        createPermission(AclSubject.TEACHER, AclAction.UPDATE),
-        createPermission(AclSubject.TEACHER, AclAction.DELETE),
-        createPermission(AclSubject.TEACHER, AclAction.VIEW),
-        // Academic management
-        createPermission(AclSubject.ACADEMIC_YEAR, AclAction.MANAGE),
-        createPermission(AclSubject.CLASS, AclAction.MANAGE),
-        createPermission(AclSubject.SUBJECTS, AclAction.MANAGE),
-        // Reports
-        createPermission(AclSubject.REPORT, AclAction.READ),
-        createPermission(AclSubject.REPORT, AclAction.VIEW),
+        // Customer management
+        createPermission(AclSubject.CUSTOMER, AclAction.CREATE),
+        createPermission(AclSubject.CUSTOMER, AclAction.READ),
+        createPermission(AclSubject.CUSTOMER, AclAction.UPDATE),
+        createPermission(AclSubject.CUSTOMER, AclAction.DELETE),
+        createPermission(AclSubject.CUSTOMER, AclAction.VIEW),
+        // Content management
+        createPermission(AclSubject.CONTENT, AclAction.CREATE),
+        createPermission(AclSubject.CONTENT, AclAction.READ),
+        createPermission(AclSubject.CONTENT, AclAction.UPDATE),
+        createPermission(AclSubject.CONTENT, AclAction.DELETE),
+        createPermission(AclSubject.CONTENT, AclAction.VIEW),
       ],
     },
     {
-      name: 'TEACHER',
+      name: 'CUSTOMER',
       permissions: [
-        // Student view only
-        createPermission(AclSubject.STUDENT, AclAction.READ),
-        createPermission(AclSubject.STUDENT, AclAction.VIEW),
-        // Class management
-        createPermission(AclSubject.CLASS, AclAction.READ),
-        createPermission(AclSubject.CLASS, AclAction.VIEW),
-        createPermission(AclSubject.CLASS, AclAction.UPDATE),
-        // Subject management
-        createPermission(AclSubject.SUBJECTS, AclAction.READ),
-        createPermission(AclSubject.SUBJECTS, AclAction.VIEW),
-        createPermission(AclSubject.SUBJECTS, AclAction.UPDATE),
-        // Assignment management
-        createPermission(AclSubject.ASSIGNMENT, AclAction.CREATE),
-        createPermission(AclSubject.ASSIGNMENT, AclAction.READ),
-        createPermission(AclSubject.ASSIGNMENT, AclAction.UPDATE),
-        createPermission(AclSubject.ASSIGNMENT, AclAction.DELETE),
-        createPermission(AclSubject.ASSIGNMENT, AclAction.VIEW),
-        // Grade management
-        createPermission(AclSubject.GRADE, AclAction.CREATE),
-        createPermission(AclSubject.GRADE, AclAction.READ),
-        createPermission(AclSubject.GRADE, AclAction.UPDATE),
-        createPermission(AclSubject.GRADE, AclAction.VIEW),
-        // Exam management
-        createPermission(AclSubject.EXAM, AclAction.CREATE),
-        createPermission(AclSubject.EXAM, AclAction.READ),
-        createPermission(AclSubject.EXAM, AclAction.UPDATE),
-        createPermission(AclSubject.EXAM, AclAction.DELETE),
-        createPermission(AclSubject.EXAM, AclAction.VIEW),
-        // Attendance
-        createPermission(AclSubject.ATTENDANCE, AclAction.CREATE),
-        createPermission(AclSubject.ATTENDANCE, AclAction.READ),
-        createPermission(AclSubject.ATTENDANCE, AclAction.UPDATE),
-        createPermission(AclSubject.ATTENDANCE, AclAction.VIEW),
-        // Reports
-        createPermission(AclSubject.REPORT, AclAction.READ),
-        createPermission(AclSubject.REPORT, AclAction.VIEW),
-      ],
-    },
-    {
-      name: 'STUDENT',
-      permissions: [
-        // View own information
+        // Self management
         createPermission(AclSubject.USER, AclAction.READ),
         createPermission(AclSubject.USER, AclAction.VIEW),
-        // View class information
-        createPermission(AclSubject.CLASS, AclAction.READ),
-        createPermission(AclSubject.CLASS, AclAction.VIEW),
-        // View subjects
-        createPermission(AclSubject.SUBJECTS, AclAction.READ),
-        createPermission(AclSubject.SUBJECTS, AclAction.VIEW),
-        // View assignments
-        createPermission(AclSubject.ASSIGNMENT, AclAction.READ),
-        createPermission(AclSubject.ASSIGNMENT, AclAction.VIEW),
-        // View grades
-        createPermission(AclSubject.GRADE, AclAction.READ),
-        createPermission(AclSubject.GRADE, AclAction.VIEW),
-        // View exams
-        createPermission(AclSubject.EXAM, AclAction.READ),
-        createPermission(AclSubject.EXAM, AclAction.VIEW),
-        // View attendance
-        createPermission(AclSubject.ATTENDANCE, AclAction.READ),
-        createPermission(AclSubject.ATTENDANCE, AclAction.VIEW),
+        createPermission(AclSubject.USER, AclAction.UPDATE, { id: '{{ id }}' }),
+        // Access customer resources
+        createPermission(AclSubject.CUSTOMER, AclAction.READ),
+        createPermission(AclSubject.CUSTOMER, AclAction.VIEW),
+        createPermission(AclSubject.CONTENT, AclAction.READ),
+        createPermission(AclSubject.CONTENT, AclAction.VIEW),
+        createPermission(AclSubject.CONTENT, AclAction.CREATE),
+        createPermission(AclSubject.CONTENT, AclAction.UPDATE),
+        createPermission(AclSubject.CONTENT, AclAction.DELETE),
       ],
     },
   ];

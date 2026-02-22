@@ -1,9 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
-import z from 'zod';
+import z, { date } from 'zod';
 
 const ProfileResponseSchema = z.object({
   id: z.string(),
   username: z.string(),
+  uniqueId: z.string(),
   email: z.email(),
   roles: z.array(
     z.object({
@@ -12,10 +13,8 @@ const ProfileResponseSchema = z.object({
       permissions: z.array(z.string()),
     })
   ),
-  studentNumber: z.string().nullable(),
-  teacherNumber: z.string().nullable(),
-  firstName: z.string().nullable(),
-  lastName: z.string().nullable(),
+  fullName: z.string().nullable(),
+  dateOfBirth: z.date().nullable(),
   phoneNumber: z.string().nullable(),
   address: z.string().nullable(),
   createdAt: z.date(),

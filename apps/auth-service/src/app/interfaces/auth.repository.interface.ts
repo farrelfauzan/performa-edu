@@ -1,15 +1,13 @@
+import { User, Role, UserType } from '@performa-edu/libs';
 import {
-  User,
-  Role,
-  UserType,
-  RegisterAdminDto,
-  RegisterAdminResponseDto,
-  RegisterStudentDto,
-  RegisterStudentResponseDto,
-  RegisterTeacherDto,
-  RegisterTeacherResponseDto,
-  ProfileResponseDto,
-} from '@performa-edu/libs';
+  CreateUserRequest,
+  CreateUserResponse,
+  DeleteUserByIdRequest,
+  DeleteUserByIdResponse,
+  ProfileResponse,
+  RegisterAdminRequest,
+  RegisterAdminResponse,
+} from '@performa-edu/proto-types/auth-service';
 
 export interface UserWithRoles extends User {
   UserOnRole: Array<{
@@ -24,16 +22,14 @@ export interface IAuthRepository {
   findUserByUsername(username: string): Promise<User | null>;
   findUserByEmailOrUsername(identifier: string): Promise<Partial<User> | null>;
   findUserWithRoles(id: string): Promise<UserWithRoles | null>;
-  registerAdmin(data: RegisterAdminDto): Promise<RegisterAdminResponseDto>;
-  registerStudent(
-    data: RegisterStudentDto
-  ): Promise<RegisterStudentResponseDto>;
-  registerTeacher(
-    data: RegisterTeacherDto
-  ): Promise<RegisterTeacherResponseDto>;
+  registerAdmin(data: RegisterAdminRequest): Promise<RegisterAdminResponse>;
+  createUser(options: CreateUserRequest): Promise<CreateUserResponse>;
+  deleteUserById(
+    options: DeleteUserByIdRequest
+  ): Promise<DeleteUserByIdResponse>;
 
   // Get Me
-  getMe(id: string): Promise<ProfileResponseDto>;
+  getMe(id: string): Promise<ProfileResponse>;
 
   // Validation
   isEmailTaken(email: string, excludeUserId?: string): Promise<boolean>;

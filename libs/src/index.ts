@@ -10,3 +10,4 @@ export * from './providers';
 export * from './types';
 export * from './common';
 export * from './zod-dtos';
+export * from './error-handler';

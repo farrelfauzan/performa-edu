@@ -8,7 +8,7 @@
       "runtimeExecutable": "pnpm exec",
       "runtimeArgs": ["nx", "serve", "api-gateway"],
       "env": {
-        "NODE_OPTIONS": "--inspect=9229"
+        "NODE_OPTIONS": "--inspect=9228"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
@@ -40,18 +40,36 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug student-service with Nx",
+      "name": "Debug customer-service with Nx",
       "runtimeExecutable": "pnpm exec",
-      "runtimeArgs": ["nx", "serve", "student-service"],
+      "runtimeArgs": ["nx", "serve", "customer-service"],
       "env": {
-        "NODE_OPTIONS": "--inspect=9229"
+        "NODE_OPTIONS": "--inspect=9230"
       },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/apps/student-service/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/customer-service/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug content-service with Nx",
+      "runtimeExecutable": "pnpm exec",
+      "runtimeArgs": ["nx", "serve", "content-service"],
+      "env": {
+        "NODE_OPTIONS": "--inspect=9231"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/apps/content-service/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
     }

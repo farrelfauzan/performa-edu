@@ -2,13 +2,22 @@ syntax = "proto3";
 
 package authservice;
 
+// The AuthService defines authentication and user management operations
 service AuthService {
+    // Authenticates a user with username/email and password
     rpc Login(LoginRequest) returns (LoginResponse);
+    // Registers a new admin user with specified roles
     rpc RegisterAdmin(RegisterAdminRequest) returns (RegisterAdminResponse);
-    rpc RegisterStudent(RegisterStudentRequest) returns (RegisterStudentResponse);
-    rpc RegisterTeacher(RegisterTeacherRequest) returns (RegisterTeacherResponse);
+    // Registers a new customer user with profile information
+    rpc RegisterCustomer(RegisterCustomerRequest) returns (RegisterCustomerResponse);
+    // Retrieves the authenticated user's profile information
     rpc GetMe(ProfileRequest) returns (ProfileResponse);
+    // Retrieves basic user information by user ID
     rpc GetUserById(GetUserByIdRequest) returns (BasicUserResponse);
+    // Create a new user
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    // Delete user by ID
+    rpc DeleteUserById(DeleteUserByIdRequest) returns (DeleteUserByIdResponse);
 }
 
 message BasicUserResponse {
@@ -24,7 +33,13 @@ message GetUserByIdRequest {
 message Role {
     string id = 1;
     string name = 2;
-    repeated string permissions = 3;
+    repeated Permissions permissions = 3;
+}
+
+message Permissions {
+    string action = 1;
+    string subject = 2;
+    optional string condition = 3;
 }
 
 message User {
@@ -44,32 +59,17 @@ message Admin {
     string deleted_at = 7;
 }
 
-message Student {
+message Customer {
     string id = 1;
-    string user_id = 2;
-    string student_number = 3;
-    string first_name = 4;
-    string last_name = 5;
-    string phone_number = 6;
-    string address = 7;
-    string email = 8;
+    string unique_id = 2;
+    string email = 3;
+    string full_name = 4;
+    string phone_number = 5;
+    optional string date_of_birth = 7;
+    string active = 8;
     string created_at = 9;
     string updated_at = 10;
-    string deleted_at = 11;
-}
-
-message Teacher {
-    string id = 1;
-    string user_id = 2;
-    string teacher_number = 3;
-    string first_name = 4;
-    string last_name = 5;
-    string phone_number = 6;
-    string address = 7;
-    string email = 8;
-    string created_at = 9;
-    string updated_at = 10;
-    string deleted_at = 11;
+    optional string deleted_at = 11;
 }
 
 message LoginRequest {
@@ -91,46 +91,26 @@ message RegisterAdminRequest {
     string user_id = 5;
 }
 
-message RegisterStudentRequest {
-    string email = 1;
-    string username = 2;
-    string password = 3;
-    repeated string role_ids = 4;
-    string user_id = 5;
-    string student_number = 6;
-    string first_name = 7;
-    string last_name = 8;
-    string phone_number = 9;
-    string address = 10;
-}
-
-message RegisterTeacherRequest {
-    string email = 1;
-    string username = 2;
-    string password = 3;
-    repeated string role_ids = 4;
-    string user_id = 5;
-    string teacher_number = 6;
-    string first_name = 7;
-    string last_name = 8;
-    string phone_number = 9;
-    string address = 10;
-}
-
 message RegisterAdminResponse {
     Admin admin = 1;
     User user = 2;
 }
 
-message RegisterStudentResponse {
-    Student student = 1;
-    User user = 2;
-} 
-
-message RegisterTeacherResponse {
-    Teacher teacher = 1;
-    User user = 2;
+message RegisterCustomerRequest {
+    string username = 1;
+    string email = 2;
+    string password = 3;
+    string full_name = 4;
+    string date_of_birth = 5;
+    string phone_number = 6;
+    optional string profile_picture = 7;
 }
+
+message RegisterCustomerResponse {
+    User user = 1;
+    Customer customer = 2;
+}
+    
 
 message ProfileRequest {
     string user_id = 1;
@@ -139,16 +119,42 @@ message ProfileRequest {
 message ProfileResponse {
     string id = 1;
     string username = 2;
-    string email = 3;
-    repeated Role roles = 4;
-    optional string student_number = 5;
-    optional string teacher_number = 6;
-    optional string first_name = 7;
-    optional string last_name = 8;
-    optional string phone_number = 9;
-    optional string address = 10;
+    string unique_id = 3;
+    string email = 4;
+    repeated Role roles = 5;
+    string full_name = 6;
+    string active = 7;
+    optional string profile_picture = 8;
+    optional string date_of_birth = 9;
+    optional string phone_number = 10;
     optional string created_at = 11;
     optional string updated_at = 12;
     optional string deleted_at = 13;
     optional string user_id = 14;
+}
+
+message CreateUserRequest {
+    string username = 1;
+    string email = 2;
+    string password = 3;
+    repeated string role_ids = 4;
+}
+
+message CreateUserResponse {
+    string id = 1;
+    string username = 2;
+    string email = 3;
+    string active = 4;
+    repeated Role roles = 5;
+    string created_at = 6;
+    string updated_at = 7;
+    string deleted_at = 8;
+}
+
+message DeleteUserByIdRequest {
+    string id = 1;
+}
+
+message DeleteUserByIdResponse {
+    string message = 1;
 }

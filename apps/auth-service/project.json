@@ -64,7 +64,7 @@
     },
     "generate-proto-types": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "inputs": ["{workspaceRoot}/proto/*.proto"],
       "outputs": ["{workspaceRoot}/types"],
       "options": {

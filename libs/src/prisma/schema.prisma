@@ -11,6 +11,24 @@ enum ActiveStatus {
   INACTIVE
 }
 
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum MediaProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 // Auth Models
 model User {
   id         String         @id @default(cuid())
@@ -51,6 +69,7 @@ model UsersOnRoles {
 // User Management Models
 model Admin {
   id        String       @id @default(cuid())
+  uniqueId  String       @unique @map("unique_id")
   userId    String       @unique @map("user_id")
   email     String       @unique
   active    ActiveStatus @default(ACTIVE)
@@ -61,36 +80,61 @@ model Admin {
   @@map("admins")
 }
 
-model Student {
-  id             String   @id @default(cuid())
-  userId         String   @unique @map("user_id")
-  studentNumber String   @unique @map("student_number")
-  username       String
-  email          String   @unique
-  firstName       String   @map("first_name")
-  lastName       String?  @map("last_name")
-  address        String?
-  phoneNumber    String?  @map("phone_number")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+model Customer {
+  id          String    @id @default(cuid())
+  userId      String    @unique @map("user_id")
+  uniqueId    String    @unique @map("unique_id")
+  fullName    String    @map("full_name")
+  phoneNumber String    @map("phone_number") @db.VarChar(15)
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
 
-  @@map("students")
+  @@map("customers")
 }
 
-model Teacher {
-  id             String   @id @default(cuid())
-  userId         String   @unique @map("user_id")
-  teacherNumber String   @unique @map("teacher_number")
-  username       String
-  firstName      String   @map("first_name")
-  lastName       String?  @map("last_name")
-  email          String   @unique
-  address        String?
-  phoneNumber    String?  @map("phone_number")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+// Content Models
+model Content {
+  id            String         @id @default(cuid())
+  userId        String         @map("user_id")
+  title         String         @db.VarChar(255)
+  body          String         @db.Text
+  status        ContentStatus  @default(DRAFT)
+  publishedAt   DateTime?      @map("published_at") @db.Timestamptz
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime?      @map("deleted_at") @db.Timestamptz
+  contentMedias ContentMedia[]
 
-  @@map("teachers")
+  @@index([userId])
+  @@map("contents")
+}
+
+model ContentMedia {
+  id               String                @id @default(cuid())
+  contentId        String                @map("content_id")
+  content          Content               @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  mediaType        MediaType             @map("media_type")
+  originalUrl      String                @map("original_url") @db.VarChar(500)
+  hlsUrl           String?               @map("hls_url") @db.VarChar(500)
+  thumbnailUrl     String?               @map("thumbnail_url") @db.VarChar(500)
+  bucketName       String                @map("bucket_name") @db.VarChar(255)
+  objectPath       String                @map("object_path") @db.VarChar(500)
+  fileName         String                @map("file_name") @db.VarChar(255)
+  fileSize         BigInt                @map("file_size")
+  mimeType         String                @map("mime_type") @db.VarChar(100)
+  duration         Int? // Duration in seconds (for video/audio)
+  width            Int? // Width in pixels (for image/video)
+  height           Int? // Height in pixels (for image/video)
+  processingStatus MediaProcessingStatus @default(PENDING) @map("processing_status")
+  processedAt      DateTime?             @map("processed_at") @db.Timestamptz
+  sortOrder        Int                   @default(0) @map("sort_order")
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime?             @map("deleted_at") @db.Timestamptz
+
+  @@index([contentId])
+  @@index([processingStatus])
+  @@map("content_media")
 }
