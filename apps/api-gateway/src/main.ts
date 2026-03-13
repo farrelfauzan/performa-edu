@@ -34,9 +34,10 @@ async function bootstrap(): Promise<NestFastifyApplication> {
   const configService = app.get(ConfigService);
 
   const port = configService.get<number>('PORT') || 3000;
-  await app.listen(port);
+  const host = configService.get<string>('HOST') || '0.0.0.0';
+  await app.listen(port, host);
 
-  Logger.log(`🚀 Application is running on: http://localhost:${port}/api`);
+  Logger.log(`🚀 Application is running on: http://${host}:${port}/api`);
 
   return app;
 }
