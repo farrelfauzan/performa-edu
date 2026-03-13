@@ -19,7 +19,6 @@ import {
   GrpcErrorHandler,
   handleGrpcCall,
   LoggedUserType,
-  ProtoHelper,
   UpdateContentDto,
 } from '@performa-edu/libs';
 import { AclAction, AclSubject } from 'libs/src/constant';
@@ -66,13 +65,7 @@ export class ContentController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalizeMany<Content>(result.contents, {
-        defaults: {
-          contentMedias: [],
-          deletedAt: null,
-          publishedAt: null,
-        },
-      }),
+      data: result.contents,
       meta: result.pageMeta,
     };
   }
@@ -90,13 +83,7 @@ export class ContentController implements OnModuleInit {
 
     return {
       data: {
-        content: ProtoHelper.normalize<Content>(result.content, {
-          defaults: {
-            contentMedias: [],
-            deletedAt: null,
-            publishedAt: null,
-          },
-        }),
+        content: result.content,
         media: result.media || [],
       },
     };
@@ -121,13 +108,7 @@ export class ContentController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalize<Content>(result.content, {
-        defaults: {
-          contentMedias: [],
-          deletedAt: null,
-          publishedAt: null,
-        },
-      }),
+      data: result.content,
     };
   }
 
@@ -150,13 +131,7 @@ export class ContentController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalize<Content>(result.content, {
-        defaults: {
-          contentMedias: [],
-          deletedAt: null,
-          publishedAt: null,
-        },
-      }),
+      data: result.content,
     };
   }
 

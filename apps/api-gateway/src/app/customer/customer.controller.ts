@@ -15,7 +15,6 @@ import {
   GetAllCustomerDto,
   GrpcErrorHandler,
   handleGrpcCall,
-  ProtoHelper,
   UpdateCustomerDto,
 } from '@performa-edu/libs';
 import {
@@ -67,13 +66,7 @@ export class CustomerController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalizeMany<Customer>(result.customers, {
-        defaults: {
-          deletedAt: null,
-          dateOfBirth: null,
-          user: null,
-        },
-      }),
+      data: result.customers,
       meta: result.meta,
     };
   }
@@ -95,13 +88,7 @@ export class CustomerController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalize<Customer>(result.customer, {
-        defaults: {
-          deletedAt: null,
-          dateOfBirth: null,
-          user: null,
-        },
-      }),
+      data: result.customer,
     };
   }
 
@@ -128,13 +115,7 @@ export class CustomerController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalize<Customer>(result.customer, {
-        defaults: {
-          deletedAt: null,
-          dateOfBirth: null,
-          user: null,
-        },
-      }),
+      data: result.customer,
     };
   }
 

@@ -17,7 +17,6 @@ import {
   LoggedUserType,
   LoginDto,
   LoginResponseDto,
-  ProtoHelper,
   PublicRoute,
 } from '@performa-edu/libs';
 import {
@@ -89,7 +88,7 @@ export class AuthController implements OnModuleInit {
       this.grpcErrorHandler,
       'Admin registration failed'
     );
-    return { data: ProtoHelper.normalize<RegisterAdminResponse>(response, {}) };
+    return { data: response };
   }
 
   @Post('register-customer')
@@ -122,21 +121,10 @@ export class AuthController implements OnModuleInit {
         'Customer creation failed'
       );
 
-      const normalizedCustomer = ProtoHelper.normalize<Customer>(
-        createCustomer.customer,
-        {
-          defaults: {
-            deletedAt: null,
-            dateOfBirth: null,
-            user: null,
-          },
-        }
-      );
-
       return {
         data: {
           user: createUser,
-          customer: normalizedCustomer,
+          customer: createCustomer.customer,
         },
       };
     } catch (error) {
@@ -170,14 +158,7 @@ export class AuthController implements OnModuleInit {
     );
 
     return {
-      data: ProtoHelper.normalize<ProfileResponse>(response, {
-        defaults: {
-          deletedAt: null,
-          dateOfBirth: null,
-          phoneNumber: null,
-          profilePicture: null,
-        },
-      }),
+      data: response,
     };
   }
 }
