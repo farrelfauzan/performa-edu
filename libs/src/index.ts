@@ -11,3 +11,4 @@ export * from './types';
 export * from './common';
 export * from './zod-dtos';
 export * from './error-handler';
+export * from './minio';
