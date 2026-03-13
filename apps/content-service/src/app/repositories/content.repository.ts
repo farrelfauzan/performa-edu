@@ -17,6 +17,7 @@ import {
   ContentStatusEnum,
   ContentWithMedia,
   DynamicQueryBuilder,
+  HlsConverterClient,
   PageMeta,
   PrismaService,
   transformResponse,
@@ -25,10 +26,16 @@ import { ContentNotFoundError } from '../error/content.error';
 
 @Injectable()
 export class ContentRepository implements IContentRepository {
+  private readonly hlsClient: HlsConverterClient;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly dynamicQueryBuilder: DynamicQueryBuilder
-  ) {}
+  ) {
+    this.hlsClient = new HlsConverterClient({
+      baseUrl: process.env.HLS_CONVERTER_URL || 'http://localhost:3001',
+    });
+  }
 
   async getAllContents(options: GetAllContentsRequest): Promise<{
     data: GetAllContentsResponse['contents'];

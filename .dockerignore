@@ -1,0 +1,65 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+**/dist
+tmp
+**/tmp
+.nx
+**/.nx
+
+# IDE and editor files
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Environment files (handled separately)
+.env
+.env.local
+.env.*.local
+
+# Test files
+coverage
+**/*.spec.ts
+**/*.test.ts
+**/__tests__
+
+# Documentation
+*.md
+!README.md
+docs
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker files (prevent recursive copies)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Nx cache
+.nx/cache
+
+# Next.js (excluded from backend services)
+apps/performa-edu-app
+.next
+
+# Misc
+*.excalidraw

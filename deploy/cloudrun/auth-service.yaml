@@ -1,0 +1,83 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: auth-service
+  labels:
+    cloud.googleapis.com/location: asia-southeast1
+  annotations:
+    run.googleapis.com/ingress: internal
+    run.googleapis.com/description: "Performa-Edu Auth Service - Internal gRPC authentication service"
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "5"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/startup-cpu-boost: "true"
+        run.googleapis.com/cloudsql-instances: PROJECT_ID:asia-southeast1:performa-edu-db
+        run.googleapis.com/vpc-access-connector: projects/PROJECT_ID/locations/asia-southeast1/connectors/serverless-connector
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+    spec:
+      containerConcurrency: 50
+      timeoutSeconds: 300
+      serviceAccountName: auth-service-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: gcr.io/PROJECT_ID/auth-service:latest
+          ports:
+            - containerPort: 5001
+              name: h2c
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: AUTH_SERVICE_GRPC_HOST
+              value: "0.0.0.0"
+            - name: AUTH_SERVICE_GRPC_PORT
+              value: "5001"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: database-url
+                  key: latest
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: latest
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-refresh-secret
+                  key: latest
+            - name: JWT_EXPIRES_IN
+              value: "7d"
+            - name: JWT_REFRESH_EXPIRES_IN
+              value: "30d"
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-url
+                  key: latest
+          startupProbe:
+            grpc:
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 24
+            timeoutSeconds: 5
+          livenessProbe:
+            grpc:
+              port: 5001
+            periodSeconds: 15
+            failureThreshold: 3
+            timeoutSeconds: 5
+          readinessProbe:
+            grpc:
+              port: 5001
+            periodSeconds: 5
+            failureThreshold: 3
+            timeoutSeconds: 5
