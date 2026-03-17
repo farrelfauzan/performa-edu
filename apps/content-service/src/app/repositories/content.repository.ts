@@ -194,6 +194,42 @@ export class ContentRepository implements IContentRepository {
         }
       }
 
+      // Create thumbnail media placeholder (IMAGE, no section)
+      if (options.thumbnail) {
+        await tx.contentMedia.create({
+          data: {
+            content: { connect: { id: content.id } },
+            mediaType: 'IMAGE',
+            originalUrl: '',
+            bucketName: '',
+            objectPath: '',
+            fileName: options.thumbnail.fileName,
+            fileSize: BigInt(options.thumbnail.fileSize),
+            mimeType: options.thumbnail.mimeType,
+            sortOrder: 0,
+            processingStatus: 'PENDING',
+          },
+        });
+      }
+
+      // Create preview video media placeholder (VIDEO, no section)
+      if (options.previewVideo) {
+        await tx.contentMedia.create({
+          data: {
+            content: { connect: { id: content.id } },
+            mediaType: 'VIDEO',
+            originalUrl: '',
+            bucketName: '',
+            objectPath: '',
+            fileName: options.previewVideo.fileName,
+            fileSize: BigInt(options.previewVideo.fileSize),
+            mimeType: options.previewVideo.mimeType,
+            sortOrder: 0,
+            processingStatus: 'PENDING',
+          },
+        });
+      }
+
       return tx.content.findUniqueOrThrow({
         where: { id: content.id },
         include: {
@@ -208,19 +244,18 @@ export class ContentRepository implements IContentRepository {
       });
     });
 
-    // Step 2: Get presigned upload URLs for each video media
-    const videoMedias = result.contentMedias.filter(
-      (m) => m.mediaType === 'VIDEO'
+    // Step 2: Get presigned upload URLs for each section video media
+    const sectionVideoMedias = result.contentMedias.filter(
+      (m) => m.mediaType === 'VIDEO' && m.sectionId !== null
     );
 
     const uploadUrls = await Promise.all(
-      videoMedias.map(async (media) => {
+      sectionVideoMedias.map(async (media) => {
         const presigned = await this.contentMediaRepository.getUploadUrl(
           media.fileName,
           media.mimeType
         );
 
-        // Store the S3 key on the media record
         await this.prisma.contentMedia.update({
           where: { id: media.id },
           data: { objectPath: presigned.s3_key },
@@ -236,14 +271,80 @@ export class ContentRepository implements IContentRepository {
       })
     );
 
+    // Step 3: Get presigned upload URL for thumbnail (IMAGE, no section)
+    let thumbnailUploadUrl: CreateContentWithSectionsResponse['thumbnailUploadUrl'] =
+      undefined;
+    if (options.thumbnail) {
+      const thumbnailMedia = result.contentMedias.find(
+        (m) => m.mediaType === 'IMAGE' && m.sectionId === null
+      );
+      if (thumbnailMedia) {
+        const presigned = await this.contentMediaRepository.getUploadUrl(
+          thumbnailMedia.fileName,
+          thumbnailMedia.mimeType
+        );
+
+        await this.prisma.contentMedia.update({
+          where: { id: thumbnailMedia.id },
+          data: { objectPath: presigned.s3_key },
+        });
+
+        // Store the S3 path as thumbnail URL on content (will be accessible after upload)
+        await this.prisma.content.update({
+          where: { id: result.id },
+          data: { thumbnailUrl: presigned.s3_key },
+        });
+
+        thumbnailUploadUrl = {
+          mediaId: thumbnailMedia.id,
+          uploadUrl: presigned.upload_url,
+          fields: presigned.fields,
+          s3Key: presigned.s3_key,
+          expiresIn: presigned.expires_in,
+        };
+      }
+    }
+
+    // Step 4: Get presigned upload URL for preview video (VIDEO, no section)
+    let previewUploadUrl: CreateContentWithSectionsResponse['previewUploadUrl'] =
+      undefined;
+    if (options.previewVideo) {
+      const previewMedia = result.contentMedias.find(
+        (m) => m.mediaType === 'VIDEO' && m.sectionId === null
+      );
+      if (previewMedia) {
+        const presigned = await this.contentMediaRepository.getUploadUrl(
+          previewMedia.fileName,
+          previewMedia.mimeType
+        );
+
+        await this.prisma.contentMedia.update({
+          where: { id: previewMedia.id },
+          data: { objectPath: presigned.s3_key },
+        });
+
+        previewUploadUrl = {
+          mediaId: previewMedia.id,
+          uploadUrl: presigned.upload_url,
+          fields: presigned.fields,
+          s3Key: presigned.s3_key,
+          expiresIn: presigned.expires_in,
+        };
+      }
+    }
+
     this.logger.log(
-      `Content ${result.id} created with ${result.sections.length} sections and ${videoMedias.length} video slots`
+      `Content ${result.id} created with ${result.sections.length} sections, ${
+        sectionVideoMedias.length
+      } video slots, thumbnail: ${!!options.thumbnail}, preview: ${!!options.previewVideo}`
     );
 
     return {
       content: transformResponse<Content>(result),
       sections: transformResponse(result.sections),
       uploadUrls,
+      thumbnailUploadUrl,
+      previewUploadUrl,
     };
   }
 

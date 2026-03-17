@@ -162,6 +162,20 @@ export class ContentMediaRepository implements IContentMediaRepository {
           processedAt: new Date(),
         },
       });
+
+      // If this is a preview video (VIDEO with no section), update Content.previewUrl
+      if (
+        contentMedia.mediaType === 'VIDEO' &&
+        contentMedia.sectionId === null &&
+        masterPlaylistUrl
+      ) {
+        await this.prisma.content.update({
+          where: { id: contentMedia.contentId },
+          data: { previewUrl: masterPlaylistUrl },
+        });
+        this.logger.log(`Updated Content ${contentMedia.contentId} previewUrl`);
+      }
+
       this.logger.log(`HLS conversion completed for media ${contentMedia.id}`);
     } else {
       await this.prisma.contentMedia.update({
