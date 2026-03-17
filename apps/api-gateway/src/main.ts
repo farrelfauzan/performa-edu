@@ -8,6 +8,10 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { TransformResponseInterceptor } from '@performa-edu/libs';
 import { ConfigService } from '@nestjs/config';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as yaml from 'yaml';
 
 async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -45,6 +49,36 @@ async function bootstrap(): Promise<NestFastifyApplication> {
     new ClassSerializerInterceptor(reflector),
     new TransformResponseInterceptor()
   );
+
+  // Setup Swagger
+  const openApiPath = path.join(__dirname, 'swagger', 'openapi.yaml');
+  let document;
+
+  if (fs.existsSync(openApiPath)) {
+    const yamlContent = fs.readFileSync(openApiPath, 'utf8');
+    document = yaml.parse(yamlContent);
+  } else {
+    const config = new DocumentBuilder()
+      .setTitle('Performa Edu API')
+      .setDescription('API for Performa Studio')
+      .setVersion('1.0.0')
+      .addServer('/api/v1', 'API v1')
+      .addBearerAuth()
+      .build();
+    document = SwaggerModule.createDocument(app, config);
+  }
+
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'list',
+      filter: true,
+      showRequestDuration: true,
+    },
+    customSiteTitle: 'Performa Edu API Docs',
+  });
+
+  Logger.log(`📚 Swagger documentation available at /api/docs`);
 
   const configService = app.get(ConfigService);
 

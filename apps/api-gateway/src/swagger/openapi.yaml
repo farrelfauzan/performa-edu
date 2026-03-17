@@ -1,0 +1,863 @@
+openapi: 3.0.3
+info:
+  title: Performa Edu API
+  description: API documentation for the Performa Edu platform
+  version: 1.0.0
+  contact:
+    name: Performa Edu Team
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: Auth
+    description: Authentication and user registration
+  - name: Customers
+    description: Customer management
+  - name: Contents
+    description: Content management with two-phase upload
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PageMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        count:
+          type: integer
+        pageCount:
+          type: integer
+        hasPreviousPage:
+          type: boolean
+        hasNextPage:
+          type: boolean
+
+    Content:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        year:
+          type: integer
+        categoryId:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, WAITING_REVIEW, ARCHIVED]
+        thumbnailUrl:
+          type: string
+          nullable: true
+        previewUrl:
+          type: string
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ContentMedia:
+      type: object
+      properties:
+        id:
+          type: string
+        contentId:
+          type: string
+        sectionId:
+          type: string
+          nullable: true
+        mediaType:
+          type: string
+          enum: [IMAGE, VIDEO]
+        originalUrl:
+          type: string
+        hlsUrl:
+          type: string
+          nullable: true
+        thumbnailUrl:
+          type: string
+          nullable: true
+        previewUrl:
+          type: string
+          nullable: true
+        bucketName:
+          type: string
+        objectPath:
+          type: string
+        fileName:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        mimeType:
+          type: string
+        processingStatus:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ContentSection:
+      type: object
+      properties:
+        id:
+          type: string
+        contentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+        medias:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentMedia'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UploadUrlInfo:
+      type: object
+      properties:
+        mediaId:
+          type: string
+        uploadUrl:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+        s3Key:
+          type: string
+        expiresIn:
+          type: integer
+
+    ConversionJobInfo:
+      type: object
+      properties:
+        mediaId:
+          type: string
+        jobId:
+          type: string
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        uniqueId:
+          type: string
+        fullName:
+          type: string
+        phoneNumber:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+        profilePictureUrl:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        user:
+          type: object
+
+    ProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: object
+
+paths:
+  # ── Auth ──
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      description: Authenticate with username/email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResponse'
+
+  /auth/register-admin:
+    post:
+      tags: [Auth]
+      summary: Register admin
+      description: Register a new admin user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password, roleIds]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                roleIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Admin registered
+
+  /auth/register-customer:
+    post:
+      tags: [Auth]
+      summary: Register customer
+      description: Register a new customer with user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, customer]
+              properties:
+                user:
+                  type: object
+                  required: [username, email, password, roleIds]
+                  properties:
+                    username:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    password:
+                      type: string
+                    roleIds:
+                      type: array
+                      items:
+                        type: string
+                customer:
+                  type: object
+                  required: [fullName, phoneNumber]
+                  properties:
+                    fullName:
+                      type: string
+                    phoneNumber:
+                      type: string
+                    dateOfBirth:
+                      type: string
+                      format: date
+                    bio:
+                      type: string
+      responses:
+        '201':
+          description: Customer registered
+
+  /auth/getMe:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProfileResponse'
+
+  # ── Customers ──
+  /customers:
+    get:
+      tags: [Customers]
+      summary: Get all customers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: Customers retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+
+  /customers/{id}:
+    get:
+      tags: [Customers]
+      summary: Get customer by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Customer'
+    put:
+      tags: [Customers]
+      summary: Update customer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                phoneNumber:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                bio:
+                  type: string
+                profilePictureUrl:
+                  type: string
+      responses:
+        '200':
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Customer'
+    delete:
+      tags: [Customers]
+      summary: Delete customer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer deleted
+
+  # ── Contents ──
+  /contents:
+    get:
+      tags: [Contents]
+      summary: Get all contents
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, PUBLISHED, ARCHIVED]
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: Contents retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Content'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+    post:
+      tags: [Contents]
+      summary: Create content
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body, categoryId, year, status]
+              properties:
+                title:
+                  type: string
+                  example: Introduction to Programming
+                body:
+                  type: string
+                  example: Course content body...
+                categoryId:
+                  type: string
+                year:
+                  type: integer
+                  example: 2026
+                status:
+                  type: integer
+                  description: "0=DRAFT, 1=PUBLISHED, 2=ARCHIVED"
+                  example: 0
+      responses:
+        '201':
+          description: Content created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Content'
+
+  /contents/{id}:
+    get:
+      tags: [Contents]
+      summary: Get content by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Content retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        $ref: '#/components/schemas/Content'
+                      media:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ContentMedia'
+    put:
+      tags: [Contents]
+      summary: Update content
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+                year:
+                  type: integer
+                categoryId:
+                  type: string
+                status:
+                  type: integer
+      responses:
+        '200':
+          description: Content updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Content'
+    delete:
+      tags: [Contents]
+      summary: Delete content
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Content deleted
+
+  /contents/with-sections:
+    post:
+      tags: [Contents]
+      summary: Create content with sections (two-phase upload)
+      description: |
+        Creates content with sections and video slots. Returns presigned S3 upload URLs
+        for each video, thumbnail, and preview.
+
+        **Flow:**
+        1. Call this endpoint with metadata
+        2. Upload files to the returned presigned URLs
+        3. Call `POST /contents/{id}/convert` to start HLS conversion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body, categoryId, year, status, sections]
+              properties:
+                title:
+                  type: string
+                  example: Complete Web Development Course
+                body:
+                  type: string
+                  example: Full course description...
+                categoryId:
+                  type: string
+                year:
+                  type: integer
+                  example: 2026
+                status:
+                  type: integer
+                  description: "0=DRAFT, 1=PUBLISHED, 2=ARCHIVED"
+                  example: 0
+                sections:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [title, sortOrder, videos]
+                    properties:
+                      title:
+                        type: string
+                        example: Getting Started
+                      description:
+                        type: string
+                        example: Introduction section
+                      sortOrder:
+                        type: integer
+                        example: 0
+                      videos:
+                        type: array
+                        minItems: 1
+                        items:
+                          type: object
+                          required: [title, sortOrder, fileName, mimeType, fileSize]
+                          properties:
+                            title:
+                              type: string
+                              example: Welcome Video
+                            sortOrder:
+                              type: integer
+                              example: 0
+                            fileName:
+                              type: string
+                              example: welcome.mp4
+                            mimeType:
+                              type: string
+                              example: video/mp4
+                            fileSize:
+                              type: integer
+                              format: int64
+                              example: 104857600
+                thumbnail:
+                  type: object
+                  description: Optional thumbnail image metadata
+                  properties:
+                    fileName:
+                      type: string
+                      example: thumbnail.jpg
+                    mimeType:
+                      type: string
+                      example: image/jpeg
+                    fileSize:
+                      type: integer
+                      example: 512000
+                previewVideo:
+                  type: object
+                  description: Optional preview video metadata (will be converted to HLS)
+                  properties:
+                    fileName:
+                      type: string
+                      example: preview.mp4
+                    mimeType:
+                      type: string
+                      example: video/mp4
+                    fileSize:
+                      type: integer
+                      example: 20971520
+      responses:
+        '201':
+          description: Content created with presigned upload URLs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        $ref: '#/components/schemas/Content'
+                      sections:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ContentSection'
+                      uploadUrls:
+                        type: array
+                        description: Presigned URLs for section video uploads
+                        items:
+                          $ref: '#/components/schemas/UploadUrlInfo'
+                      thumbnailUploadUrl:
+                        $ref: '#/components/schemas/UploadUrlInfo'
+                        description: Presigned URL for thumbnail image upload
+                      previewUploadUrl:
+                        $ref: '#/components/schemas/UploadUrlInfo'
+                        description: Presigned URL for preview video upload
+
+  /contents/{id}/convert:
+    post:
+      tags: [Contents]
+      summary: Trigger HLS conversion
+      description: |
+        Trigger HLS video conversion for all PENDING videos in a content.
+        Call this after uploading all files to S3 via presigned URLs.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                callbackUrl:
+                  type: string
+                  format: uri
+                  description: Webhook URL for conversion status callbacks
+                  example: https://your-api.com/api/v1/contents/webhooks/conversion
+      responses:
+        '200':
+          description: Conversion jobs started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      jobs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ConversionJobInfo'
+
+  /contents/webhooks/conversion:
+    post:
+      tags: [Contents]
+      summary: HLS conversion webhook
+      description: |
+        Public webhook endpoint called by the HLS converter service
+        when a conversion job completes or fails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [job_id, status]
+              properties:
+                job_id:
+                  type: string
+                  example: job_abc123
+                status:
+                  type: string
+                  enum: [completed, failed]
+                master_playlist_url:
+                  type: string
+                  nullable: true
+                  example: https://s3.example.com/output/master.m3u8
+                error_message:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean

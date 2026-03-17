@@ -8,7 +8,7 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
-    module: {
+  module: {
     rules: [
       {
         test: /\.js$/,
@@ -28,14 +28,14 @@ module.exports = {
       compiler: 'tsc',
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
-      assets: ['./src/assets'],
+      assets: ['./src/assets', './src/swagger'],
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,
       sourceMaps: true,
     }),
   ],
-   ignoreWarnings: [
+  ignoreWarnings: [
     {
       module: /prisma-client/,
       message: /Failed to parse source map/,
