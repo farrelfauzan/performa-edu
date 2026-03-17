@@ -107,6 +107,8 @@ export interface Content {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | undefined;
+  thumbnailUrl?: string | undefined;
+  previewUrl?: string | undefined;
 }
 
 export interface GetAllContentsRequest {
@@ -185,6 +187,18 @@ export interface CreateSectionInput {
   videos: CreateSectionVideoInput[];
 }
 
+export interface ThumbnailInput {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+}
+
+export interface PreviewVideoInput {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+}
+
 export interface CreateContentWithSectionsRequest {
   userId: string;
   title: string;
@@ -193,6 +207,8 @@ export interface CreateContentWithSectionsRequest {
   body: string;
   status: ContentStatus;
   sections: CreateSectionInput[];
+  thumbnail?: ThumbnailInput | undefined;
+  previewVideo?: PreviewVideoInput | undefined;
 }
 
 export interface UploadUrlInfo {
@@ -212,6 +228,8 @@ export interface CreateContentWithSectionsResponse {
   content?: Content | undefined;
   sections: ContentSection[];
   uploadUrls: UploadUrlInfo[];
+  thumbnailUploadUrl?: UploadUrlInfo | undefined;
+  previewUploadUrl?: UploadUrlInfo | undefined;
 }
 
 export interface StartContentConversionRequest {
