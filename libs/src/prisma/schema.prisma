@@ -106,6 +106,8 @@ model Content {
   title         String           @db.VarChar(255)
   year          Int              @db.SmallInt
   body          String           @db.Text
+  thumbnailUrl  String?          @map("thumbnail_url") @db.VarChar(500)
+  previewUrl    String?          @map("preview_url") @db.VarChar(500)
   status        ContentStatus    @default(DRAFT)
   publishedAt   DateTime?        @map("published_at") @db.Timestamptz
   createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz
@@ -157,6 +159,7 @@ model ContentMedia {
   originalUrl      String                @map("original_url") @db.VarChar(500)
   hlsUrl           String?               @map("hls_url") @db.VarChar(500)
   thumbnailUrl     String?               @map("thumbnail_url") @db.VarChar(500)
+  previewUrl       String?               @map("preview_url") @db.VarChar(500)
   bucketName       String                @map("bucket_name") @db.VarChar(255)
   objectPath       String                @map("object_path") @db.VarChar(500)
   fileName         String                @map("file_name") @db.VarChar(255)
