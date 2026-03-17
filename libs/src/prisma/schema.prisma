@@ -14,6 +14,7 @@ enum ActiveStatus {
 enum ContentStatus {
   DRAFT
   PUBLISHED
+  WAITING_REVIEW
   ARCHIVED
 }
 
@@ -89,6 +90,7 @@ model Customer {
   phoneNumber       String    @map("phone_number") @db.VarChar(15)
   dateOfBirth       DateTime? @map("date_of_birth") @db.Date
   profilePictureUrl String?   @map("profile_picture_url") @db.VarChar(500)
+  bio               String?   @map("bio") @db.Text
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
@@ -98,25 +100,59 @@ model Customer {
 
 // Content Models
 model Content {
-  id            String         @id @default(cuid())
-  userId        String         @map("user_id")
-  title         String         @db.VarChar(255)
-  body          String         @db.Text
-  status        ContentStatus  @default(DRAFT)
-  publishedAt   DateTime?      @map("published_at") @db.Timestamptz
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt     DateTime?      @map("deleted_at") @db.Timestamptz
+  id            String           @id @default(cuid())
+  userId        String           @map("user_id")
+  categoryId    String?          @map("category_id")
+  title         String           @db.VarChar(255)
+  year          Int              @db.SmallInt
+  body          String           @db.Text
+  status        ContentStatus    @default(DRAFT)
+  publishedAt   DateTime?        @map("published_at") @db.Timestamptz
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime?        @map("deleted_at") @db.Timestamptz
+  category      Category?        @relation(fields: [categoryId], references: [id])
   contentMedias ContentMedia[]
+  sections      ContentSection[]
 
   @@index([userId])
+  @@index([categoryId])
   @@map("contents")
+}
+
+model ContentSection {
+  id          String         @id @default(cuid())
+  contentId   String         @map("content_id")
+  content     Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  title       String         @db.VarChar(255)
+  description String?        @db.Text
+  sortOrder   Int            @default(0) @map("sort_order")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz
+  medias      ContentMedia[]
+
+  @@index([contentId])
+  @@map("content_sections")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+  contents  Content[]
+
+  @@map("categories")
 }
 
 model ContentMedia {
   id               String                @id @default(cuid())
   contentId        String                @map("content_id")
   content          Content               @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  sectionId        String?               @map("section_id")
+  section          ContentSection?       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   mediaType        MediaType             @map("media_type")
   originalUrl      String                @map("original_url") @db.VarChar(500)
   hlsUrl           String?               @map("hls_url") @db.VarChar(500)
@@ -137,6 +173,7 @@ model ContentMedia {
   deletedAt        DateTime?             @map("deleted_at") @db.Timestamptz
 
   @@index([contentId])
+  @@index([sectionId])
   @@index([processingStatus])
   @@map("content_media")
 }
