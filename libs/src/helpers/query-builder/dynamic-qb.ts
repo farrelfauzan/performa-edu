@@ -39,6 +39,9 @@ export class DynamicQueryBuilder {
       include,
     } = options;
 
+    // Always filter out soft-deleted records
+    where['deletedAt'] = null;
+
     // Fix pagination calculation
     const skip = (page - 1) * pageSize;
     const take = pageSize;
