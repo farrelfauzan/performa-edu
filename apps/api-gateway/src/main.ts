@@ -8,10 +8,11 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { TransformResponseInterceptor } from '@performa-edu/libs';
 import { ConfigService } from '@nestjs/config';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder, OpenAPIObject } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import { SWAGGER_DARK_CSS } from './swagger/swagger-dark-theme';
 
 async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -52,14 +53,14 @@ async function bootstrap(): Promise<NestFastifyApplication> {
 
   // Setup Swagger
   const openApiPath = path.join(__dirname, 'swagger', 'openapi.yaml');
-  let document;
+  let document: OpenAPIObject | (() => OpenAPIObject);
 
   if (fs.existsSync(openApiPath)) {
     const yamlContent = fs.readFileSync(openApiPath, 'utf8');
     document = yaml.parse(yamlContent);
   } else {
     const config = new DocumentBuilder()
-      .setTitle('Performa Edu API')
+      .setTitle('Performa Studio API')
       .setDescription('API for Performa Studio')
       .setVersion('1.0.0')
       .addServer('/api/v1', 'API v1')
@@ -75,7 +76,8 @@ async function bootstrap(): Promise<NestFastifyApplication> {
       filter: true,
       showRequestDuration: true,
     },
-    customSiteTitle: 'Performa Edu API Docs',
+    customSiteTitle: 'Performa Studio API Docs',
+    customCss: SWAGGER_DARK_CSS,
   });
 
   Logger.log(`📚 Swagger documentation available at /api/docs`);
