@@ -14,23 +14,28 @@ import { ClientGrpc } from '@nestjs/microservices';
 import {
   Auth,
   AuthUser,
+  ConversionWebhookDto,
   CreateContentDto,
+  CreateContentWithSectionsDto,
   GetAllContentDto,
   GrpcErrorHandler,
   handleGrpcCall,
   LoggedUserType,
+  PublicRoute,
+  StartContentConversionDto,
   UpdateContentDto,
 } from '@performa-edu/libs';
 import { AclAction, AclSubject } from 'libs/src/constant';
 import {
-  Content,
   CONTENT_SERVICE_NAME,
   CONTENTSERVICE_PACKAGE_NAME,
   ContentServiceClient,
   CreateContentResponse,
+  CreateContentWithSectionsResponse,
   DeleteContentResponse,
   GetAllContentsResponse,
   GetContentByIdResponse,
+  StartContentConversionResponse,
   UpdateContentResponse,
 } from '@performa-edu/proto-types/content-service';
 
@@ -100,6 +105,7 @@ export class ContentController implements OnModuleInit {
     const result = await handleGrpcCall(
       this.contentService.createContent({
         ...options,
+        year: options.year ?? undefined,
         userId: user.userId,
         media: [],
       }),
@@ -110,6 +116,61 @@ export class ContentController implements OnModuleInit {
     return {
       data: result.content,
     };
+  }
+
+  @Auth([{ action: AclAction.CREATE, subject: AclSubject.CONTENT }])
+  @Post('with-sections')
+  async createContentWithSections(
+    @Body() options: CreateContentWithSectionsDto,
+    @AuthUser() user: LoggedUserType
+  ): Promise<{ data: CreateContentWithSectionsResponse }> {
+    const result = await handleGrpcCall(
+      this.contentService.createContentWithSections({
+        ...options,
+        userId: user.userId,
+      }),
+      this.grpcErrorHandler,
+      'Failed to create content with sections'
+    );
+
+    return { data: result };
+  }
+
+  @Auth([{ action: AclAction.UPDATE, subject: AclSubject.CONTENT }])
+  @Post(':id/convert')
+  async startContentConversion(
+    @Param('id') id: string,
+    @Body() options: StartContentConversionDto
+  ): Promise<{ data: StartContentConversionResponse }> {
+    const result = await handleGrpcCall(
+      this.contentService.startContentConversion({
+        contentId: id,
+        callbackUrl: options.callbackUrl,
+      }),
+      this.grpcErrorHandler,
+      'Failed to start content conversion'
+    );
+
+    return { data: result };
+  }
+
+  @PublicRoute()
+  @Post('webhooks/conversion')
+  async handleConversionWebhook(
+    @Body() options: ConversionWebhookDto
+  ): Promise<{ success: boolean }> {
+    const result = await handleGrpcCall(
+      this.contentService.handleConversionWebhook({
+        jobId: options.job_id,
+        status: options.status,
+        masterPlaylistUrl: options.master_playlist_url ?? undefined,
+        errorMessage: options.error_message ?? undefined,
+      }),
+      this.grpcErrorHandler,
+      'Failed to handle conversion webhook'
+    );
+
+    return { success: result.success };
   }
 
   @Auth([{ action: AclAction.UPDATE, subject: AclSubject.CONTENT }])
