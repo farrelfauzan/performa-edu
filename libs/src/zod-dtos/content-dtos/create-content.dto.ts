@@ -7,6 +7,12 @@ export const ContentStatusSchema = z.coerce.number().min(0).max(2).default(0);
 export const CreateContentSchema = z
   .object({
     title: z.string().min(1, 'Title is required'),
+    year: z.coerce
+      .number()
+      .int()
+      .min(1900, 'Year must be a valid integer')
+      .max(new Date().getFullYear(), 'Year cannot be in the future'),
+    categoryId: z.string().min(1, 'Category is required'),
     body: z.string().min(1, 'Body is required'),
     status: ContentStatusSchema,
   })
