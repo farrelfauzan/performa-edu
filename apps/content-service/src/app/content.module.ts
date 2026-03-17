@@ -9,6 +9,7 @@ import {
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { ContentRepository } from './repositories/content.repository';
+import { ContentMediaRepository } from './repositories/content-media.repository';
 import { join } from 'path';
 
 @Module({
@@ -32,6 +33,7 @@ import { join } from 'path';
   providers: [
     ContentService,
     ContentRepository,
+    ContentMediaRepository,
     DynamicQueryBuilder,
     GrpcErrorHandler,
   ],

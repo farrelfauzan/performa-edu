@@ -92,6 +92,16 @@ export class HlsConverterClient {
     );
   }
 
+  async getBulkUploadUrls(
+    params: UploadUrlRequest[]
+  ): Promise<PresignedUploadResponse[]> {
+    return this.request<PresignedUploadResponse[]>(
+      'POST',
+      this.url('/videos/bulk-upload-urls'),
+      { videos: params }
+    );
+  }
+
   async uploadFile(
     presigned: PresignedUploadResponse,
     file: Blob | Buffer
@@ -124,6 +134,16 @@ export class HlsConverterClient {
       'POST',
       this.url('/videos/convert'),
       params
+    );
+  }
+
+  async bulkConvert(
+    requests: ConvertRequest[]
+  ): Promise<ConversionStartResponse[]> {
+    return this.request<ConversionStartResponse[]>(
+      'POST',
+      this.url('/videos/bulk-convert'),
+      { videos: requests }
     );
   }
 

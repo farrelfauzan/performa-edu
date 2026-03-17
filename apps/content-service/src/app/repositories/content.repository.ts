@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IContentRepository } from '../interfaces/content.repository.interface';
 import {
   GetAllContentsRequest,
@@ -7,6 +7,10 @@ import {
   GetContentByIdResponse,
   CreateContentRequest,
   CreateContentResponse,
+  CreateContentWithSectionsRequest,
+  CreateContentWithSectionsResponse,
+  StartContentConversionRequest,
+  StartContentConversionResponse,
   UpdateContentRequest,
   UpdateContentResponse,
   DeleteContentRequest,
@@ -17,25 +21,22 @@ import {
   ContentStatusEnum,
   ContentWithMedia,
   DynamicQueryBuilder,
-  HlsConverterClient,
   PageMeta,
   PrismaService,
   transformResponse,
 } from '@performa-edu/libs';
 import { ContentNotFoundError } from '../error/content.error';
+import { ContentMediaRepository } from './content-media.repository';
 
 @Injectable()
 export class ContentRepository implements IContentRepository {
-  private readonly hlsClient: HlsConverterClient;
+  private readonly logger = new Logger(ContentRepository.name);
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly dynamicQueryBuilder: DynamicQueryBuilder
-  ) {
-    this.hlsClient = new HlsConverterClient({
-      baseUrl: process.env.HLS_CONVERTER_URL || 'http://localhost:3001',
-    });
-  }
+    private readonly dynamicQueryBuilder: DynamicQueryBuilder,
+    private readonly contentMediaRepository: ContentMediaRepository
+  ) {}
 
   async getAllContents(options: GetAllContentsRequest): Promise<{
     data: GetAllContentsResponse['contents'];
@@ -46,10 +47,12 @@ export class ContentRepository implements IContentRepository {
       {
         ...options,
         where: {
-          deletedAt: null,
+          ...(options.categoryId && { categoryId: options.categoryId }),
+          ...(options.year && { year: options.year }),
         },
         include: {
           contentMedias: true,
+          category: true,
         },
       }
     );
@@ -91,6 +94,8 @@ export class ContentRepository implements IContentRepository {
         userId: options.userId,
         title: options.title,
         body: options.body,
+        year: options.year,
+        categoryId: options.categoryId,
         status: Object.values(ContentStatusEnum)[options.status],
       },
     });
@@ -142,5 +147,138 @@ export class ContentRepository implements IContentRepository {
     });
 
     return { message: 'Content deleted successfully' };
+  }
+
+  async createContentWithSections(
+    options: CreateContentWithSectionsRequest
+  ): Promise<CreateContentWithSectionsResponse> {
+    // Step 1: Create content + sections + media placeholders in a transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      const content = await tx.content.create({
+        data: {
+          userId: options.userId,
+          title: options.title,
+          body: options.body,
+          year: options.year,
+          categoryId: options.categoryId,
+          status: Object.values(ContentStatusEnum)[options.status],
+        },
+      });
+
+      for (const section of options.sections) {
+        const createdSection = await tx.contentSection.create({
+          data: {
+            contentId: content.id,
+            title: section.title,
+            description: section.description,
+            sortOrder: section.sortOrder,
+          },
+        });
+
+        for (const video of section.videos) {
+          await tx.contentMedia.create({
+            data: {
+              content: { connect: { id: content.id } },
+              section: { connect: { id: createdSection.id } },
+              mediaType: 'VIDEO',
+              originalUrl: '',
+              bucketName: '',
+              objectPath: '',
+              fileName: video.fileName,
+              fileSize: BigInt(video.fileSize),
+              mimeType: video.mimeType,
+              sortOrder: video.sortOrder,
+              processingStatus: 'PENDING',
+            },
+          });
+        }
+      }
+
+      return tx.content.findUniqueOrThrow({
+        where: { id: content.id },
+        include: {
+          sections: {
+            include: { medias: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+          contentMedias: {
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
+      });
+    });
+
+    // Step 2: Get presigned upload URLs for each video media
+    const videoMedias = result.contentMedias.filter(
+      (m) => m.mediaType === 'VIDEO'
+    );
+
+    const uploadUrls = await Promise.all(
+      videoMedias.map(async (media) => {
+        const presigned = await this.contentMediaRepository.getUploadUrl(
+          media.fileName,
+          media.mimeType
+        );
+
+        // Store the S3 key on the media record
+        await this.prisma.contentMedia.update({
+          where: { id: media.id },
+          data: { objectPath: presigned.s3_key },
+        });
+
+        return {
+          mediaId: media.id,
+          uploadUrl: presigned.upload_url,
+          fields: presigned.fields,
+          s3Key: presigned.s3_key,
+          expiresIn: presigned.expires_in,
+        };
+      })
+    );
+
+    this.logger.log(
+      `Content ${result.id} created with ${result.sections.length} sections and ${videoMedias.length} video slots`
+    );
+
+    return {
+      content: transformResponse<Content>(result),
+      sections: transformResponse(result.sections),
+      uploadUrls,
+    };
+  }
+
+  async startContentConversion(
+    options: StartContentConversionRequest
+  ): Promise<StartContentConversionResponse> {
+    const content = await this.prisma.content.findUniqueOrThrow({
+      where: { id: options.contentId },
+      include: {
+        contentMedias: {
+          where: {
+            mediaType: 'VIDEO',
+            processingStatus: 'PENDING',
+            deletedAt: null,
+          },
+        },
+      },
+    });
+
+    const jobs = await Promise.all(
+      content.contentMedias.map(async (media) => {
+        const { jobId } = await this.contentMediaRepository.startConversion(
+          media.id,
+          media.objectPath,
+          media.fileName,
+          options.callbackUrl
+        );
+        return { mediaId: media.id, jobId };
+      })
+    );
+
+    this.logger.log(
+      `Started ${jobs.length} HLS conversion jobs for content ${options.contentId}`
+    );
+
+    return { jobs };
   }
 }

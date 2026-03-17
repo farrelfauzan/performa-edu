@@ -1,12 +1,16 @@
 import {
   CreateContentRequest,
   CreateContentResponse,
+  CreateContentWithSectionsRequest,
+  CreateContentWithSectionsResponse,
   DeleteContentRequest,
   DeleteContentResponse,
   GetAllContentsRequest,
   GetAllContentsResponse,
   GetContentByIdRequest,
   GetContentByIdResponse,
+  StartContentConversionRequest,
+  StartContentConversionResponse,
   UpdateContentRequest,
   UpdateContentResponse,
 } from '@performa-edu/proto-types/content-service';
@@ -22,6 +26,12 @@ export interface IContentRepository {
   createContent(options: CreateContentRequest): Promise<{
     data: CreateContentResponse['content'];
   }>;
+  createContentWithSections(
+    options: CreateContentWithSectionsRequest
+  ): Promise<CreateContentWithSectionsResponse>;
+  startContentConversion(
+    options: StartContentConversionRequest
+  ): Promise<StartContentConversionResponse>;
   updateContent(options: UpdateContentRequest): Promise<{
     data: UpdateContentResponse['content'];
   }>;
