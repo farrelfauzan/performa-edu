@@ -2,6 +2,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import multipart from '@fastify/multipart';
 import { ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';
@@ -12,10 +13,24 @@ async function bootstrap(): Promise<NestFastifyApplication> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
-      bodyLimit: 3 * 1024 * 1024, // 3 MB
+      bodyLimit: 500 * 1024 * 1024, // 500 MB
     }),
-    { cors: true, logger: ['debug', 'error', 'log', 'warn', 'verbose'] }
+    {
+      cors: {
+        origin: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+      },
+      logger: ['debug', 'error', 'log', 'warn', 'verbose'],
+    }
   );
+
+  await app.register(multipart, {
+    limits: {
+      fileSize: 500 * 1024 * 1024, // 500 MB
+    },
+  });
 
   app.setGlobalPrefix('api');
   app.enableVersioning({
