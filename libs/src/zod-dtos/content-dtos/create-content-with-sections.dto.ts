@@ -19,6 +19,18 @@ const CreateSectionSchema = z.object({
     .min(1, 'At least one video per section'),
 });
 
+const ThumbnailInputSchema = z.object({
+  fileName: z.string().min(1, 'File name is required'),
+  mimeType: z.string().min(1, 'MIME type is required'),
+  fileSize: z.coerce.number().int().positive('File size must be positive'),
+});
+
+const PreviewVideoInputSchema = z.object({
+  fileName: z.string().min(1, 'File name is required'),
+  mimeType: z.string().min(1, 'MIME type is required'),
+  fileSize: z.coerce.number().int().positive('File size must be positive'),
+});
+
 export const CreateContentWithSectionsSchema = z
   .object({
     title: z.string().min(1, 'Title is required'),
@@ -29,6 +41,8 @@ export const CreateContentWithSectionsSchema = z
     sections: z
       .array(CreateSectionSchema)
       .min(1, 'At least one section is required'),
+    thumbnail: ThumbnailInputSchema.optional(),
+    previewVideo: PreviewVideoInputSchema.optional(),
   })
   .meta({ className: 'CreateContentWithSectionsDto' });
 
