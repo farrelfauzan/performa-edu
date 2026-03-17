@@ -9,7 +9,13 @@ const userSchmea = z.object({
     z.object({
       id: z.string(),
       name: z.string(),
-      permissions: z.array(z.string()),
+      permissions: z.array(
+        z.object({
+          action: z.string(),
+          subject: z.string(),
+          condition: z.string().optional(),
+        })
+      ),
     })
   ),
 });
@@ -20,9 +26,9 @@ const RegisterAdminResponseSchema = z.object({
     userId: z.string(),
     email: z.string(),
     active: z.string(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-    deletedAt: z.date().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
   }),
   user: userSchmea,
 });
@@ -37,9 +43,9 @@ const RegisterStudentSchema = z.object({
     phoneNumber: z.string(),
     address: z.string(),
     email: z.email(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-    deletedAt: z.date().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
   }),
   user: userSchmea,
 });
@@ -54,9 +60,9 @@ const RegisterTeacherSchema = z.object({
     phoneNumber: z.string(),
     address: z.string(),
     email: z.email(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-    deletedAt: z.date().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    deletedAt: z.string().nullable(),
   }),
   user: userSchmea,
 });

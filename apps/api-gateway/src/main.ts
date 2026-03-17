@@ -63,7 +63,7 @@ async function bootstrap(): Promise<NestFastifyApplication> {
       .setTitle('Performa Studio API')
       .setDescription('API for Performa Studio')
       .setVersion('1.0.0')
-      .addServer('/api/v1', 'API v1')
+      .addServer('/', 'API v1')
       .addBearerAuth()
       .build();
     document = SwaggerModule.createDocument(app, config);

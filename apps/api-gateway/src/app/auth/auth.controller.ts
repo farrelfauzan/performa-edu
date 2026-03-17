@@ -18,6 +18,8 @@ import {
   LoginDto,
   LoginResponseDto,
   PublicRoute,
+  RegisterAdminDto,
+  RegisterAdminResponseDto,
 } from '@performa-edu/libs';
 import {
   Customer,
@@ -30,8 +32,6 @@ import {
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
   ProfileResponse,
-  RegisterAdminRequest,
-  RegisterAdminResponse,
 } from 'types/proto/auth-service';
 
 @Controller({
@@ -80,15 +80,21 @@ export class AuthController implements OnModuleInit {
 
   // @Auth([{ action: AclAction.CREATE, subject: AclSubject.ADMIN }])
   @Post('register-admin')
-  async registerAdmin(@Body() options: RegisterAdminRequest): Promise<{
-    data: RegisterAdminResponse;
+  async registerAdmin(@Body() options: RegisterAdminDto): Promise<{
+    data: RegisterAdminResponseDto;
   }> {
     const response = await handleGrpcCall(
       this.authService.registerAdmin(options),
       this.grpcErrorHandler,
       'Admin registration failed'
     );
-    return { data: response };
+
+    return {
+      data: {
+        admin: response.admin,
+        user: response.user,
+      },
+    };
   }
 
   @Post('register-customer')
