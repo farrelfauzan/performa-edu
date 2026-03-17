@@ -59,6 +59,7 @@ export interface ContentMedia {
   fileName: string;
   fileSize: number;
   mimeType: string;
+  sectionId: number;
   duration: number;
   width: number;
   height: number;
@@ -70,11 +71,36 @@ export interface ContentMedia {
   deletedAt?: string | undefined;
 }
 
+export interface ContentSection {
+  id: string;
+  contentId: string;
+  content?: Content | undefined;
+  title: string;
+  description?: string | undefined;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | undefined;
+  medias: ContentMedia[];
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | undefined;
+  contents: Content[];
+}
+
 export interface Content {
   id: string;
   userId: string;
   title: string;
   body: string;
+  year: number;
+  categoryId: string;
   status: ContentStatus;
   publishedAt?: string | undefined;
   contentMedias: ContentMedia[];
@@ -87,6 +113,8 @@ export interface GetAllContentsRequest {
   page?: number | undefined;
   pageSize?: number | undefined;
   search?: string | undefined;
+  categoryId?: string | undefined;
+  year?: number | undefined;
   status?: ContentStatus | undefined;
   sortBy?: string | undefined;
   order?: Order | undefined;
@@ -100,6 +128,8 @@ export interface GetAllContentsResponse {
 export interface CreateContentRequest {
   userId: string;
   title: string;
+  categoryId: string;
+  year: number;
   body: string;
   status: ContentStatus;
   media: ContentMedia[];
@@ -122,6 +152,8 @@ export interface UpdateContentRequest {
   id: string;
   title?: string | undefined;
   body?: string | undefined;
+  year?: number | undefined;
+  categoryId?: string | undefined;
   status?: ContentStatus | undefined;
   media: ContentMedia[];
 }
@@ -138,6 +170,75 @@ export interface DeleteContentResponse {
   message: string;
 }
 
+export interface CreateSectionVideoInput {
+  title: string;
+  sortOrder: number;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+}
+
+export interface CreateSectionInput {
+  title: string;
+  description?: string | undefined;
+  sortOrder: number;
+  videos: CreateSectionVideoInput[];
+}
+
+export interface CreateContentWithSectionsRequest {
+  userId: string;
+  title: string;
+  categoryId: string;
+  year: number;
+  body: string;
+  status: ContentStatus;
+  sections: CreateSectionInput[];
+}
+
+export interface UploadUrlInfo {
+  mediaId: string;
+  uploadUrl: string;
+  fields: { [key: string]: string };
+  s3Key: string;
+  expiresIn: number;
+}
+
+export interface UploadUrlInfo_FieldsEntry {
+  key: string;
+  value: string;
+}
+
+export interface CreateContentWithSectionsResponse {
+  content?: Content | undefined;
+  sections: ContentSection[];
+  uploadUrls: UploadUrlInfo[];
+}
+
+export interface StartContentConversionRequest {
+  contentId: string;
+  callbackUrl?: string | undefined;
+}
+
+export interface ConversionJobInfo {
+  mediaId: string;
+  jobId: string;
+}
+
+export interface StartContentConversionResponse {
+  jobs: ConversionJobInfo[];
+}
+
+export interface ConversionWebhookRequest {
+  jobId: string;
+  status: string;
+  masterPlaylistUrl?: string | undefined;
+  errorMessage?: string | undefined;
+}
+
+export interface ConversionWebhookResponse {
+  success: boolean;
+}
+
 export const CONTENTSERVICE_PACKAGE_NAME = "contentservice";
 
 /** Content Service Definition */
@@ -146,6 +247,18 @@ export interface ContentServiceClient {
   /** Content CRUD Operations */
 
   createContent(request: CreateContentRequest): Observable<CreateContentResponse>;
+
+  /** Create content with sections and video slots (two-phase upload) */
+
+  createContentWithSections(request: CreateContentWithSectionsRequest): Observable<CreateContentWithSectionsResponse>;
+
+  /** Trigger HLS conversion for all pending videos in a content */
+
+  startContentConversion(request: StartContentConversionRequest): Observable<StartContentConversionResponse>;
+
+  /** Handle HLS conversion webhook callback */
+
+  handleConversionWebhook(request: ConversionWebhookRequest): Observable<ConversionWebhookResponse>;
 
   /** Retrieve content by its unique ID */
 
@@ -172,6 +285,30 @@ export interface ContentServiceController {
   createContent(
     request: CreateContentRequest,
   ): Promise<CreateContentResponse> | Observable<CreateContentResponse> | CreateContentResponse;
+
+  /** Create content with sections and video slots (two-phase upload) */
+
+  createContentWithSections(
+    request: CreateContentWithSectionsRequest,
+  ):
+    | Promise<CreateContentWithSectionsResponse>
+    | Observable<CreateContentWithSectionsResponse>
+    | CreateContentWithSectionsResponse;
+
+  /** Trigger HLS conversion for all pending videos in a content */
+
+  startContentConversion(
+    request: StartContentConversionRequest,
+  ):
+    | Promise<StartContentConversionResponse>
+    | Observable<StartContentConversionResponse>
+    | StartContentConversionResponse;
+
+  /** Handle HLS conversion webhook callback */
+
+  handleConversionWebhook(
+    request: ConversionWebhookRequest,
+  ): Promise<ConversionWebhookResponse> | Observable<ConversionWebhookResponse> | ConversionWebhookResponse;
 
   /** Retrieve content by its unique ID */
 
@@ -202,6 +339,9 @@ export function ContentServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       "createContent",
+      "createContentWithSections",
+      "startContentConversion",
+      "handleConversionWebhook",
       "getContentById",
       "updateContent",
       "deleteContent",

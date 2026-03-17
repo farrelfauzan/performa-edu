@@ -6,6 +6,12 @@ package contentservice;
 service ContentService {
     // Content CRUD Operations
     rpc CreateContent(CreateContentRequest) returns (CreateContentResponse);
+    // Create content with sections and video slots (two-phase upload)
+    rpc CreateContentWithSections(CreateContentWithSectionsRequest) returns (CreateContentWithSectionsResponse);
+    // Trigger HLS conversion for all pending videos in a content
+    rpc StartContentConversion(StartContentConversionRequest) returns (StartContentConversionResponse);
+    // Handle HLS conversion webhook callback
+    rpc HandleConversionWebhook(ConversionWebhookRequest) returns (ConversionWebhookResponse);
     // Retrieve content by its unique ID
     rpc GetContentById(GetContentByIdRequest) returns (GetContentByIdResponse);
     // Update existing content information
@@ -61,15 +67,39 @@ message ContentMedia {
     string file_name = 10;
     int64 file_size = 11;
     string mime_type = 12;
-    int32 duration = 13;
-    int32 width = 14;
-    int32 height = 15;
-    MediaProcessingStatus processing_status = 16;
-    optional string processed_at = 17;
-    int32 sort_order = 18;
-    string created_at = 19;
-    string updated_at = 20;
-    optional string deleted_at = 21;
+    int32 section_id = 14;
+    int32 duration = 15;
+    int32 width = 16;
+    int32 height = 17;
+    MediaProcessingStatus processing_status = 18;
+    optional string processed_at = 19;
+    int32 sort_order = 20;
+    string created_at = 21;
+    string updated_at = 22;
+    optional string deleted_at = 23;
+}
+
+message ContentSection {
+    string id = 1;
+    string content_id = 2;
+    Content content = 3;
+    string title = 4;
+    optional string description = 5;
+    int32 sort_order = 6;
+    string created_at = 7;
+    string updated_at = 8;
+    optional string deleted_at = 9;
+    repeated ContentMedia medias = 10;
+}
+
+message Category {
+    string id = 1;
+    string name = 2;
+    optional string description = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    optional string deleted_at = 6;
+    repeated Content contents = 7; 
 }
 
 message Content {
@@ -77,21 +107,25 @@ message Content {
     string user_id = 2;
     string title = 3;
     string body = 4;
-    ContentStatus status = 5;
-    optional string published_at = 6;
-    repeated ContentMedia content_medias = 7;
-    string created_at = 8;
-    string updated_at = 9;
-    optional string deleted_at = 10;
+    int32 year = 5;
+    string category_id = 6;
+    ContentStatus status = 7;
+    optional string published_at = 8;
+    repeated ContentMedia content_medias = 9;
+    string created_at = 10;
+    string updated_at = 11;
+    optional string deleted_at = 12;
 }
 
 message GetAllContentsRequest {
     optional int32 page = 1;
     optional int32 page_size = 2;
     optional string search = 3;
-    optional ContentStatus status = 4;
-    optional string sort_by = 5;
-    optional Order order = 6;
+    optional string category_id = 4;
+    optional int32 year = 5;
+    optional ContentStatus status = 6;
+    optional string sort_by = 7;
+    optional Order order = 8;
 }
 
 message GetAllContentsResponse {
@@ -102,9 +136,11 @@ message GetAllContentsResponse {
 message CreateContentRequest {
     string user_id = 1;
     string title = 2;
-    string body = 3;
-    ContentStatus status = 4;
-    repeated ContentMedia media = 5;
+    string category_id = 3;
+    int32 year = 4;
+    string body = 5;
+    ContentStatus status = 6;
+    repeated ContentMedia media = 7;
 }
 
 message CreateContentResponse {
@@ -124,8 +160,10 @@ message UpdateContentRequest {
     string id = 1;
     optional string title = 2;
     optional string body = 3;
-    optional ContentStatus status = 4;
-    repeated ContentMedia media = 5;
+    optional int32 year = 4;
+    optional string category_id = 5;
+    optional ContentStatus status = 6;
+    repeated ContentMedia media = 7;
 }
 
 message UpdateContentResponse {
@@ -138,4 +176,74 @@ message DeleteContentRequest {
 
 message DeleteContentResponse {
     string message = 1;
+}
+
+// ── Two-Phase Content Creation ──
+
+message CreateSectionVideoInput {
+    string title = 1;
+    int32 sort_order = 2;
+    string file_name = 3;
+    string mime_type = 4;
+    int64 file_size = 5;
+}
+
+message CreateSectionInput {
+    string title = 1;
+    optional string description = 2;
+    int32 sort_order = 3;
+    repeated CreateSectionVideoInput videos = 4;
+}
+
+message CreateContentWithSectionsRequest {
+    string user_id = 1;
+    string title = 2;
+    string category_id = 3;
+    int32 year = 4;
+    string body = 5;
+    ContentStatus status = 6;
+    repeated CreateSectionInput sections = 7;
+}
+
+message UploadUrlInfo {
+    string media_id = 1;
+    string upload_url = 2;
+    map<string, string> fields = 3;
+    string s3_key = 4;
+    int32 expires_in = 5;
+}
+
+message CreateContentWithSectionsResponse {
+    Content content = 1;
+    repeated ContentSection sections = 2;
+    repeated UploadUrlInfo upload_urls = 3;
+}
+
+// ── Start Conversion ──
+
+message StartContentConversionRequest {
+    string content_id = 1;
+    optional string callback_url = 2;
+}
+
+message ConversionJobInfo {
+    string media_id = 1;
+    string job_id = 2;
+}
+
+message StartContentConversionResponse {
+    repeated ConversionJobInfo jobs = 1;
+}
+
+// ── Webhook ──
+
+message ConversionWebhookRequest {
+    string job_id = 1;
+    string status = 2;
+    optional string master_playlist_url = 3;
+    optional string error_message = 4;
+}
+
+message ConversionWebhookResponse {
+    bool success = 1;
 }
