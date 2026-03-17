@@ -5,18 +5,25 @@ import {
   CONTENT_SERVICE_NAME,
   CONTENTSERVICE_PACKAGE_NAME,
   ContentServiceClient,
+  ConversionWebhookRequest,
+  ConversionWebhookResponse,
   CreateContentRequest,
   CreateContentResponse,
+  CreateContentWithSectionsRequest,
+  CreateContentWithSectionsResponse,
   DeleteContentRequest,
   DeleteContentResponse,
   GetAllContentsRequest,
   GetAllContentsResponse,
   GetContentByIdRequest,
   GetContentByIdResponse,
+  StartContentConversionRequest,
+  StartContentConversionResponse,
   UpdateContentRequest,
   UpdateContentResponse,
 } from '@performa-edu/proto-types/content-service';
 import { ContentRepository } from './repositories/content.repository';
+import { ContentMediaRepository } from './repositories/content-media.repository';
 
 @Injectable()
 export class ContentService implements OnModuleInit {
@@ -26,7 +33,8 @@ export class ContentService implements OnModuleInit {
     @Inject(CONTENTSERVICE_PACKAGE_NAME)
     private readonly client: ClientGrpc,
     private readonly grpcErrorHandler: GrpcErrorHandler,
-    private readonly contentRepository: ContentRepository
+    private readonly contentRepository: ContentRepository,
+    private readonly contentMediaRepository: ContentMediaRepository
   ) {}
 
   onModuleInit() {
@@ -67,5 +75,29 @@ export class ContentService implements OnModuleInit {
     options: DeleteContentRequest
   ): Promise<DeleteContentResponse> {
     return this.contentRepository.deleteContent(options);
+  }
+
+  async createContentWithSections(
+    options: CreateContentWithSectionsRequest
+  ): Promise<CreateContentWithSectionsResponse> {
+    return this.contentRepository.createContentWithSections(options);
+  }
+
+  async startContentConversion(
+    options: StartContentConversionRequest
+  ): Promise<StartContentConversionResponse> {
+    return this.contentRepository.startContentConversion(options);
+  }
+
+  async handleConversionWebhook(
+    options: ConversionWebhookRequest
+  ): Promise<ConversionWebhookResponse> {
+    await this.contentMediaRepository.handleConversionCallback(
+      options.jobId,
+      options.status as 'completed' | 'failed',
+      options.masterPlaylistUrl ?? null,
+      options.errorMessage ?? null
+    );
+    return { success: true };
   }
 }

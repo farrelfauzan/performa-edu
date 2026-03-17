@@ -1,15 +1,21 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { ContentService } from './content.service';
 import {
   ContentServiceControllerMethods,
+  ConversionWebhookRequest,
+  ConversionWebhookResponse,
   CreateContentRequest,
   CreateContentResponse,
+  CreateContentWithSectionsRequest,
+  CreateContentWithSectionsResponse,
   DeleteContentRequest,
   DeleteContentResponse,
   GetAllContentsRequest,
   GetAllContentsResponse,
   GetContentByIdRequest,
   GetContentByIdResponse,
+  StartContentConversionRequest,
+  StartContentConversionResponse,
   UpdateContentRequest,
   UpdateContentResponse,
 } from '@performa-edu/proto-types/content-service';
@@ -51,5 +57,23 @@ export class ContentController {
     options: DeleteContentRequest
   ): Promise<DeleteContentResponse> {
     return this.contentService.deleteContent(options);
+  }
+
+  async createContentWithSections(
+    options: CreateContentWithSectionsRequest
+  ): Promise<CreateContentWithSectionsResponse> {
+    return this.contentService.createContentWithSections(options);
+  }
+
+  async startContentConversion(
+    options: StartContentConversionRequest
+  ): Promise<StartContentConversionResponse> {
+    return this.contentService.startContentConversion(options);
+  }
+
+  async handleConversionWebhook(
+    options: ConversionWebhookRequest
+  ): Promise<ConversionWebhookResponse> {
+    return this.contentService.handleConversionWebhook(options);
   }
 }
