@@ -1,5 +1,6 @@
 import type {
   HlsConverterConfig,
+  HlsApiError,
   UploadUrlRequest,
   PresignedUploadResponse,
   ConvertRequest,
@@ -9,6 +10,10 @@ import type {
   JobResponse,
   TaskStatusResponse,
   HealthResponse,
+  BulkUploadUrlRequest,
+  BulkUploadResponse,
+  BulkConvertRequest,
+  BulkConversionResponse,
 } from './hls-converter.types';
 
 export class HlsConverterError extends Error {
@@ -68,7 +73,7 @@ export class HlsConverterClient {
       if (!res.ok) {
         let detail: string;
         try {
-          const err = (await res.json()) as { detail: string };
+          const err: HlsApiError = await res.json();
           detail = err.detail;
         } catch {
           detail = res.statusText;
@@ -93,12 +98,12 @@ export class HlsConverterClient {
   }
 
   async getBulkUploadUrls(
-    params: UploadUrlRequest[]
-  ): Promise<PresignedUploadResponse[]> {
-    return this.request<PresignedUploadResponse[]>(
+    params: BulkUploadUrlRequest
+  ): Promise<BulkUploadResponse> {
+    return this.request<BulkUploadResponse>(
       'POST',
       this.url('/videos/bulk-upload-urls'),
-      { videos: params }
+      params
     );
   }
 
@@ -138,12 +143,12 @@ export class HlsConverterClient {
   }
 
   async bulkConvert(
-    requests: ConvertRequest[]
-  ): Promise<ConversionStartResponse[]> {
-    return this.request<ConversionStartResponse[]>(
+    params: BulkConvertRequest
+  ): Promise<BulkConversionResponse> {
+    return this.request<BulkConversionResponse>(
       'POST',
       this.url('/videos/bulk-convert'),
-      { videos: requests }
+      params
     );
   }
 

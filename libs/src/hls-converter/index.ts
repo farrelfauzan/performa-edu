@@ -1,6 +1,7 @@
 export { HlsConverterClient, HlsConverterError } from './hls-converter.client';
 export type {
   HlsConverterConfig,
+  HlsApiError,
   UploadUrlRequest,
   PresignedUploadResponse,
   ConvertRequest,
@@ -12,4 +13,10 @@ export type {
   TaskStatusResponse,
   HealthResponse,
   WebhookPayload,
+  BulkUploadUrlRequest,
+  BulkUploadResponse,
+  BulkUploadResponseItem,
+  BulkConvertRequest,
+  BulkConversionResponse,
+  BulkConversionResponseItem,
 } from './hls-converter.types';
