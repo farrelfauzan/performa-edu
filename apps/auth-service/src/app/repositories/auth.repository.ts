@@ -311,12 +311,12 @@ export class AuthRepository implements IAuthRepository {
 
     return {
       id: roles.includes('CUSTOMER')
-        ? customer.id
+        ? customer?.id
         : roles.includes('ADMIN')
-        ? admin.id
+        ? admin?.id
         : null,
       username: user.username,
-      uniqueId: customer.uniqueId || admin.uniqueId,
+      uniqueId: customer?.uniqueId || admin?.uniqueId || null,
       email: user.email,
       active: user.active,
       roles: user.UserOnRole.map((ur) => ({
@@ -334,7 +334,7 @@ export class AuthRepository implements IAuthRepository {
         ),
       })),
       fullName: customer?.fullName || null,
-      dateOfBirth: customer?.dateOfBirth.toISOString() || null,
+      dateOfBirth: customer?.dateOfBirth?.toISOString() || null,
       phoneNumber: customer?.phoneNumber || null,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),

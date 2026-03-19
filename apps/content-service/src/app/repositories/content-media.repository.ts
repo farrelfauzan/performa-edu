@@ -18,6 +18,7 @@ export class ContentMediaRepository implements IContentMediaRepository {
   constructor(private readonly prisma: PrismaService) {
     this.hlsClient = new HlsConverterClient({
       baseUrl: process.env.HLS_CONVERTER_URL || 'http://localhost:3001',
+      apiKey: process.env.HLS_CONVERTER_API_KEY || '',
     });
   }
 

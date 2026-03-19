@@ -43,7 +43,7 @@ export class DynamicQueryBuilder {
     where['deletedAt'] = null;
 
     // Fix pagination calculation
-    const skip = (page - 1) * pageSize;
+    const skip = Math.max(0, (page - 1) * pageSize);
     const take = pageSize;
 
     // Handle sorting

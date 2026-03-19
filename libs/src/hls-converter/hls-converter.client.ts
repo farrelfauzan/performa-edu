@@ -33,12 +33,14 @@ export class HlsConverterClient {
   private readonly apiPrefix: string;
   private readonly timeout: number;
   private readonly headers: Record<string, string>;
+  private readonly apiKey?: string;
 
   constructor(config: HlsConverterConfig) {
     this.baseUrl = config.baseUrl.replace(/\/+$/, '');
     this.apiPrefix = config.apiPrefix ?? '/api/v1';
     this.timeout = config.timeout ?? 30_000;
     this.headers = config.headers ?? {};
+    this.apiKey = config.apiKey;
   }
 
   private url(path: string): string {
@@ -59,6 +61,7 @@ export class HlsConverterClient {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          ...(this.apiKey ? { 'X-API-Key': this.apiKey } : {}),
           ...this.headers,
         },
         signal: controller.signal,

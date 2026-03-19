@@ -78,7 +78,6 @@ export interface RegisterAdminRequest {
   username: string;
   password: string;
   roleIds: string[];
-  userId: string;
 }
 
 export interface RegisterAdminResponse {
