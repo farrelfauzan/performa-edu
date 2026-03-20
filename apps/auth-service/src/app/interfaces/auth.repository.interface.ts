@@ -7,6 +7,10 @@ import {
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
+  RequestPasswordResetRequest,
+  RequestPasswordResetResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from '@performa-edu/proto-types/auth-service';
 
 export interface UserWithRoles extends User {
@@ -30,6 +34,12 @@ export interface IAuthRepository {
 
   // Get Me
   getMe(id: string): Promise<ProfileResponse>;
+
+  // Password Reset
+  createPasswordResetToken(
+    options: RequestPasswordResetRequest
+  ): Promise<RequestPasswordResetResponse>;
+  resetPassword(options: ResetPasswordRequest): Promise<ResetPasswordResponse>;
 
   // Validation
   isEmailTaken(email: string, excludeUserId?: string): Promise<boolean>;

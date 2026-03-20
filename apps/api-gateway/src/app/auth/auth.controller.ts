@@ -20,9 +20,10 @@ import {
   PublicRoute,
   RegisterAdminDto,
   RegisterAdminResponseDto,
+  RequestPasswordResetDto,
+  ResetPasswordDto,
 } from '@performa-edu/libs';
 import {
-  Customer,
   CUSTOMER_SERVICE_NAME,
   CUSTOMERSERVICE_PACKAGE_NAME,
   CustomerServiceClient,
@@ -32,6 +33,8 @@ import {
   AUTHSERVICE_PACKAGE_NAME,
   AuthServiceClient,
   ProfileResponse,
+  RequestPasswordResetResponse,
+  ResetPasswordResponse,
 } from 'types/proto/auth-service';
 
 @Controller({
@@ -166,5 +169,33 @@ export class AuthController implements OnModuleInit {
     return {
       data: response,
     };
+  }
+
+  @PublicRoute()
+  @Post('request-password-reset')
+  async requestPasswordReset(
+    @Body() options: RequestPasswordResetDto
+  ): Promise<{ data: RequestPasswordResetResponse }> {
+    const response = await handleGrpcCall(
+      this.authService.requestPasswordReset(options),
+      this.grpcErrorHandler,
+      'Password reset request failed'
+    );
+
+    return { data: response };
+  }
+
+  @PublicRoute()
+  @Post('reset-password')
+  async resetPassword(
+    @Body() options: ResetPasswordDto
+  ): Promise<{ data: ResetPasswordResponse }> {
+    const response = await handleGrpcCall(
+      this.authService.resetPassword(options),
+      this.grpcErrorHandler,
+      'Password reset failed'
+    );
+
+    return { data: response };
   }
 }

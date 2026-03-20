@@ -82,3 +82,28 @@ export function InvalidPasswordError() {
     message: `Invalid password provided`,
   });
 }
+
+/* ============================
+  Password Reset Errors
+============================ */
+
+export function InvalidResetTokenError() {
+  throw new RpcException({
+    code: status.NOT_FOUND,
+    message: `Invalid or expired password reset token`,
+  });
+}
+
+export function ResetTokenExpiredError() {
+  throw new RpcException({
+    code: status.FAILED_PRECONDITION,
+    message: `Password reset token has expired`,
+  });
+}
+
+export function ResetTokenAlreadyUsedError() {
+  throw new RpcException({
+    code: status.FAILED_PRECONDITION,
+    message: `Password reset token has already been used`,
+  });
+}

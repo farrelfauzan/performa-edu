@@ -18,6 +18,10 @@ service AuthService {
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
     // Delete user by ID
     rpc DeleteUserById(DeleteUserByIdRequest) returns (DeleteUserByIdResponse);
+    // Request a password reset token for a user by email
+    rpc RequestPasswordReset(RequestPasswordResetRequest) returns (RequestPasswordResetResponse);
+    // Reset password using a valid reset token
+    rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
 }
 
 message BasicUserResponse {
@@ -155,5 +159,23 @@ message DeleteUserByIdRequest {
 }
 
 message DeleteUserByIdResponse {
+    string message = 1;
+}
+
+message RequestPasswordResetRequest {
+    string email = 1;
+}
+
+message RequestPasswordResetResponse {
+    string message = 1;
+    string reset_token = 2;
+}
+
+message ResetPasswordRequest {
+    string token = 1;
+    string new_password = 2;
+}
+
+message ResetPasswordResponse {
     string message = 1;
 }

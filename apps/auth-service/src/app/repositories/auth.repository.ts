@@ -15,6 +15,9 @@ import {
 } from '../interfaces/auth.repository.interface';
 import {
   EmailAlreadyExistsError,
+  InvalidResetTokenError,
+  ResetTokenAlreadyUsedError,
+  ResetTokenExpiredError,
   UserByEmailOrUsernameError,
   UsernameAlreadyExistsError,
   UserNotFoundError,
@@ -30,6 +33,10 @@ import {
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
+  RequestPasswordResetRequest,
+  RequestPasswordResetResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from '@performa-edu/proto-types/auth-service';
 
 @Injectable()
@@ -377,5 +384,67 @@ export class AuthRepository implements IAuthRepository {
         `Failed to check username availability: ${error.message}`
       );
     }
+  }
+
+  async createPasswordResetToken(
+    options: RequestPasswordResetRequest
+  ): Promise<RequestPasswordResetResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: options.email, deletedAt: null },
+    });
+
+    if (!user) {
+      UserNotFoundError(options.email);
+    }
+
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    return {
+      message: 'Password reset token generated successfully',
+      resetToken: token,
+    };
+  }
+
+  async resetPassword(
+    options: ResetPasswordRequest
+  ): Promise<ResetPasswordResponse> {
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: { token: options.token },
+    });
+
+    if (!resetToken) {
+      InvalidResetTokenError();
+    }
+
+    if (resetToken.usedAt) {
+      ResetTokenAlreadyUsedError();
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      ResetTokenExpiredError();
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: resetToken.userId },
+        data: { password: options.newPassword },
+      });
+
+      await tx.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      });
+    });
+
+    return { message: 'Password has been reset successfully' };
   }
 }

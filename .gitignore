@@ -56,3 +56,7 @@ out
 
 *.key
 
+
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json

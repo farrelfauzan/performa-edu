@@ -10,6 +10,10 @@ import {
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
+  RequestPasswordResetRequest,
+  RequestPasswordResetResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from 'types/proto/auth-service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -129,5 +133,21 @@ export class AuthService {
   ): Promise<DeleteUserByIdResponse> {
     const result = await this.authRepository.deleteUserById(options);
     return result;
+  }
+
+  async requestPasswordReset(
+    options: RequestPasswordResetRequest
+  ): Promise<RequestPasswordResetResponse> {
+    return await this.authRepository.createPasswordResetToken(options);
+  }
+
+  async resetPassword(
+    options: ResetPasswordRequest
+  ): Promise<ResetPasswordResponse> {
+    const hashedPassword = await this.helper.hashPassword(options.newPassword);
+    return await this.authRepository.resetPassword({
+      ...options,
+      newPassword: hashedPassword,
+    });
   }
 }

@@ -4,5 +4,6 @@ export * from './login.dto';
 export * from './profile.dto';
 export * from './register-response.dto';
 export * from './register.dto';
+export * from './reset-password.dto';
 export * from './token.dto';
 export * from './user.dto';

@@ -32,17 +32,32 @@ enum MediaProcessingStatus {
 
 // Auth Models
 model User {
-  id         String         @id @default(cuid())
-  email      String         @unique
-  username   String         @unique
-  password   String
-  active     ActiveStatus   @default(ACTIVE)
-  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt  DateTime?      @map("deleted_at") @db.Timestamptz
-  UserOnRole UsersOnRoles[]
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  username            String               @unique
+  password            String
+  active              ActiveStatus         @default(ACTIVE)
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt           DateTime?            @map("deleted_at") @db.Timestamptz
+  UserOnRole          UsersOnRoles[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model Role {

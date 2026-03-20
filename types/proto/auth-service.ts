@@ -5,10 +5,10 @@
 // source: proto/auth-service.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
-import { Observable } from "rxjs";
+import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
 
-export const protobufPackage = "authservice";
+export const protobufPackage = 'authservice';
 
 export interface BasicUserResponse {
   id: string;
@@ -147,7 +147,25 @@ export interface DeleteUserByIdResponse {
   message: string;
 }
 
-export const AUTHSERVICE_PACKAGE_NAME = "authservice";
+export interface RequestPasswordResetRequest {
+  email: string;
+}
+
+export interface RequestPasswordResetResponse {
+  message: string;
+  resetToken: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
+export const AUTHSERVICE_PACKAGE_NAME = 'authservice';
 
 /** The AuthService defines authentication and user management operations */
 
@@ -158,11 +176,15 @@ export interface AuthServiceClient {
 
   /** Registers a new admin user with specified roles */
 
-  registerAdmin(request: RegisterAdminRequest): Observable<RegisterAdminResponse>;
+  registerAdmin(
+    request: RegisterAdminRequest
+  ): Observable<RegisterAdminResponse>;
 
   /** Registers a new customer user with profile information */
 
-  registerCustomer(request: RegisterCustomerRequest): Observable<RegisterCustomerResponse>;
+  registerCustomer(
+    request: RegisterCustomerRequest
+  ): Observable<RegisterCustomerResponse>;
 
   /** Retrieves the authenticated user's profile information */
 
@@ -178,7 +200,21 @@ export interface AuthServiceClient {
 
   /** Delete user by ID */
 
-  deleteUserById(request: DeleteUserByIdRequest): Observable<DeleteUserByIdResponse>;
+  deleteUserById(
+    request: DeleteUserByIdRequest
+  ): Observable<DeleteUserByIdResponse>;
+
+  /** Request a password reset token for a user by email */
+
+  requestPasswordReset(
+    request: RequestPasswordResetRequest
+  ): Observable<RequestPasswordResetResponse>;
+
+  /** Reset password using a valid reset token */
+
+  resetPassword(
+    request: ResetPasswordRequest
+  ): Observable<ResetPasswordResponse>;
 }
 
 /** The AuthService defines authentication and user management operations */
@@ -186,64 +222,117 @@ export interface AuthServiceClient {
 export interface AuthServiceController {
   /** Authenticates a user with username/email and password */
 
-  login(request: LoginRequest): Promise<LoginResponse> | Observable<LoginResponse> | LoginResponse;
+  login(
+    request: LoginRequest
+  ): Promise<LoginResponse> | Observable<LoginResponse> | LoginResponse;
 
   /** Registers a new admin user with specified roles */
 
   registerAdmin(
-    request: RegisterAdminRequest,
-  ): Promise<RegisterAdminResponse> | Observable<RegisterAdminResponse> | RegisterAdminResponse;
+    request: RegisterAdminRequest
+  ):
+    | Promise<RegisterAdminResponse>
+    | Observable<RegisterAdminResponse>
+    | RegisterAdminResponse;
 
   /** Registers a new customer user with profile information */
 
   registerCustomer(
-    request: RegisterCustomerRequest,
-  ): Promise<RegisterCustomerResponse> | Observable<RegisterCustomerResponse> | RegisterCustomerResponse;
+    request: RegisterCustomerRequest
+  ):
+    | Promise<RegisterCustomerResponse>
+    | Observable<RegisterCustomerResponse>
+    | RegisterCustomerResponse;
 
   /** Retrieves the authenticated user's profile information */
 
-  getMe(request: ProfileRequest): Promise<ProfileResponse> | Observable<ProfileResponse> | ProfileResponse;
+  getMe(
+    request: ProfileRequest
+  ): Promise<ProfileResponse> | Observable<ProfileResponse> | ProfileResponse;
 
   /** Retrieves basic user information by user ID */
 
   getUserById(
-    request: GetUserByIdRequest,
-  ): Promise<BasicUserResponse> | Observable<BasicUserResponse> | BasicUserResponse;
+    request: GetUserByIdRequest
+  ):
+    | Promise<BasicUserResponse>
+    | Observable<BasicUserResponse>
+    | BasicUserResponse;
 
   /** Create a new user */
 
   createUser(
-    request: CreateUserRequest,
-  ): Promise<CreateUserResponse> | Observable<CreateUserResponse> | CreateUserResponse;
+    request: CreateUserRequest
+  ):
+    | Promise<CreateUserResponse>
+    | Observable<CreateUserResponse>
+    | CreateUserResponse;
 
   /** Delete user by ID */
 
   deleteUserById(
-    request: DeleteUserByIdRequest,
-  ): Promise<DeleteUserByIdResponse> | Observable<DeleteUserByIdResponse> | DeleteUserByIdResponse;
+    request: DeleteUserByIdRequest
+  ):
+    | Promise<DeleteUserByIdResponse>
+    | Observable<DeleteUserByIdResponse>
+    | DeleteUserByIdResponse;
+
+  /** Request a password reset token for a user by email */
+
+  requestPasswordReset(
+    request: RequestPasswordResetRequest
+  ):
+    | Promise<RequestPasswordResetResponse>
+    | Observable<RequestPasswordResetResponse>
+    | RequestPasswordResetResponse;
+
+  /** Reset password using a valid reset token */
+
+  resetPassword(
+    request: ResetPasswordRequest
+  ):
+    | Promise<ResetPasswordResponse>
+    | Observable<ResetPasswordResponse>
+    | ResetPasswordResponse;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      "login",
-      "registerAdmin",
-      "registerCustomer",
-      "getMe",
-      "getUserById",
-      "createUser",
-      "deleteUserById",
+      'login',
+      'registerAdmin',
+      'registerCustomer',
+      'getMe',
+      'getUserById',
+      'createUser',
+      'deleteUserById',
+      'requestPasswordReset',
+      'resetPassword',
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method
+      );
+      GrpcMethod('AuthService', method)(
+        constructor.prototype[method],
+        method,
+        descriptor
+      );
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(
+        constructor.prototype,
+        method
+      );
+      GrpcStreamMethod('AuthService', method)(
+        constructor.prototype[method],
+        method,
+        descriptor
+      );
     }
   };
 }
 
-export const AUTH_SERVICE_NAME = "AuthService";
+export const AUTH_SERVICE_NAME = 'AuthService';

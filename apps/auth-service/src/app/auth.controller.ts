@@ -16,6 +16,10 @@ import {
   RegisterAdminResponse,
   RegisterCustomerRequest,
   RegisterCustomerResponse,
+  RequestPasswordResetRequest,
+  RequestPasswordResetResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from 'types/proto/auth-service';
 import { AuthService } from './auth.service';
 import { GrpcMethod } from '@nestjs/microservices';
@@ -72,5 +76,17 @@ export class AuthController implements AuthServiceController {
     request: DeleteUserByIdRequest
   ): Promise<DeleteUserByIdResponse> {
     return await this.authService.deleteUserById(request);
+  }
+
+  async requestPasswordReset(
+    request: RequestPasswordResetRequest
+  ): Promise<RequestPasswordResetResponse> {
+    return await this.authService.requestPasswordReset(request);
+  }
+
+  async resetPassword(
+    request: ResetPasswordRequest
+  ): Promise<ResetPasswordResponse> {
+    return await this.authService.resetPassword(request);
   }
 }
