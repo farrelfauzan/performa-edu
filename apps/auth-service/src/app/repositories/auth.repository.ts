@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   PrismaService,
   User,
@@ -30,6 +30,8 @@ import {
   CreateUserResponse,
   DeleteUserByIdRequest,
   DeleteUserByIdResponse,
+  ProfilePictureUploadUrlRequest,
+  ProfilePictureUploadUrlResponse,
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
@@ -37,11 +39,37 @@ import {
   RequestPasswordResetResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  UpdateProfileRequest,
 } from '@performa-edu/proto-types/auth-service';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(AuthRepository.name);
+  private readonly s3Client: S3Client;
+  private readonly bucketName: string;
+  private readonly region: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService
+  ) {
+    this.region =
+      this.configService.get<string>('AWS_REGION') || 'ap-southeast-1';
+    this.bucketName =
+      this.configService.get<string>('S3_BUCKET_NAME') || 'performa-assets';
+    this.s3Client = new S3Client({
+      region: this.region,
+      credentials: {
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY'
+        ),
+      },
+    });
+  }
 
   // User operations
   async findUserById(id: string): Promise<UserType | null> {
@@ -341,6 +369,8 @@ export class AuthRepository implements IAuthRepository {
         ),
       })),
       fullName: customer?.fullName || null,
+      profilePicture:
+        customer?.profilePictureUrl || admin?.profilePictureUrl || null,
       dateOfBirth: customer?.dateOfBirth?.toISOString() || null,
       phoneNumber: customer?.phoneNumber || null,
       createdAt: user.createdAt.toISOString(),
@@ -446,5 +476,79 @@ export class AuthRepository implements IAuthRepository {
     });
 
     return { message: 'Password has been reset successfully' };
+  }
+
+  async updateProfile(options: UpdateProfileRequest): Promise<ProfileResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: options.userId, deletedAt: null },
+      include: {
+        UserOnRole: {
+          include: { role: true },
+          where: { role: { deletedAt: null } },
+        },
+      },
+    });
+
+    if (!user) {
+      UserNotFoundError(options.userId);
+    }
+
+    const roles = user.UserOnRole.map((ur) => ur.role.name);
+
+    if (roles.includes('CUSTOMER')) {
+      await this.prisma.customer.update({
+        where: { userId: options.userId },
+        data: {
+          ...(options.fullName !== undefined && { fullName: options.fullName }),
+          ...(options.profilePictureUrl !== undefined && {
+            profilePictureUrl: options.profilePictureUrl,
+          }),
+          ...(options.bio !== undefined && { bio: options.bio }),
+        },
+      });
+    }
+
+    if (roles.includes('ADMIN')) {
+      await this.prisma.admin.update({
+        where: { userId: options.userId },
+        data: {
+          ...(options.profilePictureUrl !== undefined && {
+            profilePictureUrl: options.profilePictureUrl,
+          }),
+        },
+      });
+    }
+
+    return this.getMe(options.userId);
+  }
+
+  async getProfilePictureUploadUrl(
+    options: ProfilePictureUploadUrlRequest
+  ): Promise<ProfilePictureUploadUrlResponse> {
+    const ext = options.filename.split('.').pop()?.toLowerCase() || 'jpg';
+    const s3Key = `profile-pictures/${options.userId}.${ext}`;
+
+    const presigned = await createPresignedPost(this.s3Client, {
+      Bucket: this.bucketName,
+      Key: s3Key,
+      Conditions: [
+        { 'Content-Type': options.contentType },
+        ['content-length-range', 1, 2 * 1024 * 1024], // max 2MB
+      ],
+      Fields: {
+        'Content-Type': options.contentType,
+      },
+      Expires: 3600,
+    });
+
+    const publicUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${s3Key}`;
+
+    return {
+      uploadUrl: presigned.url,
+      fields: presigned.fields,
+      s3Key,
+      publicUrl,
+      expiresIn: 3600,
+    };
   }
 }

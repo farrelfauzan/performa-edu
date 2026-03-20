@@ -1,53 +1,53 @@
 import { ConfigService } from '@nestjs/config';
-import { Client } from 'minio';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
+import { readFile } from 'fs/promises';
 
-export class Minio {
+export class StorageClient {
   private readonly BASE_URL: string;
-  private readonly client: Client;
+  private readonly client: S3Client;
   private readonly bucketName: string;
 
   constructor(private readonly configService: ConfigService) {
-    const minioEnvUseSSL: string | null | undefined =
-      this.configService.get<string>('MINIO_USE_SSL');
+    const region =
+      this.configService.get<string>('AWS_REGION') || 'ap-southeast-1';
 
-    let useSSL: boolean = false;
-
-    if (minioEnvUseSSL)
-      if (['true', '1', 'yes'].includes(minioEnvUseSSL.toLowerCase())) {
-        useSSL = true;
-      }
-
-    this.client = new Client({
-      endPoint: this.configService.get<string>('MINIO_HOST')!,
-      port: this.configService.get<number>('MINIO_PORT')!,
-      useSSL,
-      accessKey: this.configService.get<string>('MINIO_USER')!,
-      secretKey: this.configService.get<string>('MINIO_PASSWORD')!,
+    this.client = new S3Client({
+      region,
+      credentials: {
+        accessKeyId: this.configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: this.configService.getOrThrow<string>(
+          'AWS_SECRET_ACCESS_KEY'
+        ),
+      },
     });
 
-    this.bucketName = this.configService.get<string>('MINIO_BUCKET_NAME')!;
-
-    this.BASE_URL = `${useSSL ? 'https' : 'http'}://${this.configService
-      .getOrThrow<string>('MINIO_HOST')
-      .slice(
-        0,
-        this.configService.getOrThrow<string>('MINIO_HOST').length - 1
-      )}:${this.configService.getOrThrow<number>('MINIO_PORT')}/${
-      this.bucketName
-    }`;
+    this.bucketName = this.configService.getOrThrow<string>('S3_BUCKET_NAME');
+    this.BASE_URL = `https://${this.bucketName}.s3.${region}.amazonaws.com`;
   }
 
   async uploadBuffer(buffer: Buffer, objectName: string): Promise<void> {
-    await this.client.putObject(
-      this.bucketName,
-      objectName,
-      buffer,
-      buffer.length
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: objectName,
+        Body: buffer,
+      })
     );
   }
 
   async uploadFile(destination: string, sourceFilePath: string): Promise<void> {
-    await this.client.fPutObject(this.bucketName, destination, sourceFilePath);
+    const body = await readFile(sourceFilePath);
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: destination,
+        Body: body,
+      })
+    );
   }
 
   async deleteFile(filePath: string): Promise<void> {
@@ -65,6 +65,20 @@ export class Minio {
       filePath = filePath.replace(bucketName, '');
     }
 
-    await this.client.removeObject(this.bucketName, filePath);
+    await this.client.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucketName,
+        Key: filePath,
+      })
+    );
+  }
+
+  getPublicUrl(objectName: string): string {
+    return `${this.BASE_URL}/${objectName}`;
   }
 }
+
+/**
+ * @deprecated Use StorageClient instead
+ */
+export const Minio = StorageClient;

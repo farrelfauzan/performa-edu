@@ -22,6 +22,10 @@ service AuthService {
     rpc RequestPasswordReset(RequestPasswordResetRequest) returns (RequestPasswordResetResponse);
     // Reset password using a valid reset token
     rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+    // Update user profile (name, bio, profile picture URL)
+    rpc UpdateProfile(UpdateProfileRequest) returns (ProfileResponse);
+    // Generate presigned URL for profile picture upload
+    rpc GetProfilePictureUploadUrl(ProfilePictureUploadUrlRequest) returns (ProfilePictureUploadUrlResponse);
 }
 
 message BasicUserResponse {
@@ -178,4 +182,25 @@ message ResetPasswordRequest {
 
 message ResetPasswordResponse {
     string message = 1;
+}
+
+message UpdateProfileRequest {
+    string user_id = 1;
+    optional string full_name = 2;
+    optional string profile_picture_url = 3;
+    optional string bio = 4;
+}
+
+message ProfilePictureUploadUrlRequest {
+    string user_id = 1;
+    string filename = 2;
+    string content_type = 3;
+}
+
+message ProfilePictureUploadUrlResponse {
+    string upload_url = 1;
+    map<string, string> fields = 2;
+    string s3_key = 3;
+    string public_url = 4;
+    int32 expires_in = 5;
 }

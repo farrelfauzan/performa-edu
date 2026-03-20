@@ -7,6 +7,8 @@ import {
   DeleteUserByIdResponse,
   LoginRequest,
   LoginResponse,
+  ProfilePictureUploadUrlRequest,
+  ProfilePictureUploadUrlResponse,
   ProfileResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
@@ -14,6 +16,7 @@ import {
   RequestPasswordResetResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  UpdateProfileRequest,
 } from 'types/proto/auth-service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -149,5 +152,15 @@ export class AuthService {
       ...options,
       newPassword: hashedPassword,
     });
+  }
+
+  async updateProfile(options: UpdateProfileRequest): Promise<ProfileResponse> {
+    return this.authRepository.updateProfile(options);
+  }
+
+  async getProfilePictureUploadUrl(
+    options: ProfilePictureUploadUrlRequest
+  ): Promise<ProfilePictureUploadUrlResponse> {
+    return this.authRepository.getProfilePictureUploadUrl(options);
   }
 }

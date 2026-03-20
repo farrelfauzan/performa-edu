@@ -12,6 +12,8 @@ import {
   LoginResponse,
   ProfileRequest,
   ProfileResponse,
+  ProfilePictureUploadUrlRequest,
+  ProfilePictureUploadUrlResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
   RegisterCustomerRequest,
@@ -20,6 +22,7 @@ import {
   RequestPasswordResetResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  UpdateProfileRequest,
 } from 'types/proto/auth-service';
 import { AuthService } from './auth.service';
 import { GrpcMethod } from '@nestjs/microservices';
@@ -88,5 +91,15 @@ export class AuthController implements AuthServiceController {
     request: ResetPasswordRequest
   ): Promise<ResetPasswordResponse> {
     return await this.authService.resetPassword(request);
+  }
+
+  async updateProfile(request: UpdateProfileRequest): Promise<ProfileResponse> {
+    return await this.authService.updateProfile(request);
+  }
+
+  async getProfilePictureUploadUrl(
+    request: ProfilePictureUploadUrlRequest
+  ): Promise<ProfilePictureUploadUrlResponse> {
+    return await this.authService.getProfilePictureUploadUrl(request);
   }
 }

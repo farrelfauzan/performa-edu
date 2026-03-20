@@ -5,6 +5,7 @@ import {
   Inject,
   OnModuleInit,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import {
@@ -196,6 +197,50 @@ export class AuthController implements OnModuleInit {
       'Password reset failed'
     );
 
+    return { data: response };
+  }
+
+  @Auth()
+  @Put('profile')
+  async updateProfile(
+    @AuthUser() user: LoggedUserType,
+    @Body()
+    body: { fullName?: string; profilePictureUrl?: string; bio?: string }
+  ): Promise<{ data: ProfileResponse }> {
+    const response = await handleGrpcCall(
+      this.authService.updateProfile({
+        userId: user.userId,
+        ...body,
+      }),
+      this.grpcErrorHandler,
+      'Failed to update profile'
+    );
+    return { data: response };
+  }
+
+  @Auth()
+  @Post('profile/upload-url')
+  async getProfilePictureUploadUrl(
+    @AuthUser() user: LoggedUserType,
+    @Body() body: { filename: string; contentType: string }
+  ): Promise<{
+    data: {
+      uploadUrl: string;
+      fields: Record<string, string>;
+      s3Key: string;
+      publicUrl: string;
+      expiresIn: number;
+    };
+  }> {
+    const response = await handleGrpcCall(
+      this.authService.getProfilePictureUploadUrl({
+        userId: user.userId,
+        filename: body.filename,
+        contentType: body.contentType,
+      }),
+      this.grpcErrorHandler,
+      'Failed to generate upload URL'
+    );
     return { data: response };
   }
 }

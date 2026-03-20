@@ -165,6 +165,32 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
+export interface UpdateProfileRequest {
+  userId: string;
+  fullName?: string | undefined;
+  profilePictureUrl?: string | undefined;
+  bio?: string | undefined;
+}
+
+export interface ProfilePictureUploadUrlRequest {
+  userId: string;
+  filename: string;
+  contentType: string;
+}
+
+export interface ProfilePictureUploadUrlResponse {
+  uploadUrl: string;
+  fields: { [key: string]: string };
+  s3Key: string;
+  publicUrl: string;
+  expiresIn: number;
+}
+
+export interface ProfilePictureUploadUrlResponse_FieldsEntry {
+  key: string;
+  value: string;
+}
+
 export const AUTHSERVICE_PACKAGE_NAME = 'authservice';
 
 /** The AuthService defines authentication and user management operations */
@@ -215,6 +241,14 @@ export interface AuthServiceClient {
   resetPassword(
     request: ResetPasswordRequest
   ): Observable<ResetPasswordResponse>;
+
+  /** Update user profile (name, bio, profile picture URL) */
+
+  updateProfile(request: UpdateProfileRequest): Observable<ProfileResponse>;
+
+  /** Generate presigned URL for profile picture upload */
+
+  getProfilePictureUploadUrl(request: ProfilePictureUploadUrlRequest): Observable<ProfilePictureUploadUrlResponse>;
 }
 
 /** The AuthService defines authentication and user management operations */
@@ -271,6 +305,7 @@ export interface AuthServiceController {
   /** Delete user by ID */
 
   deleteUserById(
+  deleteUserById(
     request: DeleteUserByIdRequest
   ):
     | Promise<DeleteUserByIdResponse>
@@ -294,6 +329,21 @@ export interface AuthServiceController {
     | Promise<ResetPasswordResponse>
     | Observable<ResetPasswordResponse>
     | ResetPasswordResponse;
+
+  /** Update user profile (name, bio, profile picture URL) */
+
+  updateProfile(
+    request: UpdateProfileRequest
+  ): Promise<ProfileResponse> | Observable<ProfileResponse> | ProfileResponse;
+
+  /** Generate presigned URL for profile picture upload */
+
+  getProfilePictureUploadUrl(
+    request: ProfilePictureUploadUrlRequest
+  ):
+    | Promise<ProfilePictureUploadUrlResponse>
+    | Observable<ProfilePictureUploadUrlResponse>
+    | ProfilePictureUploadUrlResponse;
 }
 
 export function AuthServiceControllerMethods() {
@@ -308,6 +358,8 @@ export function AuthServiceControllerMethods() {
       'deleteUserById',
       'requestPasswordReset',
       'resetPassword',
+      'updateProfile',
+      'getProfilePictureUploadUrl',
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
