@@ -329,7 +329,7 @@ export class AuthRepository implements IAuthRepository {
 
     const roles = user.UserOnRole.map((ur) => ur.role.name);
 
-    if (roles.includes('ADMIN')) {
+    if (roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')) {
       admin = await this.prisma.findFirstActive<Admin>(this.prisma.admin, {
         where: { userId: id },
       });
@@ -347,7 +347,7 @@ export class AuthRepository implements IAuthRepository {
     return {
       id: roles.includes('CUSTOMER')
         ? customer?.id
-        : roles.includes('ADMIN')
+        : roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
         ? admin?.id
         : null,
       username: user.username,
@@ -508,7 +508,7 @@ export class AuthRepository implements IAuthRepository {
       });
     }
 
-    if (roles.includes('ADMIN')) {
+    if (roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')) {
       await this.prisma.admin.update({
         where: { userId: options.userId },
         data: {

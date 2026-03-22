@@ -21,6 +21,7 @@ enum ContentStatus {
 enum MediaType {
   IMAGE
   VIDEO
+  DOCUMENT
 }
 
 enum MediaProcessingStatus {
@@ -88,7 +89,7 @@ model Admin {
   uniqueId          String       @unique @map("unique_id")
   userId            String       @unique @map("user_id")
   email             String       @unique
-  profilePictureUrl String?      @map("profile_picture_url") @db.VarChar(500)
+  profilePictureUrl String?       @map("profile_picture_url") @db.VarChar(500)
   active            ActiveStatus @default(ACTIVE)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz
@@ -104,7 +105,7 @@ model Customer {
   fullName          String    @map("full_name")
   phoneNumber       String    @map("phone_number") @db.VarChar(15)
   dateOfBirth       DateTime? @map("date_of_birth") @db.Date
-  profilePictureUrl String?   @map("profile_picture_url") @db.VarChar(500)
+  profilePictureUrl String?    @map("profile_picture_url") @db.VarChar(500)
   bio               String?   @map("bio") @db.Text
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -177,8 +178,8 @@ model ContentMedia {
   previewUrl       String?               @map("preview_url") @db.VarChar(500)
   bucketName       String                @map("bucket_name") @db.VarChar(255)
   objectPath       String                @map("object_path") @db.VarChar(500)
-  fileName         String                @map("file_name") @db.VarChar(255)
-  fileSize         BigInt                @map("file_size")
+  fileName          String                 @map("file_name") @db.VarChar(255)
+  fileSize          BigInt                 @map("file_size")
   mimeType         String                @map("mime_type") @db.VarChar(100)
   duration         Int? // Duration in seconds (for video/audio)
   width            Int? // Width in pixels (for image/video)

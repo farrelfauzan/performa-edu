@@ -103,8 +103,36 @@ async function seedRoles() {
   console.log('✅ Roles seeding completed!');
 }
 
+async function seedCategories() {
+  console.log('🌱 Seeding categories...');
+
+  const categories = [
+    'Programming',
+    'Design',
+    'Business',
+    'Marketing',
+    'Photography',
+    'Music',
+    'Health & Fitness',
+    'Personal Development',
+  ];
+
+  for (const name of categories) {
+    const existing = await prisma.category.findFirst({ where: { name } });
+    if (!existing) {
+      await prisma.category.create({ data: { name } });
+      console.log(`✅ Created category: ${name}`);
+    } else {
+      console.log(`⏭️  Category already exists: ${name}`);
+    }
+  }
+
+  console.log('✅ Categories seeding completed!');
+}
+
 async function main() {
   await seedRoles();
+  await seedCategories();
 }
 
 main()

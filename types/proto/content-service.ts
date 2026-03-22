@@ -26,6 +26,7 @@ export enum ContentStatus {
 export enum MediaType {
   IMAGE = 0,
   VIDEO = 1,
+  DOCUMENT = 2,
   UNRECOGNIZED = -1,
 }
 
@@ -69,6 +70,7 @@ export interface ContentMedia {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | undefined;
+  downloadUrl?: string | undefined;
 }
 
 export interface ContentSection {
@@ -109,6 +111,8 @@ export interface Content {
   deletedAt?: string | undefined;
   thumbnailUrl?: string | undefined;
   previewUrl?: string | undefined;
+  sections: ContentSection[];
+  category?: Category | undefined;
 }
 
 export interface GetAllContentsRequest {
@@ -180,11 +184,20 @@ export interface CreateSectionVideoInput {
   fileSize: number;
 }
 
+export interface CreateSectionDocumentInput {
+  title: string;
+  sortOrder: number;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+}
+
 export interface CreateSectionInput {
   title: string;
   description?: string | undefined;
   sortOrder: number;
   videos: CreateSectionVideoInput[];
+  documents: CreateSectionDocumentInput[];
 }
 
 export interface ThumbnailInput {
@@ -230,6 +243,7 @@ export interface CreateContentWithSectionsResponse {
   uploadUrls: UploadUrlInfo[];
   thumbnailUploadUrl?: UploadUrlInfo | undefined;
   previewUploadUrl?: UploadUrlInfo | undefined;
+  documentUploadUrls: UploadUrlInfo[];
 }
 
 export interface StartContentConversionRequest {
@@ -255,6 +269,13 @@ export interface ConversionWebhookRequest {
 
 export interface ConversionWebhookResponse {
   success: boolean;
+}
+
+export interface GetAllCategoriesRequest {
+}
+
+export interface GetAllCategoriesResponse {
+  categories: Category[];
 }
 
 export const CONTENTSERVICE_PACKAGE_NAME = "contentservice";
@@ -293,6 +314,10 @@ export interface ContentServiceClient {
   /** Retrieve all contents with optional pagination, filtering, and sorting */
 
   getAllContents(request: GetAllContentsRequest): Observable<GetAllContentsResponse>;
+
+  /** Retrieve all categories */
+
+  getAllCategories(request: GetAllCategoriesRequest): Observable<GetAllCategoriesResponse>;
 }
 
 /** Content Service Definition */
@@ -351,6 +376,12 @@ export interface ContentServiceController {
   getAllContents(
     request: GetAllContentsRequest,
   ): Promise<GetAllContentsResponse> | Observable<GetAllContentsResponse> | GetAllContentsResponse;
+
+  /** Retrieve all categories */
+
+  getAllCategories(
+    request: GetAllCategoriesRequest,
+  ): Promise<GetAllCategoriesResponse> | Observable<GetAllCategoriesResponse> | GetAllCategoriesResponse;
 }
 
 export function ContentServiceControllerMethods() {
@@ -364,6 +395,7 @@ export function ContentServiceControllerMethods() {
       "updateContent",
       "deleteContent",
       "getAllContents",
+      "getAllCategories",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

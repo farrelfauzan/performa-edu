@@ -12,6 +12,8 @@ import {
   DeleteContentResponse,
   GetAllContentsRequest,
   GetAllContentsResponse,
+  GetAllCategoriesRequest,
+  GetAllCategoriesResponse,
   GetContentByIdRequest,
   GetContentByIdResponse,
   StartContentConversionRequest,
@@ -75,5 +77,11 @@ export class ContentController {
     options: ConversionWebhookRequest
   ): Promise<ConversionWebhookResponse> {
     return this.contentService.handleConversionWebhook(options);
+  }
+
+  async getAllCategories(
+    options: GetAllCategoriesRequest
+  ): Promise<GetAllCategoriesResponse> {
+    return this.contentService.getAllCategories(options);
   }
 }

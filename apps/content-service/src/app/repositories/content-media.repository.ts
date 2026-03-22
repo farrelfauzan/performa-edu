@@ -9,16 +9,40 @@ import {
   PresignedUploadResponse,
   PrismaService,
 } from '@performa-edu/libs';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class ContentMediaRepository implements IContentMediaRepository {
   private readonly hlsClient: HlsConverterClient;
   private readonly logger = new Logger(ContentMediaRepository.name);
+  private readonly s3Client: S3Client;
+  private readonly bucketName: string;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService
+  ) {
     this.hlsClient = new HlsConverterClient({
       baseUrl: process.env.HLS_CONVERTER_URL || 'http://localhost:3001',
       apiKey: process.env.HLS_CONVERTER_API_KEY || '',
+    });
+
+    const region =
+      this.configService.get<string>('AWS_REGION') || 'ap-southeast-1';
+    this.bucketName =
+      this.configService.get<string>('S3_BUCKET_NAME') || 'performa-assets';
+    this.s3Client = new S3Client({
+      region,
+      credentials: {
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY'
+        ),
+      },
     });
   }
 
@@ -189,5 +213,89 @@ export class ContentMediaRepository implements IContentMediaRepository {
         `HLS conversion failed for media ${contentMedia.id}: ${errorMessage}`
       );
     }
+  }
+
+  /**
+   * Get a presigned POST URL for uploading a thumbnail directly to S3.
+   * Thumbnails are stored as-is (no HLS conversion).
+   */
+  async getThumbnailUploadUrl(
+    fileName: string,
+    mimeType: string
+  ): Promise<{
+    upload_url: string;
+    fields: Record<string, string>;
+    s3_key: string;
+    expires_in: number;
+  }> {
+    const s3Key = `thumbnails/${randomUUID()}/${fileName}`;
+
+    const presigned = await createPresignedPost(this.s3Client, {
+      Bucket: this.bucketName,
+      Key: s3Key,
+      Conditions: [
+        ['content-length-range', 0, 10 * 1024 * 1024], // max 10MB
+        ['starts-with', '$Content-Type', ''],
+      ],
+      Fields: {
+        'Content-Type': mimeType,
+      },
+      Expires: 3600,
+    });
+
+    return {
+      upload_url: presigned.url,
+      fields: presigned.fields,
+      s3_key: s3Key,
+      expires_in: 3600,
+    };
+  }
+
+  /**
+   * Get a presigned POST URL for uploading a document directly to S3.
+   * Documents are stored as-is (no HLS conversion).
+   */
+  async getDocumentUploadUrl(
+    fileName: string,
+    mimeType: string
+  ): Promise<{
+    upload_url: string;
+    fields: Record<string, string>;
+    s3_key: string;
+    expires_in: number;
+  }> {
+    const s3Key = `documents/${randomUUID()}/${fileName}`;
+
+    const presigned = await createPresignedPost(this.s3Client, {
+      Bucket: this.bucketName,
+      Key: s3Key,
+      Conditions: [
+        ['content-length-range', 0, 100 * 1024 * 1024], // max 100MB
+        ['starts-with', '$Content-Type', ''],
+      ],
+      Fields: {
+        'Content-Type': mimeType,
+      },
+      Expires: 3600,
+    });
+
+    return {
+      upload_url: presigned.url,
+      fields: presigned.fields,
+      s3_key: s3Key,
+      expires_in: 3600,
+    };
+  }
+
+  /**
+   * Generate a presigned GET URL for secure document download.
+   */
+  async getPresignedGetUrl(s3Key: string, expiresIn = 86400): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: s3Key,
+    });
+
+    return getSignedUrl(this.s3Client, command, { expiresIn });
   }
 }

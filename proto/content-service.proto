@@ -20,6 +20,8 @@ service ContentService {
     rpc DeleteContent(DeleteContentRequest) returns (DeleteContentResponse);
     // Retrieve all contents with optional pagination, filtering, and sorting
     rpc GetAllContents(GetAllContentsRequest) returns (GetAllContentsResponse);
+    // Retrieve all categories
+    rpc GetAllCategories(GetAllCategoriesRequest) returns (GetAllCategoriesResponse);
 }
 
 enum Order {
@@ -36,6 +38,7 @@ enum ContentStatus {
 enum MediaType {
     IMAGE = 0;
     VIDEO = 1;
+    DOCUMENT = 2;
 }
 
 enum MediaProcessingStatus {
@@ -77,6 +80,7 @@ message ContentMedia {
     string created_at = 21;
     string updated_at = 22;
     optional string deleted_at = 23;
+    optional string download_url = 24;
 }
 
 message ContentSection {
@@ -117,6 +121,8 @@ message Content {
     optional string deleted_at = 12;
     optional string thumbnail_url = 13;
     optional string preview_url = 14;
+    repeated ContentSection sections = 15;
+    optional Category category = 16;
 }
 
 message GetAllContentsRequest {
@@ -190,11 +196,20 @@ message CreateSectionVideoInput {
     int64 file_size = 5;
 }
 
+message CreateSectionDocumentInput {
+    string title = 1;
+    int32 sort_order = 2;
+    string file_name = 3;
+    string mime_type = 4;
+    int64 file_size = 5;
+}
+
 message CreateSectionInput {
     string title = 1;
     optional string description = 2;
     int32 sort_order = 3;
     repeated CreateSectionVideoInput videos = 4;
+    repeated CreateSectionDocumentInput documents = 5;
 }
 
 message ThumbnailInput {
@@ -235,6 +250,7 @@ message CreateContentWithSectionsResponse {
     repeated UploadUrlInfo upload_urls = 3;
     optional UploadUrlInfo thumbnail_upload_url = 4;
     optional UploadUrlInfo preview_upload_url = 5;
+    repeated UploadUrlInfo document_upload_urls = 6;
 }
 
 // ── Start Conversion ──
@@ -264,4 +280,12 @@ message ConversionWebhookRequest {
 
 message ConversionWebhookResponse {
     bool success = 1;
+}
+
+// ── Categories ──
+
+message GetAllCategoriesRequest {}
+
+message GetAllCategoriesResponse {
+    repeated Category categories = 1;
 }

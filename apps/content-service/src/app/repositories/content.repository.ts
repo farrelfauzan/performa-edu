@@ -64,7 +64,17 @@ export class ContentRepository implements IContentRepository {
     };
 
     return {
-      data: transformResponse<ContentWithMedia[]>(content.data),
+      data: await Promise.all(
+        transformResponse<ContentWithMedia[]>(content.data).map(async (c) => {
+          if (c.thumbnailUrl && !c.thumbnailUrl.startsWith('http')) {
+            c.thumbnailUrl =
+              await this.contentMediaRepository.getPresignedGetUrl(
+                c.thumbnailUrl
+              );
+          }
+          return c;
+        })
+      ),
       meta,
     };
   }
@@ -76,6 +86,23 @@ export class ContentRepository implements IContentRepository {
       this.prisma.content,
       {
         where: { id: options.id },
+        include: {
+          category: true,
+          sections: {
+            where: { deletedAt: null },
+            include: {
+              medias: {
+                where: { deletedAt: null },
+                orderBy: { sortOrder: 'asc' },
+              },
+            },
+            orderBy: { sortOrder: 'asc' },
+          },
+          contentMedias: {
+            where: { deletedAt: null },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
       }
     );
 
@@ -83,7 +110,55 @@ export class ContentRepository implements IContentRepository {
       ContentNotFoundError(options.id);
     }
 
-    return { data: transformResponse<Content>(content) };
+    // Query document medias separately and generate presigned GET URLs
+    const documentMedias = await this.prisma.contentMedia.findMany({
+      where: {
+        contentId: options.id,
+        mediaType: 'DOCUMENT',
+        deletedAt: null,
+        objectPath: { not: '' },
+      },
+      select: { id: true, objectPath: true },
+    });
+
+    const downloadUrlMap = new Map<string, string>();
+    await Promise.all(
+      documentMedias.map(async (media) => {
+        const url = await this.contentMediaRepository.getPresignedGetUrl(
+          media.objectPath
+        );
+        downloadUrlMap.set(media.id, url);
+      })
+    );
+
+    const transformed = transformResponse<Content>(content);
+
+    // Attach download URLs to document medias within sections
+    if (transformed.sections) {
+      for (const section of transformed.sections) {
+        if (section.medias) {
+          for (const media of section.medias) {
+            const url = downloadUrlMap.get(media.id);
+            if (url) {
+              media.downloadUrl = url;
+            }
+          }
+        }
+      }
+    }
+
+    // Generate presigned URL for thumbnail
+    if (
+      transformed.thumbnailUrl &&
+      !transformed.thumbnailUrl.startsWith('http')
+    ) {
+      transformed.thumbnailUrl =
+        await this.contentMediaRepository.getPresignedGetUrl(
+          transformed.thumbnailUrl
+        );
+    }
+
+    return { data: transformed };
   }
 
   async createContent(
@@ -192,6 +267,26 @@ export class ContentRepository implements IContentRepository {
             },
           });
         }
+
+        // Create DOCUMENT media placeholders for this section
+        const documents = section.documents ?? [];
+        for (const doc of documents) {
+          await tx.contentMedia.create({
+            data: {
+              content: { connect: { id: content.id } },
+              section: { connect: { id: createdSection.id } },
+              mediaType: 'DOCUMENT',
+              originalUrl: '',
+              bucketName: '',
+              objectPath: '',
+              fileName: doc.fileName,
+              fileSize: BigInt(doc.fileSize),
+              mimeType: doc.mimeType,
+              sortOrder: doc.sortOrder,
+              processingStatus: 'COMPLETED', // Documents don't need processing
+            },
+          });
+        }
       }
 
       // Create thumbnail media placeholder (IMAGE, no section)
@@ -233,6 +328,7 @@ export class ContentRepository implements IContentRepository {
       return tx.content.findUniqueOrThrow({
         where: { id: content.id },
         include: {
+          category: true,
           sections: {
             include: { medias: true },
             orderBy: { sortOrder: 'asc' },
@@ -279,10 +375,11 @@ export class ContentRepository implements IContentRepository {
         (m) => m.mediaType === 'IMAGE' && m.sectionId === null
       );
       if (thumbnailMedia) {
-        const presigned = await this.contentMediaRepository.getUploadUrl(
-          thumbnailMedia.fileName,
-          thumbnailMedia.mimeType
-        );
+        const presigned =
+          await this.contentMediaRepository.getThumbnailUploadUrl(
+            thumbnailMedia.fileName,
+            thumbnailMedia.mimeType
+          );
 
         await this.prisma.contentMedia.update({
           where: { id: thumbnailMedia.id },
@@ -339,12 +436,41 @@ export class ContentRepository implements IContentRepository {
       } video slots, thumbnail: ${!!options.thumbnail}, preview: ${!!options.previewVideo}`
     );
 
+    // Step 5: Get presigned upload URLs for document media
+    const documentMedias = result.contentMedias.filter(
+      (m) => m.mediaType === 'DOCUMENT' && m.sectionId !== null
+    );
+
+    const documentUploadUrls = await Promise.all(
+      documentMedias.map(async (media) => {
+        const presigned =
+          await this.contentMediaRepository.getDocumentUploadUrl(
+            media.fileName,
+            media.mimeType
+          );
+
+        await this.prisma.contentMedia.update({
+          where: { id: media.id },
+          data: { objectPath: presigned.s3_key },
+        });
+
+        return {
+          mediaId: media.id,
+          uploadUrl: presigned.upload_url,
+          fields: presigned.fields,
+          s3Key: presigned.s3_key,
+          expiresIn: presigned.expires_in,
+        };
+      })
+    );
+
     return {
       content: transformResponse<Content>(result),
       sections: transformResponse(result.sections),
       uploadUrls,
       thumbnailUploadUrl,
       previewUploadUrl,
+      documentUploadUrls,
     };
   }
 

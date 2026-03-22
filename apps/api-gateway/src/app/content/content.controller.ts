@@ -34,6 +34,7 @@ import {
   CreateContentWithSectionsResponse,
   DeleteContentResponse,
   GetAllContentsResponse,
+  GetAllCategoriesResponse,
   GetContentByIdResponse,
   StartContentConversionResponse,
   UpdateContentResponse,
@@ -73,6 +74,20 @@ export class ContentController implements OnModuleInit {
       data: result.contents,
       meta: result.pageMeta,
     };
+  }
+
+  @Auth([{ action: AclAction.READ, subject: AclSubject.CONTENT }])
+  @Get('categories')
+  async getCategories(): Promise<{
+    data: GetAllCategoriesResponse['categories'];
+  }> {
+    const result = await handleGrpcCall(
+      this.contentService.getAllCategories({}),
+      this.grpcErrorHandler,
+      'Failed to fetch categories'
+    );
+
+    return { data: result.categories };
   }
 
   @Auth([{ action: AclAction.READ, subject: AclSubject.CONTENT }])

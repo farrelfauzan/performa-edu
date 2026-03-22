@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ContentService } from './content.service';
 import { ContentController } from './content.controller';
 import {
@@ -10,10 +11,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { ContentRepository } from './repositories/content.repository';
 import { ContentMediaRepository } from './repositories/content-media.repository';
+import { CategoryRepository } from './repositories/category.repository';
 import { join } from 'path';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     PrismaModule,
     ClientsModule.register([
       {
@@ -34,6 +37,7 @@ import { join } from 'path';
     ContentService,
     ContentRepository,
     ContentMediaRepository,
+    CategoryRepository,
     DynamicQueryBuilder,
     GrpcErrorHandler,
   ],

@@ -10,6 +10,14 @@ const CreateSectionVideoSchema = z.object({
   fileSize: z.coerce.number().int().positive('File size must be positive'),
 });
 
+const CreateSectionDocumentSchema = z.object({
+  title: z.string().min(1, 'Document title is required'),
+  sortOrder: z.coerce.number().int().min(0),
+  fileName: z.string().min(1, 'File name is required'),
+  mimeType: z.string().min(1, 'MIME type is required'),
+  fileSize: z.coerce.number().int().positive('File size must be positive'),
+});
+
 const CreateSectionSchema = z.object({
   title: z.string().min(1, 'Section title is required'),
   description: z.string().optional(),
@@ -17,6 +25,7 @@ const CreateSectionSchema = z.object({
   videos: z
     .array(CreateSectionVideoSchema)
     .min(1, 'At least one video per section'),
+  documents: z.array(CreateSectionDocumentSchema).optional().default([]),
 });
 
 const ThumbnailInputSchema = z.object({

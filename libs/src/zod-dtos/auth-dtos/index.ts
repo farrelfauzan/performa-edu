@@ -6,4 +6,5 @@ export * from './register-response.dto';
 export * from './register.dto';
 export * from './reset-password.dto';
 export * from './token.dto';
+export * from './update-profile.dto';
 export * from './user.dto';

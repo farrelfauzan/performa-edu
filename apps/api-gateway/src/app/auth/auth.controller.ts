@@ -18,11 +18,13 @@ import {
   LoggedUserType,
   LoginDto,
   LoginResponseDto,
+  ProfilePictureUploadUrlDto,
   PublicRoute,
   RegisterAdminDto,
   RegisterAdminResponseDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
+  UpdateProfileDto,
 } from '@performa-edu/libs';
 import {
   CUSTOMER_SERVICE_NAME,
@@ -204,8 +206,7 @@ export class AuthController implements OnModuleInit {
   @Put('profile')
   async updateProfile(
     @AuthUser() user: LoggedUserType,
-    @Body()
-    body: { fullName?: string; profilePictureUrl?: string; bio?: string }
+    @Body() body: UpdateProfileDto
   ): Promise<{ data: ProfileResponse }> {
     const response = await handleGrpcCall(
       this.authService.updateProfile({
@@ -222,7 +223,7 @@ export class AuthController implements OnModuleInit {
   @Post('profile/upload-url')
   async getProfilePictureUploadUrl(
     @AuthUser() user: LoggedUserType,
-    @Body() body: { filename: string; contentType: string }
+    @Body() body: ProfilePictureUploadUrlDto
   ): Promise<{
     data: {
       uploadUrl: string;

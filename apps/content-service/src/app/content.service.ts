@@ -15,6 +15,8 @@ import {
   DeleteContentResponse,
   GetAllContentsRequest,
   GetAllContentsResponse,
+  GetAllCategoriesRequest,
+  GetAllCategoriesResponse,
   GetContentByIdRequest,
   GetContentByIdResponse,
   StartContentConversionRequest,
@@ -24,6 +26,7 @@ import {
 } from '@performa-edu/proto-types/content-service';
 import { ContentRepository } from './repositories/content.repository';
 import { ContentMediaRepository } from './repositories/content-media.repository';
+import { CategoryRepository } from './repositories/category.repository';
 
 @Injectable()
 export class ContentService implements OnModuleInit {
@@ -34,7 +37,8 @@ export class ContentService implements OnModuleInit {
     private readonly client: ClientGrpc,
     private readonly grpcErrorHandler: GrpcErrorHandler,
     private readonly contentRepository: ContentRepository,
-    private readonly contentMediaRepository: ContentMediaRepository
+    private readonly contentMediaRepository: ContentMediaRepository,
+    private readonly categoryRepository: CategoryRepository
   ) {}
 
   onModuleInit() {
@@ -99,5 +103,11 @@ export class ContentService implements OnModuleInit {
       options.errorMessage ?? null
     );
     return { success: true };
+  }
+
+  async getAllCategories(
+    _options: GetAllCategoriesRequest
+  ): Promise<GetAllCategoriesResponse> {
+    return this.categoryRepository.getAllCategories();
   }
 }
