@@ -191,6 +191,14 @@ export interface ProfilePictureUploadUrlResponse_FieldsEntry {
   value: string;
 }
 
+export interface GetRolesRequest {
+  name?: string | undefined;
+}
+
+export interface GetRolesResponse {
+  roles: Role[];
+}
+
 export const AUTHSERVICE_PACKAGE_NAME = "authservice";
 
 /** The AuthService defines authentication and user management operations */
@@ -239,6 +247,10 @@ export interface AuthServiceClient {
   /** Generate presigned URL for profile picture upload */
 
   getProfilePictureUploadUrl(request: ProfilePictureUploadUrlRequest): Observable<ProfilePictureUploadUrlResponse>;
+
+  /** Get roles by optional name filter */
+
+  getRoles(request: GetRolesRequest): Observable<GetRolesResponse>;
 }
 
 /** The AuthService defines authentication and user management operations */
@@ -308,6 +320,10 @@ export interface AuthServiceController {
     | Promise<ProfilePictureUploadUrlResponse>
     | Observable<ProfilePictureUploadUrlResponse>
     | ProfilePictureUploadUrlResponse;
+
+  /** Get roles by optional name filter */
+
+  getRoles(request: GetRolesRequest): Promise<GetRolesResponse> | Observable<GetRolesResponse> | GetRolesResponse;
 }
 
 export function AuthServiceControllerMethods() {
@@ -324,6 +340,7 @@ export function AuthServiceControllerMethods() {
       "resetPassword",
       "updateProfile",
       "getProfilePictureUploadUrl",
+      "getRoles",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

@@ -7,6 +7,8 @@ import {
   CreateUserResponse,
   DeleteUserByIdRequest,
   DeleteUserByIdResponse,
+  GetRolesRequest,
+  GetRolesResponse,
   GetUserByIdRequest,
   LoginRequest,
   LoginResponse,
@@ -101,5 +103,9 @@ export class AuthController implements AuthServiceController {
     request: ProfilePictureUploadUrlRequest
   ): Promise<ProfilePictureUploadUrlResponse> {
     return await this.authService.getProfilePictureUploadUrl(request);
+  }
+
+  async getRoles(request: GetRolesRequest): Promise<GetRolesResponse> {
+    return await this.authService.getRoles(request);
   }
 }

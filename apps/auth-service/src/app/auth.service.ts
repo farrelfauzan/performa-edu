@@ -5,6 +5,8 @@ import {
   CreateUserResponse,
   DeleteUserByIdRequest,
   DeleteUserByIdResponse,
+  GetRolesRequest,
+  GetRolesResponse,
   LoginRequest,
   LoginResponse,
   ProfilePictureUploadUrlRequest,
@@ -162,5 +164,9 @@ export class AuthService {
     options: ProfilePictureUploadUrlRequest
   ): Promise<ProfilePictureUploadUrlResponse> {
     return this.authRepository.getProfilePictureUploadUrl(options);
+  }
+
+  async getRoles(options: GetRolesRequest): Promise<GetRolesResponse> {
+    return this.authRepository.getRoles(options);
   }
 }
