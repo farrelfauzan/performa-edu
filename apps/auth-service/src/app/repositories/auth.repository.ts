@@ -8,6 +8,7 @@ import {
   generateUniqueId,
   transformResponse,
   Customer,
+  Student,
 } from '@performa-edu/libs';
 import {
   IAuthRepository,
@@ -30,6 +31,8 @@ import {
   CreateUserResponse,
   DeleteUserByIdRequest,
   DeleteUserByIdResponse,
+  GetRolesRequest,
+  GetRolesResponse,
   ProfilePictureUploadUrlRequest,
   ProfilePictureUploadUrlResponse,
   ProfileResponse,
@@ -306,6 +309,7 @@ export class AuthRepository implements IAuthRepository {
   async getMe(id: string): Promise<ProfileResponse> {
     let admin: Admin;
     let customer: Customer;
+    let student: Student;
 
     const user = await this.prisma.user.findUnique({
       where: { id, deletedAt: null },
@@ -344,14 +348,26 @@ export class AuthRepository implements IAuthRepository {
       );
     }
 
+    if (roles.includes('STUDENT')) {
+      student = await this.prisma.findFirstActive<Student>(
+        this.prisma.student,
+        {
+          where: { userId: id },
+        }
+      );
+    }
+
     return {
       id: roles.includes('CUSTOMER')
         ? customer?.id
+        : roles.includes('STUDENT')
+        ? student?.id
         : roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
         ? admin?.id
         : null,
       username: user.username,
-      uniqueId: customer?.uniqueId || admin?.uniqueId || null,
+      uniqueId:
+        customer?.uniqueId || admin?.uniqueId || student?.uniqueId || null,
       email: user.email,
       active: user.active,
       roles: user.UserOnRole.map((ur) => ({
@@ -368,11 +384,17 @@ export class AuthRepository implements IAuthRepository {
           })
         ),
       })),
-      fullName: customer?.fullName || null,
+      fullName: customer?.fullName || student?.fullName || null,
       profilePicture:
-        customer?.profilePictureUrl || admin?.profilePictureUrl || null,
-      dateOfBirth: customer?.dateOfBirth?.toISOString() || null,
-      phoneNumber: customer?.phoneNumber || null,
+        customer?.profilePictureUrl ||
+        admin?.profilePictureUrl ||
+        student?.profilePictureUrl ||
+        null,
+      dateOfBirth:
+        customer?.dateOfBirth?.toISOString() ||
+        student?.dateOfBirth?.toISOString() ||
+        null,
+      phoneNumber: customer?.phoneNumber || student?.phoneNumber || null,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
       deletedAt: user.deletedAt?.toISOString() ?? null,
@@ -508,6 +530,19 @@ export class AuthRepository implements IAuthRepository {
       });
     }
 
+    if (roles.includes('STUDENT')) {
+      await this.prisma.student.update({
+        where: { userId: options.userId },
+        data: {
+          ...(options.fullName !== undefined && { fullName: options.fullName }),
+          ...(options.profilePictureUrl !== undefined && {
+            profilePictureUrl: options.profilePictureUrl,
+          }),
+          ...(options.bio !== undefined && { bio: options.bio }),
+        },
+      });
+    }
+
     if (roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')) {
       await this.prisma.admin.update({
         where: { userId: options.userId },
@@ -541,7 +576,7 @@ export class AuthRepository implements IAuthRepository {
       Expires: 3600,
     });
 
-    const publicUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${s3Key}`;
+    const publicUrl = `https://dv0u9v99guak9.cloudfront.net/${s3Key}`;
 
     return {
       uploadUrl: presigned.url,
@@ -549,6 +584,33 @@ export class AuthRepository implements IAuthRepository {
       s3Key,
       publicUrl,
       expiresIn: 3600,
+    };
+  }
+
+  async getRoles(options: GetRolesRequest): Promise<GetRolesResponse> {
+    const roles = await this.prisma.role.findMany({
+      where: {
+        deletedAt: null,
+        ...(options.name && { name: options.name }),
+      },
+    });
+
+    return {
+      roles: roles.map((role) => ({
+        id: role.id,
+        name: role.name,
+        permissions: (
+          role.permissions as {
+            action: string;
+            subject: string;
+            condition?: string;
+          }[]
+        ).map((p) => ({
+          action: p.action,
+          subject: p.subject,
+          condition: p.condition || undefined,
+        })),
+      })),
     };
   }
 }

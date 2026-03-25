@@ -3,13 +3,10 @@ import { z } from 'zod';
 
 export const updateStudentSchema = z
   .object({
-    id: z.cuid(),
-    email: z.email().optional(),
-    username: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    address: z.string().optional().nullable(),
+    fullName: z.string().min(1, 'Full name is required').optional(),
     phoneNumber: z.string().optional().nullable(),
+    dateOfBirth: z.string().optional(),
+    bio: z.string().optional().nullable(),
   })
   .meta({
     id: 'UpdateStudent',

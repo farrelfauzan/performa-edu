@@ -26,6 +26,8 @@ service AuthService {
     rpc UpdateProfile(UpdateProfileRequest) returns (ProfileResponse);
     // Generate presigned URL for profile picture upload
     rpc GetProfilePictureUploadUrl(ProfilePictureUploadUrlRequest) returns (ProfilePictureUploadUrlResponse);
+    // Get roles by optional name filter
+    rpc GetRoles(GetRolesRequest) returns (GetRolesResponse);
 }
 
 message BasicUserResponse {
@@ -203,4 +205,12 @@ message ProfilePictureUploadUrlResponse {
     string s3_key = 3;
     string public_url = 4;
     int32 expires_in = 5;
+}
+
+message GetRolesRequest {
+    optional string name = 1;
+}
+
+message GetRolesResponse {
+    repeated Role roles = 1;
 }

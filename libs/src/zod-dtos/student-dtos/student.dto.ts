@@ -1,34 +1,27 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { userSchema } from '../auth-dtos';
 
-const studentSchema = z
+const RegisterStudentSchema = z
   .object({
-    id: z.cuid().meta({ description: 'Unique identifier for the student' }),
-    userId: z
-      .cuid()
-      .meta({ description: 'Identifier for the associated user' }),
-    username: z.string().meta({ description: 'Username of the student' }),
-    firstName: z.string().meta({ description: 'First name of the student' }),
-    lastName: z.string().meta({ description: 'Last name of the student' }),
-    studentNumber: z
+    username: z.string().min(1, 'Username is required'),
+    email: z.string().email('Invalid email'),
+    password: z
       .string()
-      .optional()
-      .meta({ description: 'Student number assigned to the student' }),
-    phoneNumber: z
-      .string()
-      .optional()
-      .meta({ description: 'Phone number of the student' }),
-    address: z
-      .string()
-      .optional()
-      .meta({ description: 'Address of the student' }),
-    createdAt: z.date().meta({ description: 'Creation timestamp' }),
-    updatedAt: z.date().meta({ description: 'Last update timestamp' }),
-    deletedAt: z.date().optional().meta({ description: 'Deletion timestamp' }),
-    user: userSchema,
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+      .regex(
+        /[!@#$%^&*(),.?":{}|<>]/,
+        'Password must contain a special character'
+      ),
+    // roleIds: z.array(z.string()).min(1, 'At least one role ID is required'), --- IGNORE ---
+    fullName: z.string().min(1, 'Full name is required'),
+    phoneNumber: z.string().optional(),
+    dateOfBirth: z.string().optional(),
+    profilePictureUrl: z.string().url('Invalid URL').optional(),
+    bio: z.string().max(500, 'Bio must be at most 500 characters').optional(),
   })
-  .meta({
-    id: 'Student',
-  });
+  .meta({ id: 'RegisterStudent' });
 
-export type StudentType = z.infer<typeof studentSchema>;
+export class RegisterStudentDto extends createZodDto(RegisterStudentSchema) {}
+
+export type RegisterStudentType = z.infer<typeof RegisterStudentSchema>;

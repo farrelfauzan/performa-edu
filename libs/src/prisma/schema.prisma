@@ -31,6 +31,18 @@ enum MediaProcessingStatus {
   FAILED
 }
 
+enum AssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum ProgressAction {
+  COMPLETE_SECTION
+  ANSWER_QUESTION
+}
+
 // Auth Models
 model User {
   id                  String               @id @default(cuid())
@@ -112,6 +124,64 @@ model Customer {
   deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
 
   @@map("customers")
+}
+
+model Student {
+  id                String       @id @default(cuid())
+  userId            String       @unique @map("user_id")
+  uniqueId          String       @unique @map("unique_id")
+  fullName          String       @map("full_name")
+  phoneNumber       String?      @map("phone_number") @db.VarChar(15)
+  dateOfBirth       DateTime?    @map("date_of_birth") @db.Date
+  profilePictureUrl String?      @map("profile_picture_url") @db.VarChar(500)
+  bio               String?      @db.Text
+  active            ActiveStatus @default(ACTIVE)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt         DateTime?    @map("deleted_at") @db.Timestamptz
+
+  assignments       Assignment[]
+
+  @@map("students")
+}
+
+model Assignment {
+  id          String           @id @default(cuid())
+  teacherId   String           @map("teacher_id")
+  studentId   String           @map("student_id")
+  contentId   String           @map("content_id")
+  status      AssignmentStatus @default(ASSIGNED)
+  progress    Float            @default(0)
+  dueDate     DateTime?        @map("due_date") @db.Timestamptz
+  assignedAt  DateTime         @default(now()) @map("assigned_at") @db.Timestamptz
+  startedAt   DateTime?        @map("started_at") @db.Timestamptz
+  completedAt DateTime?        @map("completed_at") @db.Timestamptz
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  student     Student          @relation(fields: [studentId], references: [id])
+  progressLogs ProgressLog[]
+
+  @@unique([studentId, contentId])
+  @@index([teacherId])
+  @@index([contentId])
+  @@map("assignments")
+}
+
+model ProgressLog {
+  id           String         @id @default(cuid())
+  assignmentId String         @map("assignment_id")
+  sectionId    String?        @map("section_id")
+  questionId   String?        @map("question_id")
+  action       ProgressAction
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  assignment   Assignment     @relation(fields: [assignmentId], references: [id])
+
+  @@unique([assignmentId, sectionId, action])
+  @@unique([assignmentId, questionId, action])
+  @@index([assignmentId])
+  @@map("progress_logs")
 }
 
 // Content Models

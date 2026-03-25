@@ -1,27 +1,5 @@
-version: '3.8'
-
 services:
   # Infrastructure Services
-  postgres:
-    image: postgres:16-alpine
-    container_name: performa-edu-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-performa_edu_db}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-performa_edu_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - performa-network
-
   redis:
     image: redis:7-alpine
     container_name: performa-edu-redis
@@ -49,8 +27,9 @@ services:
     environment:
       NODE_ENV: development
       PORT: ${API_GATEWAY_PORT:-3000}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-performa_edu_db}?schema=public
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production-minimum-32-characters}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
       AUTH_SERVICE_GRPC_HOST: auth-service
@@ -59,6 +38,8 @@ services:
       CONTENT_SERVICE_GRPC_PORT: ${CONTENT_SERVICE_GRPC_PORT:-50052}
       CUSTOMER_SERVICE_GRPC_HOST: customer-service
       CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+      STUDENT_SERVICE_GRPC_HOST: student-service
+      STUDENT_SERVICE_GRPC_PORT: ${STUDENT_SERVICE_GRPC_PORT:-50054}
       REDIS_URL: redis://redis:6379
     ports:
       - "${API_GATEWAY_PORT:-3000}:${API_GATEWAY_PORT:-3000}"
@@ -68,8 +49,6 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       auth-service:
@@ -77,6 +56,8 @@ services:
       content-service:
         condition: service_started
       customer-service:
+        condition: service_started
+      student-service:
         condition: service_started
     networks:
       - performa-network
@@ -92,8 +73,10 @@ services:
       NODE_ENV: development
       AUTH_SERVICE_GRPC_HOST: 0.0.0.0
       AUTH_SERVICE_GRPC_PORT: ${AUTH_SERVICE_GRPC_PORT:-50051}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-performa_edu_db}?schema=public
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production-minimum-32-characters}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY:-}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
       REDIS_URL: redis://redis:6379
@@ -105,8 +88,6 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -123,8 +104,14 @@ services:
       NODE_ENV: development
       CONTENT_SERVICE_GRPC_HOST: 0.0.0.0
       CONTENT_SERVICE_GRPC_PORT: ${CONTENT_SERVICE_GRPC_PORT:-50052}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-performa_edu_db}?schema=public
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      HLS_CONVERTER_URL: ${HLS_CONVERTER_URL:-}
+      HLS_CONVERTER_API_KEY: ${HLS_CONVERTER_API_KEY:-}
     ports:
       - "${CONTENT_SERVICE_GRPC_PORT:-50052}:${CONTENT_SERVICE_GRPC_PORT:-50052}"
     volumes:
@@ -133,8 +120,6 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -151,7 +136,7 @@ services:
       NODE_ENV: development
       CUSTOMER_SERVICE_GRPC_HOST: 0.0.0.0
       CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-performa_edu_db}?schema=public
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
     ports:
       - "${CUSTOMER_SERVICE_GRPC_PORT:-50053}:${CUSTOMER_SERVICE_GRPC_PORT:-50053}"
@@ -161,8 +146,38 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
-      postgres:
+      redis:
         condition: service_healthy
+    networks:
+      - performa-network
+
+  student-service:
+    build:
+      context: .
+      dockerfile: apps/student-service/Dockerfile
+      target: development
+    container_name: performa-edu-student-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      STUDENT_SERVICE_GRPC_HOST: 0.0.0.0
+      STUDENT_SERVICE_GRPC_PORT: ${STUDENT_SERVICE_GRPC_PORT:-50054}
+      AUTH_SERVICE_GRPC_HOST: auth-service
+      AUTH_SERVICE_GRPC_PORT: ${AUTH_SERVICE_GRPC_PORT:-50051}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+    ports:
+      - "${STUDENT_SERVICE_GRPC_PORT:-50054}:${STUDENT_SERVICE_GRPC_PORT:-50054}"
+    volumes:
+      - ./apps/student-service/src:/app/apps/student-service/src:ro
+      - ./libs/src:/app/libs/src:ro
+      - ./proto:/app/proto:ro
+      - ./types:/app/types:ro
+    depends_on:
       redis:
         condition: service_healthy
     networks:
@@ -171,7 +186,7 @@ services:
 networks:
   performa-network:
     driver: bridge
+    name: performa-network
 
 volumes:
-  postgres_data:
   redis_data:

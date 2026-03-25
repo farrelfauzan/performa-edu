@@ -15,6 +15,10 @@ tags:
     description: Authentication and user registration
   - name: Customers
     description: Customer management
+  - name: Students
+    description: Student management and registration
+  - name: Assignments
+    description: Content assignment and progress tracking
   - name: Contents
     description: Content management with two-phase upload
 
@@ -200,6 +204,95 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        uniqueId:
+          type: string
+        fullName:
+          type: string
+        phoneNumber:
+          type: string
+          nullable: true
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+        profilePictureUrl:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        active:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+        teacherId:
+          type: string
+        studentId:
+          type: string
+        contentId:
+          type: string
+        status:
+          type: string
+          enum: [ASSIGNED, IN_PROGRESS, COMPLETED, OVERDUE]
+        progress:
+          type: number
+          format: float
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        assignedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        student:
+          $ref: '#/components/schemas/Student'
+
+    ProgressLog:
+      type: object
+      properties:
+        id:
+          type: string
+        assignmentId:
+          type: string
+        action:
+          type: string
+          enum: [COMPLETE_SECTION, ANSWER_QUESTION]
+        sectionId:
+          type: string
+          nullable: true
+        questionId:
+          type: string
+          nullable: true
+        createdAt:
           type: string
           format: date-time
 
@@ -874,3 +967,511 @@ paths:
                 properties:
                   success:
                     type: boolean
+
+  # ── Students ──
+  /students:
+    post:
+      tags: [Students]
+      summary: Register a new student
+      description: |
+        Creates a user account in auth-service and a student profile in student-service.
+        Rolls back the user if student creation fails.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password, roleIds, fullName]
+              properties:
+                username:
+                  type: string
+                  example: studentjohn
+                email:
+                  type: string
+                  format: email
+                  example: john@student.edu
+                password:
+                  type: string
+                  description: Min 8 chars, must include uppercase and special character
+                  example: MyPassword123!
+                roleIds:
+                  type: array
+                  items:
+                    type: string
+                  example: ['clxxx_role_student']
+                fullName:
+                  type: string
+                  example: John Student
+                phoneNumber:
+                  type: string
+                  example: '081234567890'
+                dateOfBirth:
+                  type: string
+                  format: date
+                  example: '2000-05-20'
+      responses:
+        '201':
+          description: Student registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                      student:
+                        $ref: '#/components/schemas/Student'
+    get:
+      tags: [Students]
+      summary: Get all students
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: Students retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Student'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+
+  /students/{id}:
+    get:
+      tags: [Students]
+      summary: Get student by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Student'
+    put:
+      tags: [Students]
+      summary: Update student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                phoneNumber:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+                bio:
+                  type: string
+      responses:
+        '200':
+          description: Student updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Student'
+    delete:
+      tags: [Students]
+      summary: Delete student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student deleted
+
+  # ── Assignments ──
+  /assignments:
+    post:
+      tags: [Assignments]
+      summary: Create assignment
+      description: Teacher assigns a content to a student
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId, contentId]
+              properties:
+                studentId:
+                  type: string
+                contentId:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date-time
+                  description: Optional due date
+      responses:
+        '201':
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Assignment'
+
+  /assignments/bulk:
+    post:
+      tags: [Assignments]
+      summary: Bulk create assignments
+      description: Teacher assigns a content to multiple students at once
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentIds, contentId]
+              properties:
+                studentIds:
+                  type: array
+                  items:
+                    type: string
+                contentId:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Assignments created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+                  created:
+                    type: integer
+                  skipped:
+                    type: integer
+
+  /assignments/{studentId}/{contentId}:
+    delete:
+      tags: [Assignments]
+      summary: Delete assignment
+      description: Teacher removes an assignment from a student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assignment deleted
+
+  /assignments/my:
+    get:
+      tags: [Assignments]
+      summary: Get my assignments
+      description: Student retrieves their own assignments (resolved via auth token)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ASSIGNED, IN_PROGRESS, COMPLETED, OVERDUE]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Assignments retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+
+  /assignments/student/{studentId}:
+    get:
+      tags: [Assignments]
+      summary: Get student assignments
+      description: Teacher/Admin retrieves assignments for a specific student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Student assignments retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+
+  /assignments/teacher:
+    get:
+      tags: [Assignments]
+      summary: Get teacher assignments
+      description: Teacher retrieves assignments they created
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: contentId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Teacher assignments retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+
+  /assignments/content/{contentId}:
+    get:
+      tags: [Assignments]
+      summary: Get content assignments
+      description: Teacher/Admin sees which students have this content assigned
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Content assignments retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+                  totalAssigned:
+                    type: integer
+
+  /assignments/progress:
+    put:
+      tags: [Assignments]
+      summary: Update progress
+      description: |
+        Student logs a progress action (complete a section or answer a question).
+        Idempotent — logging the same action twice returns `alreadyLogged: true`.
+        Progress percentage is auto-calculated based on completed items vs total content sections.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contentId, action]
+              properties:
+                contentId:
+                  type: string
+                action:
+                  type: string
+                  enum: [COMPLETE_SECTION, ANSWER_QUESTION]
+                sectionId:
+                  type: string
+                  description: Required when action is COMPLETE_SECTION
+                questionId:
+                  type: string
+                  description: Required when action is ANSWER_QUESTION
+      responses:
+        '200':
+          description: Progress updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Assignment'
+                  alreadyLogged:
+                    type: boolean
+
+  /assignments/{studentId}/{contentId}/progress:
+    get:
+      tags: [Assignments]
+      summary: Get progress logs
+      description: View detailed progress logs for a student's assignment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Progress logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProgressLog'
+                  progress:
+                    type: number
+                    format: float
+                  completedItems:
+                    type: integer
+                  totalItems:
+                    type: integer
