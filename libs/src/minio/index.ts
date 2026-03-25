@@ -6,6 +6,8 @@ import {
 } from '@aws-sdk/client-s3';
 import { readFile } from 'fs/promises';
 
+export const CDN_BASE_URL = 'https://dv0u9v99guak9.cloudfront.net';
+
 export class StorageClient {
   private readonly BASE_URL: string;
   private readonly client: S3Client;
@@ -51,7 +53,12 @@ export class StorageClient {
   }
 
   async deleteFile(filePath: string): Promise<void> {
-    if (filePath.startsWith(this.BASE_URL)) {
+    if (filePath.startsWith(CDN_BASE_URL)) {
+      const cdnUrl = CDN_BASE_URL.endsWith('/')
+        ? CDN_BASE_URL
+        : `${CDN_BASE_URL}/`;
+      filePath = filePath.replace(cdnUrl, '');
+    } else if (filePath.startsWith(this.BASE_URL)) {
       const baseUrl = this.BASE_URL.endsWith('/')
         ? this.BASE_URL
         : `${this.BASE_URL}/`;
@@ -74,7 +81,7 @@ export class StorageClient {
   }
 
   getPublicUrl(objectName: string): string {
-    return `${this.BASE_URL}/${objectName}`;
+    return `${CDN_BASE_URL}/${objectName}`;
   }
 }
 
