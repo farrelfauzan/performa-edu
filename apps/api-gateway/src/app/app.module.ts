@@ -14,8 +14,11 @@ import { ClsModule } from 'nestjs-cls';
 import { GrpcErrorHandler } from '@performa-edu/libs';
 import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer-service';
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
+import { STUDENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/student-service';
 import { CustomerController } from './customer/customer.controller';
 import { ContentController } from './content/content.controller';
+import { StudentController } from './student/student.controller';
+import { AssignmentController } from './assignment/assignment.controller';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -62,6 +65,17 @@ import { ContentController } from './content/content.controller';
           }`,
         },
       },
+      {
+        name: STUDENTSERVICE_PACKAGE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          package: STUDENTSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/student-service.proto'),
+          url: `${process.env.STUDENT_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.STUDENT_SERVICE_GRPC_PORT || '50054'
+          }`,
+        },
+      },
     ]),
   ],
   controllers: [
@@ -69,6 +83,8 @@ import { ContentController } from './content/content.controller';
     AuthController,
     CustomerController,
     ContentController,
+    StudentController,
+    AssignmentController,
   ],
   providers: [
     AppService,

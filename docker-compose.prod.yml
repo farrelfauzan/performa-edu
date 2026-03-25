@@ -1,17 +1,6 @@
-version: '3.8'
-
 # Production overrides - use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 
 services:
-  postgres:
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    # In production, consider not exposing ports externally
-    # ports: []
-
   redis:
     restart: always
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
@@ -81,6 +70,12 @@ services:
       CONTENT_SERVICE_GRPC_PORT: ${CONTENT_SERVICE_GRPC_PORT:-50052}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      HLS_CONVERTER_URL: ${HLS_CONVERTER_URL:-}
+      HLS_CONVERTER_API_KEY: ${HLS_CONVERTER_API_KEY:-}
     volumes: []
     ports: []
     deploy:

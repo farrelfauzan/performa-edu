@@ -19,6 +19,7 @@ help:
 	@echo "  make auth         - Start only auth-service"
 	@echo "  make content      - Start only content-service"
 	@echo "  make customer     - Start only customer-service"
+	@echo "  make student      - Start only student-service"
 	@echo ""
 	@echo "Database:"
 	@echo "  make db           - Start only PostgreSQL and Redis"
@@ -76,6 +77,9 @@ content:
 customer:
 	docker-compose up -d postgres redis customer-service
 
+student:
+	docker-compose up -d postgres redis student-service
+
 # ===========================================
 # Infrastructure Only
 # ===========================================
@@ -122,6 +126,9 @@ shell-content:
 
 shell-customer:
 	docker-compose exec customer-service sh
+
+shell-student:
+	docker-compose exec student-service sh
 
 shell-postgres:
 	docker-compose exec postgres psql -U postgres -d performa_edu_db
