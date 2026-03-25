@@ -59,6 +59,18 @@ async function seedRoles() {
         createPermission(AclSubject.CONTENT, AclAction.UPDATE),
         createPermission(AclSubject.CONTENT, AclAction.DELETE),
         createPermission(AclSubject.CONTENT, AclAction.VIEW),
+        // Student management
+        createPermission(AclSubject.STUDENT, AclAction.CREATE),
+        createPermission(AclSubject.STUDENT, AclAction.READ),
+        createPermission(AclSubject.STUDENT, AclAction.UPDATE),
+        createPermission(AclSubject.STUDENT, AclAction.DELETE),
+        createPermission(AclSubject.STUDENT, AclAction.VIEW),
+        // Assignment management
+        createPermission(AclSubject.ASSIGNMENT, AclAction.CREATE),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.READ),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.UPDATE),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.DELETE),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.VIEW),
       ],
     },
     {
@@ -76,6 +88,31 @@ async function seedRoles() {
         createPermission(AclSubject.CONTENT, AclAction.CREATE),
         createPermission(AclSubject.CONTENT, AclAction.UPDATE),
         createPermission(AclSubject.CONTENT, AclAction.DELETE),
+        // Student management (teacher creates/views students)
+        createPermission(AclSubject.STUDENT, AclAction.CREATE),
+        createPermission(AclSubject.STUDENT, AclAction.READ),
+        createPermission(AclSubject.STUDENT, AclAction.VIEW),
+        // Assignment management (teacher assigns content)
+        createPermission(AclSubject.ASSIGNMENT, AclAction.CREATE),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.READ),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.DELETE),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.VIEW),
+      ],
+    },
+    {
+      name: 'STUDENT',
+      permissions: [
+        // Self management
+        createPermission(AclSubject.USER, AclAction.READ),
+        createPermission(AclSubject.USER, AclAction.VIEW),
+        createPermission(AclSubject.USER, AclAction.UPDATE, { id: '{{ id }}' }),
+        // View assigned content
+        createPermission(AclSubject.CONTENT, AclAction.READ),
+        createPermission(AclSubject.CONTENT, AclAction.VIEW),
+        // Own assignments
+        createPermission(AclSubject.ASSIGNMENT, AclAction.READ),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.VIEW),
+        createPermission(AclSubject.ASSIGNMENT, AclAction.UPDATE),
       ],
     },
   ];

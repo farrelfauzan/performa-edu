@@ -1,0 +1,295 @@
+syntax = "proto3";
+
+package studentservice;
+
+service StudentService {
+  // Student CRUD
+  rpc RegisterStudent(RegisterStudentRequest) returns (RegisterStudentResponse);
+  rpc GetStudentById(GetStudentByIdRequest) returns (GetStudentByIdResponse);
+  rpc GetStudentByUserId(GetStudentByUserIdRequest) returns (GetStudentByUserIdResponse);
+  rpc UpdateStudent(UpdateStudentRequest) returns (UpdateStudentResponse);
+  rpc DeleteStudent(DeleteStudentRequest) returns (DeleteStudentResponse);
+  rpc GetAllStudents(GetAllStudentsRequest) returns (GetAllStudentsResponse);
+  rpc GetProfilePictureUploadUrl(ProfilePictureUploadUrlRequest) returns (ProfilePictureUploadUrlResponse);
+
+  // Assignment management
+  rpc CreateAssignment(CreateAssignmentRequest) returns (CreateAssignmentResponse);
+  rpc BulkCreateAssignments(BulkCreateAssignmentsRequest) returns (BulkCreateAssignmentsResponse);
+  rpc DeleteAssignment(DeleteAssignmentRequest) returns (DeleteAssignmentResponse);
+  rpc GetAssignment(GetAssignmentRequest) returns (GetAssignmentResponse);
+
+  // Query assignments
+  rpc GetStudentAssignments(GetStudentAssignmentsRequest) returns (GetStudentAssignmentsResponse);
+  rpc GetTeacherAssignments(GetTeacherAssignmentsRequest) returns (GetTeacherAssignmentsResponse);
+  rpc GetContentAssignments(GetContentAssignmentsRequest) returns (GetContentAssignmentsResponse);
+
+  // Progress tracking
+  rpc UpdateProgress(UpdateProgressRequest) returns (UpdateProgressResponse);
+  rpc GetProgressLogs(GetProgressLogsRequest) returns (GetProgressLogsResponse);
+}
+
+// Shared enums
+
+enum Order {
+  ASC = 0;
+  DESC = 1;
+}
+
+enum AssignmentStatus {
+  ASSIGNED = 0;
+  IN_PROGRESS = 1;
+  COMPLETED = 2;
+  OVERDUE = 3;
+}
+
+enum ProgressAction {
+  COMPLETE_SECTION = 0;
+  ANSWER_QUESTION = 1;
+}
+
+// Shared messages
+
+message PageMeta {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 count = 3;
+  optional int32 page_count = 4;
+  optional bool has_previous_page = 5;
+  optional bool has_next_page = 6;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+}
+
+// Student messages
+
+message Student {
+  string id = 1;
+  string user_id = 2;
+  string unique_id = 3;
+  string full_name = 4;
+  optional string phone_number = 5;
+  optional string date_of_birth = 6;
+  optional string profile_picture_url = 7;
+  optional string bio = 8;
+  string active = 9;
+  string created_at = 10;
+  string updated_at = 11;
+  optional string deleted_at = 12;
+  optional User user = 13;
+}
+
+message RegisterStudentRequest {
+  string user_id = 1;
+  string full_name = 2;
+  optional string phone_number = 3;
+  optional string date_of_birth = 4;
+  optional string profile_picture_url = 5;
+  optional string bio = 6;
+}
+
+message RegisterStudentResponse {
+  Student student = 1;
+}
+
+message GetStudentByIdRequest {
+  string id = 1;
+}
+
+message GetStudentByIdResponse {
+  Student student = 1;
+}
+
+message GetStudentByUserIdRequest {
+  string user_id = 1;
+}
+
+message GetStudentByUserIdResponse {
+  Student student = 1;
+}
+
+message UpdateStudentRequest {
+  string id = 1;
+  optional string full_name = 2;
+  optional string phone_number = 3;
+  optional string date_of_birth = 4;
+  optional string bio = 5;
+}
+
+message UpdateStudentResponse {
+  Student student = 1;
+}
+
+message DeleteStudentRequest {
+  string id = 1;
+}
+
+message DeleteStudentResponse {
+  string message = 1;
+}
+
+message GetAllStudentsRequest {
+  optional int32 page = 1;
+  optional int32 page_size = 2;
+  optional string search = 3;
+  optional string sort_by = 4;
+  optional Order order = 5;
+}
+
+message GetAllStudentsResponse {
+  repeated Student students = 1;
+  PageMeta meta = 2;
+}
+
+// Assignment messages
+
+message Assignment {
+  string id = 1;
+  string teacher_id = 2;
+  string student_id = 3;
+  string content_id = 4;
+  AssignmentStatus status = 5;
+  float progress = 6;
+  optional string due_date = 7;
+  string assigned_at = 8;
+  optional string started_at = 9;
+  optional string completed_at = 10;
+  optional Student student = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+message CreateAssignmentRequest {
+  string teacher_id = 1;
+  string student_id = 2;
+  string content_id = 3;
+  optional string due_date = 4;
+}
+
+message CreateAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message BulkCreateAssignmentsRequest {
+  string teacher_id = 1;
+  repeated string student_ids = 2;
+  string content_id = 3;
+  optional string due_date = 4;
+}
+
+message BulkCreateAssignmentsResponse {
+  repeated Assignment assignments = 1;
+  int32 created = 2;
+  int32 skipped = 3;
+}
+
+message DeleteAssignmentRequest {
+  string teacher_id = 1;
+  string student_id = 2;
+  string content_id = 3;
+}
+
+message DeleteAssignmentResponse {
+  string message = 1;
+}
+
+message GetAssignmentRequest {
+  string student_id = 1;
+  string content_id = 2;
+}
+
+message GetAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+// Query assignment messages
+
+message GetStudentAssignmentsRequest {
+  string student_id = 1;
+  optional AssignmentStatus status = 2;
+  optional int32 page = 3;
+  optional int32 page_size = 4;
+}
+
+message GetStudentAssignmentsResponse {
+  repeated Assignment assignments = 1;
+  PageMeta meta = 2;
+}
+
+message GetTeacherAssignmentsRequest {
+  string teacher_id = 1;
+  optional string content_id = 2;
+  optional AssignmentStatus status = 3;
+  optional int32 page = 4;
+  optional int32 page_size = 5;
+}
+
+message GetTeacherAssignmentsResponse {
+  repeated Assignment assignments = 1;
+  PageMeta meta = 2;
+}
+
+message GetContentAssignmentsRequest {
+  string content_id = 1;
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+}
+
+message GetContentAssignmentsResponse {
+  repeated Assignment assignments = 1;
+  PageMeta meta = 2;
+  int32 total_assigned = 3;
+}
+
+// Progress messages
+
+message UpdateProgressRequest {
+  string student_id = 1;
+  string content_id = 2;
+  ProgressAction action = 3;
+  optional string section_id = 4;
+  optional string question_id = 5;
+}
+
+message UpdateProgressResponse {
+  Assignment assignment = 1;
+  bool already_logged = 2;
+}
+
+message GetProgressLogsRequest {
+  string assignment_id = 1;
+}
+
+message ProgressLog {
+  string id = 1;
+  string assignment_id = 2;
+  optional string section_id = 3;
+  optional string question_id = 4;
+  ProgressAction action = 5;
+  string created_at = 6;
+}
+
+message GetProgressLogsResponse {
+  repeated ProgressLog logs = 1;
+  float progress = 2;
+  int32 completed_items = 3;
+  int32 total_items = 4;
+}
+
+// Profile picture upload
+
+message ProfilePictureUploadUrlRequest {
+  string filename = 1;
+  string content_type = 2;
+}
+
+message ProfilePictureUploadUrlResponse {
+  string upload_url = 1;
+  map<string, string> fields = 2;
+  string s3_key = 3;
+  string public_url = 4;
+  int32 expires_in = 5;
+}

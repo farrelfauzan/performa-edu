@@ -14,6 +14,8 @@ export enum AclSubject {
   ADMIN = 'Admin',
   CUSTOMER = 'Customer',
   CONTENT = 'Content',
+  STUDENT = 'Student',
+  ASSIGNMENT = 'Assignment',
 }
 
 export type Permissions = Record<AclSubject, AclAction>;
