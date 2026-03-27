@@ -40,6 +40,8 @@ services:
       CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
       STUDENT_SERVICE_GRPC_HOST: student-service
       STUDENT_SERVICE_GRPC_PORT: ${STUDENT_SERVICE_GRPC_PORT:-50054}
+      QUIZ_SERVICE_GRPC_HOST: quiz-service
+      QUIZ_SERVICE_GRPC_PORT: ${QUIZ_SERVICE_GRPC_PORT:-50055}
       REDIS_URL: redis://redis:6379
     ports:
       - "${API_GATEWAY_PORT:-3000}:${API_GATEWAY_PORT:-3000}"
@@ -58,6 +60,8 @@ services:
       customer-service:
         condition: service_started
       student-service:
+        condition: service_started
+      quiz-service:
         condition: service_started
     networks:
       - performa-network
@@ -174,6 +178,36 @@ services:
       - "${STUDENT_SERVICE_GRPC_PORT:-50054}:${STUDENT_SERVICE_GRPC_PORT:-50054}"
     volumes:
       - ./apps/student-service/src:/app/apps/student-service/src:ro
+      - ./libs/src:/app/libs/src:ro
+      - ./proto:/app/proto:ro
+      - ./types:/app/types:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - performa-network
+
+  quiz-service:
+    build:
+      context: .
+      dockerfile: apps/quiz-service/Dockerfile
+      target: development
+    container_name: performa-edu-quiz-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      QUIZ_SERVICE_GRPC_HOST: 0.0.0.0
+      QUIZ_SERVICE_GRPC_PORT: ${QUIZ_SERVICE_GRPC_PORT:-50055}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-performa-assets}
+    ports:
+      - "${QUIZ_SERVICE_GRPC_PORT:-50055}:${QUIZ_SERVICE_GRPC_PORT:-50055}"
+    volumes:
+      - ./apps/quiz-service/src:/app/apps/quiz-service/src:ro
       - ./libs/src:/app/libs/src:ro
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
