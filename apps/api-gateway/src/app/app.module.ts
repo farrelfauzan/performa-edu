@@ -15,10 +15,12 @@ import { GrpcErrorHandler } from '@performa-edu/libs';
 import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer-service';
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { STUDENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/student-service';
+import { QUIZSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/quiz-service';
 import { CustomerController } from './customer/customer.controller';
 import { ContentController } from './content/content.controller';
 import { StudentController } from './student/student.controller';
 import { AssignmentController } from './assignment/assignment.controller';
+import { QuizController } from './quiz/quiz.controller';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -76,6 +78,17 @@ import { AssignmentController } from './assignment/assignment.controller';
           }`,
         },
       },
+      {
+        name: QUIZSERVICE_PACKAGE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          package: QUIZSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/quiz-service.proto'),
+          url: `${process.env.QUIZ_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.QUIZ_SERVICE_GRPC_PORT || '50055'
+          }`,
+        },
+      },
     ]),
   ],
   controllers: [
@@ -85,6 +98,7 @@ import { AssignmentController } from './assignment/assignment.controller';
     ContentController,
     StudentController,
     AssignmentController,
+    QuizController,
   ],
   providers: [
     AppService,
