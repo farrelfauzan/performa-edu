@@ -43,6 +43,20 @@ enum ProgressAction {
   ANSWER_QUESTION
 }
 
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  MULTI_SELECT
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+  TIMED_OUT
+}
+
 // Auth Models
 model User {
   id                  String               @id @default(cuid())
@@ -265,4 +279,92 @@ model ContentMedia {
   @@index([sectionId])
   @@index([processingStatus])
   @@map("content_media")
+}
+
+// Quiz Models
+model Quiz {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  title            String    @db.VarChar(255)
+  description      String?   @db.Text
+  timeLimitSecs    Int?      @map("time_limit_secs")
+  passingScore     Int       @default(70) @map("passing_score")
+  maxAttempts      Int       @default(3) @map("max_attempts")
+  shuffleQuestions Boolean   @default(false) @map("shuffle_questions")
+  isPublished      Boolean   @default(false) @map("is_published")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  @@index([userId])
+  @@map("quizzes")
+}
+
+model Question {
+  id              String       @id @default(cuid())
+  quizId          String       @map("quiz_id")
+  quiz            Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  type            QuestionType
+  text            String       @db.Text
+  explanation     String?      @db.Text
+  pictureUrl      String?      @map("picture_url")
+  points          Int          @default(1)
+  sortOrder       Int          @default(0) @map("sort_order")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  options QuestionOption[]
+  answers AttemptAnswer[]
+
+  @@index([quizId])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(cuid())
+  questionId String  @map("question_id")
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String  @db.Text
+  isCorrect  Boolean @default(false) @map("is_correct")
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  @@index([questionId])
+  @@map("question_options")
+}
+
+model QuizAttempt {
+  id          String        @id @default(cuid())
+  quizId      String        @map("quiz_id")
+  quiz        Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId      String        @map("user_id")
+  score       Float?
+  totalPoints Int?          @map("total_points")
+  status      AttemptStatus @default(IN_PROGRESS)
+  startedAt   DateTime      @default(now()) @map("started_at") @db.Timestamptz
+  submittedAt DateTime?     @map("submitted_at") @db.Timestamptz
+
+  answers AttemptAnswer[]
+
+  @@index([quizId])
+  @@index([userId])
+  @@map("quiz_attempts")
+}
+
+model AttemptAnswer {
+  id              String  @id @default(cuid())
+  attemptId       String  @map("attempt_id")
+  attempt         QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId      String  @map("question_id")
+  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOptions String[] @map("selected_options")
+  textAnswer      String? @map("text_answer") @db.Text
+  isCorrect       Boolean @default(false) @map("is_correct")
+  pointsEarned    Float   @default(0) @map("points_earned")
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@map("attempt_answers")
 }

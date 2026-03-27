@@ -1,0 +1,377 @@
+syntax = "proto3";
+
+package quizservice;
+
+service QuizService {
+  // Quiz CRUD
+  rpc CreateQuiz(CreateQuizRequest) returns (CreateQuizResponse);
+  rpc GetQuizById(GetQuizByIdRequest) returns (GetQuizByIdResponse);
+  rpc UpdateQuiz(UpdateQuizRequest) returns (UpdateQuizResponse);
+  rpc DeleteQuiz(DeleteQuizRequest) returns (DeleteQuizResponse);
+  rpc GetAllQuizzes(GetAllQuizzesRequest) returns (GetAllQuizzesResponse);
+  rpc PublishQuiz(PublishQuizRequest) returns (PublishQuizResponse);
+  rpc UnpublishQuiz(UnpublishQuizRequest) returns (UnpublishQuizResponse);
+
+  // Question management
+  rpc AddQuestion(AddQuestionRequest) returns (AddQuestionResponse);
+  rpc UpdateQuestion(UpdateQuestionRequest) returns (UpdateQuestionResponse);
+  rpc DeleteQuestion(DeleteQuestionRequest) returns (DeleteQuestionResponse);
+  rpc ReorderQuestions(ReorderQuestionsRequest) returns (ReorderQuestionsResponse);
+  rpc GetQuestionPictureUploadUrl(GetQuestionPictureUploadUrlRequest) returns (GetQuestionPictureUploadUrlResponse);
+
+  // Quiz attempts
+  rpc StartAttempt(StartAttemptRequest) returns (StartAttemptResponse);
+  rpc SubmitAnswer(SubmitAnswerRequest) returns (SubmitAnswerResponse);
+  rpc SubmitAttempt(SubmitAttemptRequest) returns (SubmitAttemptResponse);
+  rpc GetAttemptResult(GetAttemptResultRequest) returns (GetAttemptResultResponse);
+  rpc GetAttemptHistory(GetAttemptHistoryRequest) returns (GetAttemptHistoryResponse);
+
+  // Analytics
+  rpc GetQuizAnalytics(GetQuizAnalyticsRequest) returns (GetQuizAnalyticsResponse);
+}
+
+// Enums
+
+enum Order {
+  ASC = 0;
+  DESC = 1;
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE = 0;
+  TRUE_FALSE = 1;
+  SHORT_ANSWER = 2;
+  MULTI_SELECT = 3;
+}
+
+enum AttemptStatus {
+  IN_PROGRESS = 0;
+  SUBMITTED = 1;
+  GRADED = 2;
+  TIMED_OUT = 3;
+}
+
+// Shared messages
+
+message PageMeta {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 count = 3;
+  optional int32 page_count = 4;
+  optional bool has_previous_page = 5;
+  optional bool has_next_page = 6;
+}
+
+// Quiz messages
+
+message QuestionOption {
+  string id = 1;
+  string text = 2;
+  bool is_correct = 3;
+  int32 sort_order = 4;
+}
+
+message Question {
+  string id = 1;
+  string quiz_id = 2;
+  QuestionType type = 3;
+  string text = 4;
+  optional string explanation = 5;
+  int32 points = 6;
+  int32 sort_order = 7;
+  repeated QuestionOption options = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  optional string picture_url = 11;
+}
+
+message Quiz {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  optional string description = 4;
+  optional int32 time_limit_secs = 5;
+  int32 passing_score = 6;
+  int32 max_attempts = 7;
+  bool shuffle_questions = 8;
+  bool is_published = 9;
+  int32 question_count = 10;
+  repeated Question questions = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+// Quiz CRUD messages
+
+message CreateQuizRequest {
+  string user_id = 1;
+  string title = 2;
+  optional string description = 3;
+  optional int32 time_limit_secs = 4;
+  optional int32 passing_score = 5;
+  optional int32 max_attempts = 6;
+  optional bool shuffle_questions = 7;
+  repeated CreateQuestionInput questions = 8;
+}
+
+message CreateQuestionInput {
+  QuestionType type = 1;
+  string text = 2;
+  optional string explanation = 3;
+  optional int32 points = 4;
+  optional int32 sort_order = 5;
+  repeated CreateOptionInput options = 6;
+  optional string picture_url = 7;
+}
+
+message CreateOptionInput {
+  string text = 1;
+  bool is_correct = 2;
+  optional int32 sort_order = 3;
+}
+
+message CreateQuizResponse {
+  Quiz quiz = 1;
+}
+
+message GetQuizByIdRequest {
+  string id = 1;
+}
+
+message GetQuizByIdResponse {
+  Quiz quiz = 1;
+}
+
+message UpdateQuizRequest {
+  string id = 1;
+  optional string title = 2;
+  optional string description = 3;
+  optional int32 time_limit_secs = 4;
+  optional int32 passing_score = 5;
+  optional int32 max_attempts = 6;
+  optional bool shuffle_questions = 7;
+  // When true, set time_limit_secs to null
+  optional bool clear_time_limit = 8;
+}
+
+message UpdateQuizResponse {
+  Quiz quiz = 1;
+}
+
+message DeleteQuizRequest {
+  string id = 1;
+}
+
+message DeleteQuizResponse {
+  string message = 1;
+}
+
+message GetAllQuizzesRequest {
+  string user_id = 1;
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+  optional string search = 4;
+  optional string sort_by = 5;
+  optional Order order = 6;
+  optional bool is_published = 7;
+}
+
+message GetAllQuizzesResponse {
+  repeated Quiz quizzes = 1;
+  PageMeta meta = 2;
+}
+
+message PublishQuizRequest {
+  string id = 1;
+}
+
+message PublishQuizResponse {
+  Quiz quiz = 1;
+}
+
+message UnpublishQuizRequest {
+  string id = 1;
+}
+
+message UnpublishQuizResponse {
+  Quiz quiz = 1;
+}
+
+// Question management messages
+
+message AddQuestionRequest {
+  string quiz_id = 1;
+  QuestionType type = 2;
+  string text = 3;
+  optional string explanation = 4;
+  optional int32 points = 5;
+  optional int32 sort_order = 6;
+  repeated CreateOptionInput options = 7;
+  optional string picture_url = 8;
+}
+
+message AddQuestionResponse {
+  Question question = 1;
+}
+
+message UpdateQuestionRequest {
+  string quiz_id = 1;
+  string question_id = 2;
+  optional QuestionType type = 3;
+  optional string text = 4;
+  optional string explanation = 5;
+  optional int32 points = 6;
+  repeated CreateOptionInput options = 7;
+  optional string picture_url = 8;
+}
+
+message UpdateQuestionResponse {
+  Question question = 1;
+}
+
+message DeleteQuestionRequest {
+  string quiz_id = 1;
+  string question_id = 2;
+}
+
+message DeleteQuestionResponse {
+  string message = 1;
+}
+
+message ReorderQuestionsRequest {
+  string quiz_id = 1;
+  repeated string question_ids = 2;
+}
+
+message ReorderQuestionsResponse {
+  string message = 1;
+}
+
+// Attempt messages
+
+message StartAttemptRequest {
+  string quiz_id = 1;
+  string user_id = 2;
+}
+
+message StartAttemptResponse {
+  QuizAttempt attempt = 1;
+  repeated AttemptQuestion questions = 2;
+}
+
+message AttemptQuestion {
+  string id = 1;
+  QuestionType type = 2;
+  string text = 3;
+  int32 points = 4;
+  int32 sort_order = 5;
+  repeated AttemptOption options = 6;
+}
+
+message AttemptOption {
+  string id = 1;
+  string text = 2;
+  int32 sort_order = 3;
+}
+
+message SubmitAnswerRequest {
+  string attempt_id = 1;
+  string question_id = 2;
+  repeated string selected_option_ids = 3;
+  optional string text_answer = 4;
+}
+
+message SubmitAnswerResponse {
+  string message = 1;
+}
+
+message SubmitAttemptRequest {
+  string attempt_id = 1;
+}
+
+message SubmitAttemptResponse {
+  QuizAttempt attempt = 1;
+}
+
+message QuizAttempt {
+  string id = 1;
+  string quiz_id = 2;
+  string user_id = 3;
+  optional float score = 4;
+  optional int32 total_points = 5;
+  AttemptStatus status = 6;
+  string started_at = 7;
+  optional string submitted_at = 8;
+}
+
+message GetAttemptResultRequest {
+  string attempt_id = 1;
+}
+
+message AttemptAnswerResult {
+  string question_id = 1;
+  string question_text = 2;
+  QuestionType question_type = 3;
+  repeated string selected_option_ids = 4;
+  optional string text_answer = 5;
+  bool is_correct = 6;
+  float points_earned = 7;
+  int32 max_points = 8;
+  optional string explanation = 9;
+  repeated QuestionOption correct_options = 10;
+}
+
+message GetAttemptResultResponse {
+  QuizAttempt attempt = 1;
+  repeated AttemptAnswerResult answers = 2;
+}
+
+message GetAttemptHistoryRequest {
+  string quiz_id = 1;
+  optional string user_id = 2;
+  optional int32 page = 3;
+  optional int32 page_size = 4;
+}
+
+message GetAttemptHistoryResponse {
+  repeated QuizAttempt attempts = 1;
+  PageMeta meta = 2;
+}
+
+// Analytics messages
+
+message QuestionStat {
+  string question_id = 1;
+  string text = 2;
+  float correct_rate = 3;
+  float average_points = 4;
+}
+
+message GetQuizAnalyticsRequest {
+  string quiz_id = 1;
+}
+
+message GetQuizAnalyticsResponse {
+  string quiz_id = 1;
+  int32 total_attempts = 2;
+  float average_score = 3;
+  float pass_rate = 4;
+  repeated QuestionStat question_stats = 5;
+}
+
+// Question picture upload
+
+message GetQuestionPictureUploadUrlRequest {
+  string quiz_id = 1;
+  string question_id = 2;
+  string filename = 3;
+  string content_type = 4;
+}
+
+message GetQuestionPictureUploadUrlResponse {
+  string upload_url = 1;
+  map<string, string> fields = 2;
+  string s3_key = 3;
+  string public_url = 4;
+  int32 expires_in = 5;
+}
