@@ -5,13 +5,13 @@ import {
   UploadFile,
 } from '../interfaces/content-media.repository.interface';
 import {
+  CDN_BASE_URL,
   HlsConverterClient,
   PresignedUploadResponse,
   PrismaService,
 } from '@performa-edu/libs';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client } from '@aws-sdk/client-s3';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 
@@ -288,14 +288,16 @@ export class ContentMediaRepository implements IContentMediaRepository {
   }
 
   /**
-   * Generate a presigned GET URL for secure document download.
+   * Get a public CloudFront URL for a given S3 key.
    */
-  async getPresignedGetUrl(s3Key: string, expiresIn = 86400): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucketName,
-      Key: s3Key,
-    });
+  getCloudFrontUrl(s3Key: string): string {
+    return `${CDN_BASE_URL}/${s3Key}`;
+  }
 
-    return getSignedUrl(this.s3Client, command, { expiresIn });
+  /**
+   * @deprecated Use getCloudFrontUrl instead
+   */
+  async getPresignedGetUrl(s3Key: string): Promise<string> {
+    return this.getCloudFrontUrl(s3Key);
   }
 }

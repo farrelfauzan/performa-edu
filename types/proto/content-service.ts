@@ -20,6 +20,7 @@ export enum ContentStatus {
   DRAFT = 0,
   PUBLISHED = 1,
   ARCHIVED = 2,
+  WAITING_FOR_REVIEW = 3,
   UNRECOGNIZED = -1,
 }
 

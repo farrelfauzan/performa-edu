@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IContentRepository } from '../interfaces/content.repository.interface';
 import {
+  ContentStatus,
   GetAllContentsRequest,
   GetAllContentsResponse,
   GetContentByIdRequest,
@@ -27,6 +28,16 @@ import {
 } from '@performa-edu/libs';
 import { ContentNotFoundError } from '../error/content.error';
 import { ContentMediaRepository } from './content-media.repository';
+
+/**
+ * Map DB status string to proto ContentStatus enum integer.
+ */
+const statusStringToProto: Record<string, ContentStatus> = {
+  DRAFT: ContentStatus.DRAFT,
+  PUBLISHED: ContentStatus.PUBLISHED,
+  ARCHIVED: ContentStatus.ARCHIVED,
+  WAITING_REVIEW: ContentStatus.WAITING_FOR_REVIEW,
+};
 
 @Injectable()
 export class ContentRepository implements IContentRepository {
@@ -57,6 +68,8 @@ export class ContentRepository implements IContentRepository {
       }
     );
 
+    console.log('Raw content data:', content.data); // Debug log for raw data
+
     const meta: PageMeta = {
       page: options.page || 1,
       pageSize: options.pageSize || 10,
@@ -67,11 +80,12 @@ export class ContentRepository implements IContentRepository {
       data: await Promise.all(
         transformResponse<ContentWithMedia[]>(content.data).map(async (c) => {
           if (c.thumbnailUrl && !c.thumbnailUrl.startsWith('http')) {
-            c.thumbnailUrl =
-              await this.contentMediaRepository.getPresignedGetUrl(
-                c.thumbnailUrl
-              );
+            c.thumbnailUrl = await this.contentMediaRepository.getCloudFrontUrl(
+              c.thumbnailUrl
+            );
           }
+          c.status =
+            statusStringToProto[c.status as unknown as string] ?? c.status;
           return c;
         })
       ),
@@ -110,7 +124,7 @@ export class ContentRepository implements IContentRepository {
       ContentNotFoundError(options.id);
     }
 
-    // Query document medias separately and generate presigned GET URLs
+    // Query document medias separately and generate CloudFront URLs
     const documentMedias = await this.prisma.contentMedia.findMany({
       where: {
         contentId: options.id,
@@ -124,7 +138,7 @@ export class ContentRepository implements IContentRepository {
     const downloadUrlMap = new Map<string, string>();
     await Promise.all(
       documentMedias.map(async (media) => {
-        const url = await this.contentMediaRepository.getPresignedGetUrl(
+        const url = await this.contentMediaRepository.getCloudFrontUrl(
           media.objectPath
         );
         downloadUrlMap.set(media.id, url);
@@ -153,10 +167,14 @@ export class ContentRepository implements IContentRepository {
       !transformed.thumbnailUrl.startsWith('http')
     ) {
       transformed.thumbnailUrl =
-        await this.contentMediaRepository.getPresignedGetUrl(
+        await this.contentMediaRepository.getCloudFrontUrl(
           transformed.thumbnailUrl
         );
     }
+
+    transformed.status =
+      statusStringToProto[transformed.status as unknown as string] ??
+      transformed.status;
 
     return { data: transformed };
   }

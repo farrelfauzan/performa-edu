@@ -1,7 +1,7 @@
 # Frontend Flow — Student Management, Assignment & Quiz
 
 > **Branch**: `revamp-v2`
-> **Date**: 2026-03-22
+> **Date**: 2026-03-27
 > **Depends on**: [student-service-approach.md](./student-service-approach.md), [quiz-service-approach.md](./quiz-service-approach.md)
 
 ---
@@ -12,20 +12,20 @@ This document covers the full frontend implementation for three flows:
 
 1. **Teacher registers a student** (performa-studio)
 2. **Teacher assigns content/quiz to student** (performa-studio)
-3. **Student works on quiz** (performa-app)
+3. **Teacher creates a quiz for content** (performa-studio)
 
 ---
 
 ## 2. Tech Stack Reference
 
-| | performa-studio (Teacher) | performa-app (Student) |
-|---|---|---|
-| **Framework** | React 19 + Vite | React Native + Expo |
-| **Routing** | TanStack Router (file-based) | Expo Router (file-based) |
-| **Data Fetching** | TanStack Query + Axios | TanStack Query + Axios (to add) |
-| **State** | Zustand (auth + forms) | Zustand (auth, to add) |
-| **Forms** | Zustand store + Zod validation | React state + Zod |
-| **UI** | Shadcn/UI (Radix + Tailwind) | Custom components + Tailwind (Uniwind) |
+| | performa-studio (Teacher) |
+|---|---|
+| **Framework** | React 19 + Vite |
+| **Routing** | TanStack Router (file-based) |
+| **Data Fetching** | TanStack Query + Axios |
+| **State** | Zustand (auth + forms) |
+| **Forms** | TanStack Form + Zustand store + Zod validation |
+| **UI** | Shadcn/UI (Radix + Tailwind) |
 
 ---
 
@@ -802,551 +802,758 @@ Students now see this content in their app (GET /assignments/my)
 
 ---
 
-## 5. Flow 3 — Student Works on Quiz (performa-app)
+## 5. Flow 3 — Teacher Creates Quiz (performa-studio)
 
-### 5.1 Prerequisites — API Client Setup
+Quiz is a **standalone content type** with its own sidebar entry under the dashboard, separate from the video/document studio. Quizzes appear alongside Studio, Students, Assignments, etc. in the sidebar navigation.
 
-The mobile app currently uses mock data. Before implementing quiz flow, add:
+### 5.1 New Routes
+
+```
+src/routes/(dashboard)/dashboard/
+├── quizzes.tsx                        ← Quiz list (table with search/pagination/filter)
+├── quizzes_.create.tsx                ← Quiz creation page (wizard)
+└── quizzes_.$quizId.tsx               ← Quiz detail / edit
+```
+
+### 5.2 API Layer
 
 ```typescript
-// utils/api-client.ts
+// lib/api.ts — add quizApi
 
-import axios from 'axios';
-import { useAuthStore } from '../stores/auth-store';
+export const quizApi = {
+  // Quiz CRUD
+  getAll: (params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    sortBy?: string;
+    order?: 'asc' | 'desc';
+    isPublished?: boolean;
+  }) => apiClient.get<QuizListResponse>('/quizzes', { params }),
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+  getById: (quizId: string) =>
+    apiClient.get<QuizResponse>(`/quizzes/${quizId}`),
 
-export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
-});
+  create: (data: CreateQuizPayload) =>
+    apiClient.post<QuizResponse>('/quizzes', data),
 
-apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  update: (quizId: string, data: UpdateQuizPayload) =>
+    apiClient.put<QuizResponse>(`/quizzes/${quizId}`, data),
 
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout();
-    }
-    return Promise.reject(error.response?.data || error);
-  }
-);
-```
+  delete: (quizId: string) =>
+    apiClient.delete(`/quizzes/${quizId}`),
 
-```typescript
-// stores/auth-store.ts
+  publish: (quizId: string) =>
+    apiClient.put<QuizResponse>(`/quizzes/${quizId}/publish`),
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+  unpublish: (quizId: string) =>
+    apiClient.put<QuizResponse>(`/quizzes/${quizId}/unpublish`),
 
-interface AuthState {
-  accessToken: string | null;
-  user: SessionUser | null;
-  setAuth: (token: string, user: SessionUser) => void;
-  setUser: (user: SessionUser) => void;
-  logout: () => void;
-}
+  // Question management
+  addQuestion: (quizId: string, data: CreateQuestionPayload) =>
+    apiClient.post<QuestionResponse>(`/quizzes/${quizId}/questions`, data),
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      accessToken: null,
-      user: null,
-      setAuth: (accessToken, user) => set({ accessToken, user }),
-      setUser: (user) => set({ user }),
-      logout: () => set({ accessToken: null, user: null }),
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
-);
-```
+  updateQuestion: (quizId: string, questionId: string, data: UpdateQuestionPayload) =>
+    apiClient.put<QuestionResponse>(`/quizzes/${quizId}/questions/${questionId}`, data),
 
-### 5.2 New Routes (Expo Router)
+  deleteQuestion: (quizId: string, questionId: string) =>
+    apiClient.delete(`/quizzes/${quizId}/questions/${questionId}`),
 
-```
-app/
-├── (auth)/
-│   ├── _layout.tsx            ← Auth layout (no tab bar)
-│   └── login.tsx              ← Login screen
-├── (tabs)/
-│   ├── _layout.tsx            ← Tab bar layout
-│   ├── index.tsx              ← Home (assigned content list)
-│   ├── courses.tsx            ← All assigned content (grid)
-│   ├── explore.tsx            ← Video reels
-│   └── profile.tsx            ← Student profile
-├── content/
-│   ├── [id].tsx               ← Content detail (sections list)
-│   └── section/
-│       └── [sectionId].tsx    ← Section player (video/document)
-├── quiz/
-│   ├── [contentId].tsx        ← Quiz intro screen
-│   └── [contentId]/
-│       └── play.tsx           ← Quiz question-by-question
-└── _layout.tsx                ← Root layout (auth check)
-```
+  reorderQuestions: (quizId: string, questionIds: string[]) =>
+    apiClient.put(`/quizzes/${quizId}/questions/reorder`, { questionIds }),
 
-### 5.3 API Layer (Mobile)
+  // Analytics
+  getAnalytics: (quizId: string) =>
+    apiClient.get<QuizAnalyticsResponse>(`/quizzes/${quizId}/analytics`),
 
-```typescript
-// utils/api.ts
-
-export const authApi = {
-  login: (data: { email: string; password: string }) =>
-    apiClient.post('/auth/login', data),
-  getMe: () => apiClient.get('/auth/getMe'),
-};
-
-export const assignmentApi = {
-  // Student: my assignments
-  getMy: (params?: { status?: string; page?: number; pageSize?: number }) =>
-    apiClient.get<AssignmentListResponse>('/assignments/my', { params }),
-
-  // Student: update progress
-  updateProgress: (data: UpdateProgressPayload) =>
-    apiClient.put<UpdateProgressResponse>('/assignments/progress', data),
-
-  // Student: view progress detail
-  getProgressLogs: (studentId: string, contentId: string) =>
-    apiClient.get<ProgressLogsResponse>(`/assignments/${studentId}/${contentId}/progress`),
-};
-
-export const contentApi = {
-  getById: (id: string) =>
-    apiClient.get<ContentResponse>(`/contents/${id}`),
+  getAttemptHistory: (quizId: string, params?: { userId?: string; page?: number }) =>
+    apiClient.get<AttemptHistoryResponse>(`/quizzes/${quizId}/attempts`, { params }),
 };
 ```
 
 ```typescript
 // Types
 
-interface UpdateProgressPayload {
-  contentId: string;
-  action: 'COMPLETE_SECTION' | 'ANSWER_QUESTION';
-  sectionId?: string;
-  questionId?: string;
+type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'MULTI_SELECT';
+type AttemptStatus = 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED' | 'TIMED_OUT';
+
+interface CreateQuizPayload {
+  title: string;
+  description?: string;
+  timeLimitSecs?: number;
+  passingScore?: number;       // percentage 0-100
+  maxAttempts?: number;
+  shuffleQuestions?: boolean;
+  questions?: CreateQuestionPayload[];  // optional: create quiz with questions in one call
 }
 
-interface UpdateProgressResponse {
-  assignment: Assignment;
-  alreadyLogged: boolean;
+interface UpdateQuizPayload {
+  title?: string;
+  description?: string;
+  timeLimitSecs?: number | null;
+  passingScore?: number;
+  maxAttempts?: number;
+  shuffleQuestions?: boolean;
+}
+
+interface CreateQuestionPayload {
+  type: QuestionType;
+  text: string;
+  explanation?: string;
+  points?: number;
+  sortOrder?: number;
+  options?: CreateOptionPayload[];
+}
+
+interface UpdateQuestionPayload {
+  type?: QuestionType;
+  text?: string;
+  explanation?: string;
+  points?: number;
+  sortOrder?: number;
+  options?: CreateOptionPayload[];  // replaces all options
+}
+
+interface CreateOptionPayload {
+  text: string;
+  isCorrect: boolean;
+  sortOrder?: number;
+}
+
+interface Quiz {
+  id: string;
+  title: string;
+  description?: string;
+  timeLimitSecs?: number;
+  passingScore: number;
+  maxAttempts: number;
+  shuffleQuestions: boolean;
+  isPublished: boolean;
+  questionCount: number;       // count for list view
+  questions?: Question[];      // included when fetching detail
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Question {
+  id: string;
+  quizId: string;
+  type: QuestionType;
+  text: string;
+  explanation?: string;
+  points: number;
+  sortOrder: number;
+  options: QuestionOption[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface QuestionOption {
+  id: string;
+  questionId: string;
+  text: string;
+  isCorrect: boolean;
+  sortOrder: number;
+}
+
+interface QuizListResponse {
+  quizzes: Quiz[];
+  meta: PageMeta;
+}
+
+interface QuizResponse {
+  quiz: Quiz;
+}
+
+interface QuestionResponse {
+  question: Question;
+}
+
+interface QuizAnalyticsResponse {
+  quizId: string;
+  totalAttempts: number;
+  averageScore: number;
+  passRate: number;
+  questionStats: {
+    questionId: string;
+    text: string;
+    correctRate: number;
+    averagePoints: number;
+  }[];
+}
+
+interface AttemptHistoryResponse {
+  attempts: {
+    id: string;
+    userId: string;
+    studentName: string;
+    score: number;
+    totalPoints: number;
+    status: AttemptStatus;
+    startedAt: string;
+    submittedAt?: string;
+  }[];
+  meta: PageMeta;
 }
 ```
 
-### 5.4 Home Screen — My Assignments
-
-Replace current mock data with real assigned content:
-
-```
-┌──────────────────────────────────┐
-│  👋 Hi, John                     │
-│  You have 3 assigned courses     │
-├──────────────────────────────────┤
-│                                    │
-│  Continue Learning                 │
-│  ┌────────────────────────────┐    │
-│  │ 📘 React Native Fund...  │    │
-│  │ ██████░░░░ 60%            │    │
-│  │ Due Apr 15                │    │
-│  └────────────────────────────┘    │
-│                                    │
-│  New Assignments                   │
-│  ┌────────┐  ┌────────┐           │
-│  │TS Adv  │  │Design  │           │
-│  │0%      │  │0%      │           │
-│  │May 01  │  │May 15  │           │
-│  └────────┘  └────────┘           │
-│                                    │
-│  Completed ✅                     │
-│  ┌────────────────────────────┐    │
-│  │ 📗 System Design Basics   │    │
-│  │ ██████████ 100%  ✅       │    │
-│  └────────────────────────────┘    │
-│                                    │
-└──────────────────────────────────┘
-    🏠     📚     🎬     👤
-```
+### 5.3 Query Hooks
 
 ```typescript
-// hooks/use-assignments.ts (mobile)
+// hooks/use-quizzes.ts
 
-export function useMyAssignments(params?: { status?: string }) {
-  return useQuery({
-    queryKey: ['my-assignments', params],
-    queryFn: () => assignmentApi.getMy(params),
+import { useApiQuery, useApiMutation } from './use-api';
+import { quizApi } from '../lib/api';
+
+export function useQuizzes(params?: { page?: number; pageSize?: number; search?: string; isPublished?: boolean }) {
+  return useApiQuery(
+    ['quizzes', params?.page, params?.pageSize, params?.search, params?.isPublished],
+    () => quizApi.getAll(params),
+  );
+}
+
+export function useQuiz(quizId: string) {
+  return useApiQuery(
+    ['quiz', quizId],
+    () => quizApi.getById(quizId),
+    { enabled: !!quizId },
+  );
+}
+
+export function useCreateQuiz() {
+  return useApiMutation(quizApi.create, {
+    invalidateQueries: ['quizzes'],
+    onSuccess: () => {
+      toast.success('Quiz created successfully');
+    },
   });
+}
+
+export function useUpdateQuiz() {
+  return useApiMutation(
+    ({ quizId, data }: { quizId: string; data: UpdateQuizPayload }) =>
+      quizApi.update(quizId, data),
+    {
+      invalidateQueries: ['quizzes', 'quiz'],
+      onSuccess: () => {
+        toast.success('Quiz updated successfully');
+      },
+    },
+  );
+}
+
+export function useDeleteQuiz() {
+  return useApiMutation(quizApi.delete, {
+    invalidateQueries: ['quizzes'],
+    onSuccess: () => {
+      toast.success('Quiz deleted');
+    },
+  });
+}
+
+export function usePublishQuiz() {
+  return useApiMutation(quizApi.publish, {
+    invalidateQueries: ['quizzes', 'quiz'],
+    onSuccess: () => {
+      toast.success('Quiz published');
+    },
+  });
+}
+
+export function useAddQuestion() {
+  return useApiMutation(
+    ({ quizId, data }: { quizId: string; data: CreateQuestionPayload }) =>
+      quizApi.addQuestion(quizId, data),
+    {
+      invalidateQueries: ['quiz'],
+      onSuccess: () => {
+        toast.success('Question added');
+      },
+    },
+  );
+}
+
+export function useUpdateQuestion() {
+  return useApiMutation(
+    ({ quizId, questionId, data }: { quizId: string; questionId: string; data: UpdateQuestionPayload }) =>
+      quizApi.updateQuestion(quizId, questionId, data),
+    {
+      invalidateQueries: ['quiz'],
+      onSuccess: () => {
+        toast.success('Question updated');
+      },
+    },
+  );
+}
+
+export function useDeleteQuestion() {
+  return useApiMutation(
+    ({ quizId, questionId }: { quizId: string; questionId: string }) =>
+      quizApi.deleteQuestion(quizId, questionId),
+    {
+      invalidateQueries: ['quiz'],
+      onSuccess: () => {
+        toast.success('Question deleted');
+      },
+    },
+  );
+}
+
+export function useReorderQuestions() {
+  return useApiMutation(
+    ({ quizId, questionIds }: { quizId: string; questionIds: string[] }) =>
+      quizApi.reorderQuestions(quizId, questionIds),
+    {
+      invalidateQueries: ['quiz'],
+    },
+  );
+}
+
+export function useQuizAnalytics(quizId: string) {
+  return useApiQuery(
+    ['quiz-analytics', quizId],
+    () => quizApi.getAnalytics(quizId),
+    { enabled: !!quizId },
+  );
 }
 ```
 
-### 5.5 Content Detail Screen
+### 5.4 Validation Schemas
 
-Student taps on an assignment → opens content detail:
+```typescript
+// validations/quiz.ts
 
-```
-┌──────────────────────────────────┐
-│  ←  React Native Fundamentals    │
-│  ██████░░░░ 60%  •  6/10 done   │
-├──────────────────────────────────┤
-│                                    │
-│  ┌────────────────────────────┐    │
-│  │  🎬  Preview Video         │    │
-│  │  ▶ (thumbnail)             │    │
-│  └────────────────────────────┘    │
-│                                    │
-│  Sections                          │
-│                                    │
-│  ✅ 1. Introduction                │
-│     └─ 2 videos  •  Completed     │
-│                                    │
-│  ✅ 2. Core Concepts               │
-│     └─ 3 videos  •  Completed     │
-│                                    │
-│  🔵 3. Advanced Topics            │
-│     └─ 4 videos  •  Completed     │
-│     └─ 📝 Quiz (3/5 answered)    │
-│                                    │
-│  ⬜ 4. Deployment                  │
-│     └─ 3 videos  •  Not started   │
-│     └─ 📝 Quiz (not started)     │
-│                                    │
-└──────────────────────────────────┘
-```
+import { z } from 'zod';
 
-Tapping a section opens the section player. Tapping a quiz opens the quiz screen.
+export const optionSchema = z.object({
+  text: z.string().min(1, 'Option text is required'),
+  isCorrect: z.boolean(),
+  sortOrder: z.number().optional(),
+});
 
-### 5.6 Quiz Intro Screen
+export const questionSchema = z.object({
+  type: z.enum(['MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER', 'MULTI_SELECT']),
+  text: z.string().min(1, 'Question text is required').max(2000),
+  explanation: z.string().max(2000).optional().or(z.literal('')),
+  points: z.number().min(1).max(100).default(1),
+  options: z
+    .array(optionSchema)
+    .min(2, 'At least 2 options required')
+    .refine(
+      (options) => options.some((o) => o.isCorrect),
+      'At least one option must be marked as correct'
+    ),
+});
 
-```
-┌──────────────────────────────────┐
-│  ←  Quiz: Advanced Topics        │
-├──────────────────────────────────┤
-│                                    │
-│           📝                       │
-│                                    │
-│     Advanced Topics Quiz           │
-│                                    │
-│     5 Questions                    │
-│     ~10 minutes                    │
-│                                    │
-│     Progress: 3/5 answered         │
-│     ███████░░░ 60%                │
-│                                    │
-│     ⚠️ You can resume where        │
-│     you left off.                  │
-│                                    │
-│     ┌────────────────────────┐     │
-│     │      Start Quiz        │     │
-│     └────────────────────────┘     │
-│                                    │
-│     ┌────────────────────────┐     │
-│     │    Review Answers      │     │
-│     └────────────────────────┘     │
-│                                    │
-└──────────────────────────────────┘
+export const quizSettingsSchema = z.object({
+  title: z.string().min(1, 'Quiz title is required').max(255),
+  description: z.string().max(2000).optional().or(z.literal('')),
+  timeLimitSecs: z
+    .number()
+    .min(60, 'Minimum 1 minute')
+    .max(7200, 'Maximum 2 hours')
+    .optional()
+    .nullable(),
+  passingScore: z.number().min(0).max(100).default(70),
+  maxAttempts: z.number().min(1).max(99).default(3),
+  shuffleQuestions: z.boolean().default(false),
+});
+
+export const createQuizSchema = z.object({
+  ...quizSettingsSchema.shape,
+  questions: z.array(questionSchema).min(1, 'At least one question is required'),
+});
+
+// Field-level schemas for TanStack Form validators
+export const quizFieldSchemas = {
+  title: quizSettingsSchema.shape.title,
+  description: quizSettingsSchema.shape.description,
+  passingScore: quizSettingsSchema.shape.passingScore,
+  maxAttempts: quizSettingsSchema.shape.maxAttempts,
+  timeLimitSecs: quizSettingsSchema.shape.timeLimitSecs,
+};
+
+export type CreateQuizFormData = z.infer<typeof createQuizSchema>;
+export type QuestionFormData = z.infer<typeof questionSchema>;
+export type OptionFormData = z.infer<typeof optionSchema>;
 ```
 
-### 5.7 Quiz Play Screen — Question by Question
+### 5.5 Quiz Store (Zustand)
 
-```
-┌──────────────────────────────────┐
-│  ←  Question 4 of 5     ⏱ 3:42  │
-│  ████████░░ 80%                  │
-├──────────────────────────────────┤
-│                                    │
-│  What is the purpose of           │
-│  useEffect in React?              │
-│                                    │
-│  ┌────────────────────────────┐    │
-│  │ ○ To manage component      │    │
-│  │   state                    │    │
-│  └────────────────────────────┘    │
-│  ┌────────────────────────────┐    │
-│  │ ● To perform side effects  │    │  ← selected
-│  │   after render             │    │
-│  └────────────────────────────┘    │
-│  ┌────────────────────────────┐    │
-│  │ ○ To create new components │    │
-│  └────────────────────────────┘    │
-│  ┌────────────────────────────┐    │
-│  │ ○ To define routes         │    │
-│  └────────────────────────────┘    │
-│                                    │
-│  ┌────────────────────────────┐    │
-│  │        Next →              │    │
-│  └────────────────────────────┘    │
-│                                    │
-└──────────────────────────────────┘
-```
-
-### 5.8 Quiz State Management
+Uses a Zustand store similar to the content creation wizard (`studio-store.ts`):
 
 ```typescript
 // stores/quiz-store.ts
 
 import { create } from 'zustand';
 
-interface QuizState {
-  contentId: string;
-  sectionId: string;
-  questions: QuizQuestion[];
-  currentIndex: number;
-  answers: Record<string, string>;        // questionId → selectedOptionId
-  answeredQuestionIds: Set<string>;       // already sent to server
-  isSubmitting: boolean;
-
-  // Actions
-  loadQuiz: (contentId: string, sectionId: string, questions: QuizQuestion[]) => void;
-  selectAnswer: (questionId: string, optionId: string) => void;
-  markAnswered: (questionId: string) => void;
-  nextQuestion: () => void;
-  prevQuestion: () => void;
-  goToQuestion: (index: number) => void;
-  reset: () => void;
+interface QuizFormQuestion {
+  tempId: string;           // client-side temp ID for list keys
+  type: QuestionType;
+  text: string;
+  explanation: string;
+  points: number;
+  options: {
+    tempId: string;
+    text: string;
+    isCorrect: boolean;
+  }[];
 }
 
-export const useQuizStore = create<QuizState>((set, get) => ({
-  contentId: '',
-  sectionId: '',
-  questions: [],
-  currentIndex: 0,
-  answers: {},
-  answeredQuestionIds: new Set(),
-  isSubmitting: false,
+interface QuizStoreState {
+  // Step tracking (2 steps: Settings → Questions)
+  currentStep: number;
 
-  loadQuiz: (contentId, sectionId, questions) =>
-    set({ contentId, sectionId, questions, currentIndex: 0, answers: {}, answeredQuestionIds: new Set() }),
+  // Step 1: Quiz Settings
+  title: string;
+  description: string;
+  timeLimitSecs: number | null;
+  passingScore: number;
+  maxAttempts: number;
+  shuffleQuestions: boolean;
 
-  selectAnswer: (questionId, optionId) =>
-    set((state) => ({ answers: { ...state.answers, [questionId]: optionId } })),
+  // Step 2: Questions
+  questions: QuizFormQuestion[];
+  activeQuestionIndex: number;
 
-  markAnswered: (questionId) =>
-    set((state) => ({
-      answeredQuestionIds: new Set([...state.answeredQuestionIds, questionId]),
-    })),
+  // Validation errors
+  errors: Record<string, string>;
 
-  nextQuestion: () =>
-    set((state) => ({
-      currentIndex: Math.min(state.currentIndex + 1, state.questions.length - 1),
-    })),
+  // Actions
+  setStep: (step: number) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  setField: (field: string, value: unknown) => void;
+  setErrors: (errors: Record<string, string>) => void;
 
-  prevQuestion: () =>
-    set((state) => ({
-      currentIndex: Math.max(state.currentIndex - 1, 0),
-    })),
+  // Question actions
+  addQuestion: () => void;
+  removeQuestion: (index: number) => void;
+  updateQuestion: (index: number, field: string, value: unknown) => void;
+  setActiveQuestion: (index: number) => void;
+  reorderQuestions: (fromIndex: number, toIndex: number) => void;
 
-  goToQuestion: (index) => set({ currentIndex: index }),
+  // Option actions
+  addOption: (questionIndex: number) => void;
+  removeOption: (questionIndex: number, optionIndex: number) => void;
+  updateOption: (questionIndex: number, optionIndex: number, field: string, value: unknown) => void;
+  setCorrectOption: (questionIndex: number, optionIndex: number) => void;
 
-  reset: () =>
-    set({ contentId: '', sectionId: '', questions: [], currentIndex: 0, answers: {}, answeredQuestionIds: new Set() }),
-}));
+  reset: () => void;
+}
 ```
 
-### 5.9 Quiz Play Screen Implementation
+### 5.6 Quiz List Page
+
+Accessible via the **Quizzes** sidebar item (`/dashboard/quizzes`). Shows all quizzes created by the teacher in a table layout, similar to the Studio content list.
+
+```
+┌─────────────────────────────────────────────────┐
+│  Quizzes                         [+ Create Quiz]  │
+├─────────────────────────────────────────────────┤
+│  🔍 Search quizzes...         Filter: [All ▾]     │
+├─────────────────────────────────────────────────┤
+│  Title              │ Questions │ Status │ Updated │
+│  Intro to React     │ 5         │ ✅ Pub │ Mar 25  │
+│  Advanced Topics    │ 8         │ 📝 Dra │ Mar 24  │
+│  TypeScript Basics  │ 10        │ ✅ Pub │ Mar 22  │
+│  System Design      │ 6         │ 📝 Dra │ Mar 20  │
+├─────────────────────────────────────────────────┤
+│  ← 1 2 3 ... →                         12/page   │
+└─────────────────────────────────────────────────┘
+```
 
 ```typescript
-// app/quiz/[contentId]/play.tsx
+// routes/(dashboard)/dashboard/quizzes.tsx
 
-export default function QuizPlayScreen() {
-  const { contentId } = useLocalSearchParams<{ contentId: string }>();
-  const store = useQuizStore();
-  const { mutate: updateProgress } = useUpdateProgress();
+export default function QuizzesPage() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [isPublished, setIsPublished] = useState<boolean | undefined>();
+  const navigate = useNavigate();
 
-  const question = store.questions[store.currentIndex];
-  const selectedOption = store.answers[question?.id];
-  const isAlreadyAnswered = store.answeredQuestionIds.has(question?.id);
-
-  const handleNext = () => {
-    // If student selected an answer and hasn't submitted it yet → send to server
-    if (selectedOption && !isAlreadyAnswered) {
-      updateProgress(
-        {
-          contentId: store.contentId,
-          action: 'ANSWER_QUESTION',
-          questionId: question.id,
-        },
-        {
-          onSuccess: (data) => {
-            store.markAnswered(question.id);
-            // Progress auto-updates from server response
-          },
-        }
-      );
-    }
-
-    // Move to next question (or finish)
-    if (store.currentIndex < store.questions.length - 1) {
-      store.nextQuestion();
-    } else {
-      // Last question → navigate to results
-      router.replace(`/quiz/${contentId}/results`);
-    }
-  };
+  const { data, isLoading } = useQuizzes({ page, pageSize: 12, search, isPublished });
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-900">
-      {/* Header: question number + progress bar */}
-      <View className="px-4 pt-4">
-        <Text className="text-white/60 font-[Poppins_400Regular]">
-          Question {store.currentIndex + 1} of {store.questions.length}
-        </Text>
-        <View className="mt-2 h-2 rounded-full bg-white/10">
-          <View
-            className="h-2 rounded-full bg-blue-400"
-            style={{ width: `${((store.currentIndex + 1) / store.questions.length) * 100}%` }}
-          />
-        </View>
-      </View>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Quizzes</h1>
+        <Button onClick={() => navigate({ to: '/dashboard/quizzes/create' })}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Quiz
+        </Button>
+      </div>
 
-      {/* Question text */}
-      <View className="flex-1 px-4 pt-8">
-        <Text className="text-xl text-white font-[Poppins_600SemiBold] mb-6">
-          {question?.text}
-        </Text>
+      <div className="flex items-center gap-4">
+        <Input
+          placeholder="Search quizzes..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          className="max-w-sm"
+        />
+        <Select value={isPublished?.toString() ?? 'all'} onValueChange={(v) => {
+          setIsPublished(v === 'all' ? undefined : v === 'true');
+          setPage(1);
+        }}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="true">Published</SelectItem>
+            <SelectItem value="false">Draft</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* Options */}
-        {question?.options.map((option) => (
-          <Pressable
-            key={option.id}
-            onPress={() => !isAlreadyAnswered && store.selectAnswer(question.id, option.id)}
-            className={`mb-3 rounded-xl border-2 p-4 ${
-              selectedOption === option.id
-                ? 'border-blue-400 bg-blue-400/10'
-                : 'border-white/10 bg-white/5'
-            } ${isAlreadyAnswered ? 'opacity-60' : ''}`}
-          >
-            <Text className="text-white font-[Poppins_400Regular]">
-              {option.text}
-            </Text>
-          </Pressable>
-        ))}
-
-        {isAlreadyAnswered && (
-          <Text className="text-green-400 text-sm font-[Poppins_400Regular] mt-2">
-            ✅ Answer submitted
-          </Text>
-        )}
-      </View>
-
-      {/* Navigation */}
-      <View className="flex-row justify-between px-4 pb-6">
-        <Pressable
-          onPress={store.prevQuestion}
-          disabled={store.currentIndex === 0}
-          className={`rounded-xl px-6 py-3 ${store.currentIndex === 0 ? 'opacity-30' : 'bg-white/10'}`}
-        >
-          <Text className="text-white font-[Poppins_600SemiBold]">← Back</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={handleNext}
-          disabled={!selectedOption}
-          className={`rounded-xl px-6 py-3 ${selectedOption ? 'bg-blue-500' : 'bg-white/10 opacity-30'}`}
-        >
-          <Text className="text-white font-[Poppins_600SemiBold]">
-            {store.currentIndex === store.questions.length - 1 ? 'Finish' : 'Next →'}
-          </Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+      <PerformaTable
+        columns={quizColumns}
+        data={data?.quizzes ?? []}
+        meta={data?.meta}
+        isLoading={isLoading}
+        onPageChange={setPage}
+        onRowClick={(quiz) =>
+          navigate({ to: '/dashboard/quizzes/$quizId', params: { quizId: quiz.id } })
+        }
+      />
+    </div>
   );
 }
 ```
 
-### 5.10 Progress Update Hook
+### 5.7 Quiz Creation Page — 2-Step Wizard
+
+Clicking "Create Quiz" navigates to `/dashboard/quizzes/create`.
+
+#### Step 1: Quiz Settings
+
+```
+┌─────────────────────────────────────────────────┐
+│  ← Back    Create Quiz                            │
+│            Step 1 of 2: Settings                  │
+├─────────────────────────────────────────────────┤
+│  ● Settings  ○ Questions                          │
+├─────────────────────────────────────────────────┤
+│                                                   │
+│  Quiz Title *                                     │
+│  ┌─────────────────────────────────────────┐      │
+│  │ Intro to React Native Quiz               │      │
+│  └─────────────────────────────────────────┘      │
+│                                                   │
+│  Description (optional)                           │
+│  ┌─────────────────────────────────────────┐      │
+│  │ Test your understanding of React Native  │      │
+│  │ fundamentals.                            │      │
+│  └─────────────────────────────────────────┘      │
+│                                                   │
+│  ┌──────────────────┐  ┌──────────────────┐       │
+│  │ Time Limit (min)  │  │ Passing Score (%) │       │
+│  │ ┌──────────────┐  │  │ ┌──────────────┐  │       │
+│  │ │ 10            │  │  │ │ 70            │  │       │
+│  │ └──────────────┘  │  │ └──────────────┘  │       │
+│  └──────────────────┘  └──────────────────┘       │
+│                                                   │
+│  ┌──────────────────┐  ┌──────────────────┐       │
+│  │ Max Attempts      │  │ Shuffle           │       │
+│  │ ┌──────────────┐  │  │ ┌──────────────┐  │       │
+│  │ │ 3             │  │  │ │ ☐ Shuffle Qs  │  │       │
+│  │ └──────────────┘  │  │ └──────────────┘  │       │
+│  └──────────────────┘  └──────────────────┘       │
+│                                                   │
+│                                       [Next →]    │
+└─────────────────────────────────────────────────┘
+```
+
+#### Step 2: Questions
+
+```
+┌─────────────────────────────────────────────────┐
+│  ← Back    Create Quiz                            │
+│            Step 2 of 2: Questions                 │
+├─────────────────────────────────────────────────┤
+│  ○ Settings  ● Questions                          │
+├─────────────────────────────────────────────────┤
+│                                                   │
+│  Questions (3)                   [+ Add Question]  │
+│                                                   │
+│  ┌───────────────────────────────────────────┐    │
+│  │ ☰  Q1  Multiple Choice          2 pts  ✕  │    │
+│  │                                            │    │
+│  │  Question Text *                           │    │
+│  │  ┌────────────────────────────────────┐    │    │
+│  │  │ What is React Native?              │    │    │
+│  │  └────────────────────────────────────┘    │    │
+│  │                                            │    │
+│  │  Type: [Multiple Choice ▾]   Points: [2]   │    │
+│  │                                            │    │
+│  │  Options:                                  │    │
+│  │  ┌────────────────────────────────────┐    │    │
+│  │  │ ◉ A cross-platform framework       │ ✕  │    │
+│  │  └────────────────────────────────────┘    │    │
+│  │  ┌────────────────────────────────────┐    │    │
+│  │  │ ○ A database tool                  │ ✕  │    │
+│  │  └────────────────────────────────────┘    │    │
+│  │  ┌────────────────────────────────────┐    │    │
+│  │  │ ○ A CSS framework                  │ ✕  │    │
+│  │  └────────────────────────────────────┘    │    │
+│  │  ┌────────────────────────────────────┐    │    │
+│  │  │ ○ A testing library                │ ✕  │    │
+│  │  └────────────────────────────────────┘    │    │
+│  │  [+ Add Option]                            │    │
+│  │                                            │    │
+│  │  Explanation (shown after attempt):        │    │
+│  │  ┌────────────────────────────────────┐    │    │
+│  │  │ React Native is a framework by...  │    │    │
+│  │  └────────────────────────────────────┘    │    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│  ┌───────────────────────────────────────────┐    │
+│  │ ☰  Q2  True / False             1 pt   ✕  │    │
+│  │  ...                                       │    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│  ┌───────────────────────────────────────────┐    │
+│  │ ☰  Q3  Multiple Choice          1 pt   ✕  │    │
+│  │  ...                                       │    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│                         [← Back]  [Save as Draft] │
+│                                   [Create & Publish] │
+└─────────────────────────────────────────────────┘
+```
+
+### 5.8 Question Type Behaviors
+
+| Type | Options | Correct Answer |
+|------|---------|---------------|
+| **MULTIPLE_CHOICE** | 2-6 options, radio select | Exactly 1 correct |
+| **TRUE_FALSE** | Auto-generated: "True" + "False" | 1 correct |
+| **SHORT_ANSWER** | No options shown | Teacher enters expected answer text |
+| **MULTI_SELECT** | 2-6 options, checkbox select | 1 or more correct |
+
+When changing question type:
+- **→ TRUE_FALSE**: Auto-set options to `[{text: "True"}, {text: "False"}]`, lock option editing
+- **→ SHORT_ANSWER**: Hide options panel, show "Expected answer" textarea
+- **→ MULTIPLE_CHOICE / MULTI_SELECT**: Show editable options list
+
+### 5.9 Quiz Edit Page
+
+Navigating to `/dashboard/quizzes/:quizId` loads the quiz with all questions and reuses the same 2-step wizard form, pre-populated with existing data.
 
 ```typescript
-// hooks/use-progress.ts
+// routes/(dashboard)/dashboard/quizzes_.$quizId.tsx
 
-export function useUpdateProgress() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: assignmentApi.updateProgress,
-    onSuccess: (data) => {
-      // Update assignment cache with new progress
-      queryClient.invalidateQueries({ queryKey: ['my-assignments'] });
-    },
-  });
+export default function EditQuizPage() {
+  const { quizId } = useParams();
+  const { data, isLoading } = useQuiz(quizId);
+  const { mutate: updateQuiz, isPending: isUpdating } = useUpdateQuiz();
+  const { mutate: publishQuiz } = usePublishQuiz();
+  const store = useQuizStore();
+
+  // Pre-populate store on data load
+  useEffect(() => {
+    if (data?.quiz) {
+      store.setField('title', data.quiz.title);
+      store.setField('description', data.quiz.description ?? '');
+      store.setField('timeLimitSecs', data.quiz.timeLimitSecs ?? null);
+      store.setField('passingScore', data.quiz.passingScore);
+      store.setField('maxAttempts', data.quiz.maxAttempts);
+      store.setField('shuffleQuestions', data.quiz.shuffleQuestions);
+      // Map server questions → store format with tempIds
+      // ...
+    }
+  }, [data]);
+
+  const handleSave = () => {
+    // Validate → updateQuiz → redirect or show success
+  };
+
+  const handlePublish = () => {
+    publishQuiz(quizId, {
+      onSuccess: () => navigate({ to: '/dashboard/quizzes' }),
+    });
+  };
+
+  // Renders same QuizWizard component as create page
 }
 ```
 
-### 5.11 Complete Quiz Flow
+### 5.10 Quiz Analytics Dialog
+
+From the quiz list or quiz detail page, clicking "Analytics" opens a dialog:
 
 ```
-Student opens app → sees assigned content list (Home)
-  ↓
-Taps "React Native Fundamentals" → Content Detail screen
-  ↓
-Sees sections list with progress indicators
-  ↓
-Taps "📝 Quiz: Advanced Topics" → Quiz Intro screen
-  ↓
-Sees: 5 questions, 3/5 already answered (can resume)
-  ↓
-Taps "Start Quiz" → Quiz Play screen (starts at Q4, the next unanswered)
-  ↓
-Reads Q4 → selects an option → taps "Next"
-  ↓
-PUT /api/v1/assignments/progress
-  { contentId, action: "ANSWER_QUESTION", questionId: "q4_id" }
-  ↓
-Server:
-  1. Creates ProgressLog entry
-  2. Counts: 7/10 items completed → progress = 70%
-  3. Updates assignment (status: IN_PROGRESS, progress: 70)
-  4. Returns { assignment, alreadyLogged: false }
-  ↓
-Student sees Q5 → selects option → taps "Finish"
-  ↓
-PUT /api/v1/assignments/progress
-  { contentId, action: "ANSWER_QUESTION", questionId: "q5_id" }
-  ↓
-Server:
-  1. Creates ProgressLog entry
-  2. Counts: 8/10 items → progress = 80%
-  3. Returns updated assignment
-  ↓
-Quiz results screen shows: 5/5 questions answered
-  ↓
-Student goes back to content detail → sees updated progress bar
-  ↓
-Remaining items: Section 4 + Quiz Q6
-Once all done → assignment.status = COMPLETED (100%)
+┌─────────────────────────────────────────────────┐
+│  Analytics: Intro to React Native Quiz           │
+├─────────────────────────────────────────────────┤
+│                                                   │
+│  Total Attempts: 45    Average Score: 78%         │
+│  Pass Rate: 82%                                   │
+│                                                   │
+│  Question Difficulty                              │
+│  ┌───────────────────────────────────────────┐    │
+│  │ Q1: What is React Native?     ████████ 92%│    │
+│  │ Q2: JSX is...                 ██████░░ 74%│    │
+│  │ Q3: State vs Props            █████░░░ 61%│    │
+│  │ Q4: useEffect lifecycle       ███░░░░░ 38%│    │
+│  │ Q5: Navigation patterns       ██████░░ 71%│    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│  Recent Attempts                                  │
+│  ┌───────────────────────────────────────────┐    │
+│  │ John Doe     85%  GRADED    Mar 25 10:30  │    │
+│  │ Jane Smith   92%  GRADED    Mar 25 09:15  │    │
+│  │ Bob Wilson   60%  GRADED    Mar 24 14:00  │    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│                                       [Close]     │
+└─────────────────────────────────────────────────┘
 ```
 
-### 5.12 Section Completion (Video/Document)
+### 5.11 Quiz Creation Flow
 
-When a student finishes watching a section's video or reads a document:
-
-```typescript
-// app/content/section/[sectionId].tsx
-
-// Called when video finishes or student scrolls to end of document
-const handleSectionComplete = () => {
-  updateProgress({
-    contentId,
-    action: 'COMPLETE_SECTION',
-    sectionId,
-  });
-};
-
-// For video: listen to onEnd event
-<Video onEnd={handleSectionComplete} />
-
-// For document: detect scroll to bottom
-<ScrollView onScroll={handleDocumentScroll}>
-  {/* document content */}
-</ScrollView>
+```
+Teacher clicks "Quizzes" in sidebar → /dashboard/quizzes
+  ↓
+Sees quiz list (table with search, filter by status)
+  ↓
+Clicks "+ Create Quiz" → /dashboard/quizzes/create
+  ↓
+Step 1: Fills quiz settings (title, description, time limit, etc.)
+  ↓
+Zod validates step 1 → errors shown inline if invalid
+  ↓
+Clicks "Next →" → moves to step 2
+  ↓
+Adds questions one by one:
+  - Selects question type
+  - Writes question text
+  - Adds options (for MC/TF/MS) or expected answer (for SA)
+  - Marks correct option(s)
+  - Sets points & optional explanation
+  - Can reorder via drag handle
+  ↓
+Clicks "Create & Publish" or "Save as Draft"
+  ↓
+POST /api/v1/quizzes
+  {
+    title, description,
+    timeLimitSecs, passingScore, maxAttempts, shuffleQuestions,
+    questions: [
+      { type, text, explanation, points, options: [{ text, isCorrect }] },
+      ...
+    ]
+  }
+  ↓
+onSuccess:
+  1. Toast: "Quiz created successfully"
+  2. Invalidate ['quizzes'] query
+  3. Navigate to /dashboard/quizzes
+  ↓
+If "Create & Publish" was clicked:
+  PUT /api/v1/quizzes/:quizId/publish
+  ↓
+Quiz appears in quiz list with Published badge
 ```
 
 ---
@@ -1359,33 +1566,19 @@ const handleSectionComplete = () => {
 /login
   ↓ (authenticate)
 /dashboard
-  ├── /studio                    ← Content list
-  │   ├── /studio/create         ← Create content
-  │   └── /studio/:id            ← Content detail + [Assign to Students]
-  ├── /students                  ← Student list        ← NEW
-  │   ├── /students/create       ← Create student      ← NEW
-  │   └── /students/:id          ← Student detail       ← NEW
-  │       └── Assignments tab    ← Student's assignments
-  ├── /assignments               ← Teacher overview     ← NEW
+  ├── /studio                         ← Content list (videos/documents)
+  │   ├── /studio/create              ← Create content (4-step wizard)
+  │   └── /studio/:contentId          ← Content detail (Sections | Assigned Students)
+  ├── /quizzes                        ← Quiz list (table)                    ← NEW
+  │   ├── /quizzes/create             ← Create quiz (2-step wizard)          ← NEW
+  │   └── /quizzes/:quizId            ← Quiz detail / edit                   ← NEW
+  ├── /students                       ← Student list
+  │   ├── /students/create            ← Create student
+  │   └── /students/:id              ← Student detail
+  │       └── Assignments tab         ← Student's assignments
+  ├── /assignments                    ← Teacher assignment overview
   ├── /analytics
   └── /settings
-```
-
-### performa-app (Student)
-
-```
-/login
-  ↓ (authenticate with credentials from teacher)
-/(tabs)
-  ├── / (home)                   ← My assignments (continue learning, new, completed)
-  ├── /courses                   ← All assignments in grid
-  ├── /explore                   ← Video reels
-  └── /profile                   ← Student profile + stats
-/content/[id]                    ← Content detail (sections + quiz links)
-/content/section/[sectionId]     ← Section player (video/document)
-/quiz/[contentId]                ← Quiz intro
-/quiz/[contentId]/play           ← Quiz question-by-question
-/quiz/[contentId]/results        ← Quiz results summary
 ```
 
 ---
@@ -1394,20 +1587,16 @@ const handleSectionComplete = () => {
 
 | Step | Project | Task |
 |------|---------|------|
-| **1** | performa-app | Add auth store (Zustand + AsyncStorage persist) |
-| **2** | performa-app | Add API client (Axios + interceptors) |
-| **3** | performa-app | Add TanStack Query provider |
-| **4** | performa-app | Add login screen |
-| **5** | performa-studio | Add `/students` routes + pages (list, create, detail) |
-| **6** | performa-studio | Add `studentApi` + hooks (`useStudents`, `useCreateStudent`) |
-| **7** | performa-studio | Add `AssignContentSheet` component to content detail |
-| **8** | performa-studio | Add `assignmentApi` + hooks |
-| **9** | performa-studio | Add student detail page with assignments tab |
-| **10** | performa-app | Replace mock data: Home → `useMyAssignments()` |
-| **11** | performa-app | Add content detail screen (`/content/[id]`) |
-| **12** | performa-app | Add section player screen |
-| **13** | performa-app | Add progress tracking (`COMPLETE_SECTION` on video end) |
-| **14** | performa-app | Add quiz intro screen |
-| **15** | performa-app | Add quiz play screen with `useQuizStore` |
-| **16** | performa-app | Add progress tracking (`ANSWER_QUESTION` on each answer) |
-| **17** | performa-app | Add quiz results screen |
+| **1** | performa-edu | Add Quiz models to Prisma schema (Quiz, Question, QuestionOption, QuizAttempt, AttemptAnswer) |
+| **2** | performa-edu | Create `quiz-service` gRPC microservice (NestJS module, controller, service, repository) |
+| **3** | performa-edu | Add `quiz-service.proto` with gRPC service definition |
+| **4** | performa-edu | Wire quiz-service into API gateway (QuizController, routes) |
+| **5** | performa-edu | Add quiz-service to docker-compose.yml (port 50055) |
+| **6** | performa-studio | Add `quizApi` to API layer (`lib/api.ts`) |
+| **7** | performa-studio | Add `useQuizzes` hooks (`hooks/use-quizzes.ts`) |
+| **8** | performa-studio | Add quiz validation schemas (`validations/quiz.ts`) |
+| **9** | performa-studio | Add quiz Zustand store (`stores/quiz-store.ts`) |
+| **10** | performa-studio | Add "Quizzes" sidebar item + quiz list page (`/dashboard/quizzes`) |
+| **11** | performa-studio | Add quiz creation page (2-step wizard: Settings → Questions) |
+| **12** | performa-studio | Add quiz detail/edit page (reuse wizard components) |
+| **13** | performa-studio | Add quiz analytics dialog |
