@@ -14,6 +14,7 @@ const RegisterStudentSchema = z
         'Password must contain a special character'
       ),
     // roleIds: z.array(z.string()).min(1, 'At least one role ID is required'), --- IGNORE ---
+    branchId: z.string().min(1, 'Branch ID is required'),
     fullName: z.string().min(1, 'Full name is required'),
     phoneNumber: z.string().optional(),
     dateOfBirth: z.string().optional(),

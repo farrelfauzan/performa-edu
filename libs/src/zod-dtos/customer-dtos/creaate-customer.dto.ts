@@ -22,6 +22,8 @@ const CreateCustomerSchema = z
       fullName: z.string().min(1, 'Full name is required'),
       phoneNumber: z.string().min(1, 'Phone number is required'),
       dateOfBirth: z.string().optional(),
+      branchId: z.string().optional(),
+      branchName: z.string().optional(),
     }),
   })
   .meta({ className: 'CreateCustomerDto' });
