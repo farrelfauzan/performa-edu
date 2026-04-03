@@ -57,6 +57,13 @@
         "command": "npx prisma migrate reset --schema=schema.prisma --force",
         "cwd": "libs/src/prisma"
       }
+    },
+    "prisma-format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma format --schema=schema.prisma",
+        "cwd": "libs/src/prisma"
+      }
     }
   }
 }
