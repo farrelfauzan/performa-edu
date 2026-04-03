@@ -6,10 +6,11 @@ import {
   Inject,
   OnModuleInit,
   Param,
+  Post,
   Put,
   Query,
 } from '@nestjs/common';
-import { ClientGrpc } from '@nestjs/microservices';
+import { ClientGrpc, GrpcMethod } from '@nestjs/microservices';
 import {
   Auth,
   GetAllCustomerDto,
@@ -18,6 +19,8 @@ import {
   UpdateCustomerDto,
 } from '@performa-edu/libs';
 import {
+  CreateCustomerRequest,
+  CreateCustomerResponse,
   Customer,
   CUSTOMER_SERVICE_NAME,
   CUSTOMERSERVICE_PACKAGE_NAME,
@@ -68,6 +71,27 @@ export class CustomerController implements OnModuleInit {
     return {
       data: result.customers,
       meta: result.meta,
+    };
+  }
+
+  @Auth([
+    {
+      action: AclAction.CREATE,
+      subject: AclSubject.CUSTOMER,
+    },
+  ])
+  @Post()
+  async createCustomer(@Body() options: CreateCustomerRequest): Promise<{
+    data: CreateCustomerResponse['customer'];
+  }> {
+    const result = await handleGrpcCall(
+      this.customerService.createCustomer(options),
+      this.grpcErrorHandler,
+      'Failed to create customer'
+    );
+
+    return {
+      data: result.customer,
     };
   }
 

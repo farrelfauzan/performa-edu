@@ -16,11 +16,15 @@ import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { STUDENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/student-service';
 import { QUIZSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/quiz-service';
+import { CLASSSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/class-service';
+import { BRANCHSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/branch-service';
 import { CustomerController } from './customer/customer.controller';
 import { ContentController } from './content/content.controller';
 import { StudentController } from './student/student.controller';
 import { AssignmentController } from './assignment/assignment.controller';
 import { QuizController } from './quiz/quiz.controller';
+import { ClassController } from './class/class.controller';
+import { BranchController } from './branch/branch.controller';
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -89,6 +93,28 @@ import { QuizController } from './quiz/quiz.controller';
           }`,
         },
       },
+      {
+        name: CLASSSERVICE_PACKAGE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          package: CLASSSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/class-service.proto'),
+          url: `${process.env.CLASS_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.CLASS_SERVICE_GRPC_PORT || '50056'
+          }`,
+        },
+      },
+      {
+        name: BRANCHSERVICE_PACKAGE_NAME,
+        transport: Transport.GRPC,
+        options: {
+          package: BRANCHSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/branch-service.proto'),
+          url: `${process.env.BRANCH_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.BRANCH_SERVICE_GRPC_PORT || '50057'
+          }`,
+        },
+      },
     ]),
   ],
   controllers: [
@@ -99,6 +125,8 @@ import { QuizController } from './quiz/quiz.controller';
     StudentController,
     AssignmentController,
     QuizController,
+    ClassController,
+    BranchController,
   ],
   providers: [
     AppService,

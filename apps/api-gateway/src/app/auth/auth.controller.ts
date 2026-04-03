@@ -128,6 +128,8 @@ export class AuthController implements OnModuleInit {
         this.customerService.createCustomer({
           ...customer,
           userId: createUser.id,
+          branchId: customer.branchId || null,
+          branchName: customer.branchName || null,
         }),
         this.grpcErrorHandler,
         'Customer creation failed'

@@ -89,6 +89,7 @@ export class StudentController implements OnModuleInit {
           phoneNumber: body.phoneNumber,
           dateOfBirth: body.dateOfBirth,
           profilePictureUrl: body.profilePictureUrl,
+          branchId: body.branchId,
           bio: body.bio,
         }),
         this.grpcErrorHandler,
