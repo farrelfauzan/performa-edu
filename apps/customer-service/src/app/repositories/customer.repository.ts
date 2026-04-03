@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ICustomerRepository } from '../interfaces/customer-interface';
 import {
-  CreateCustomerDto,
   Customer,
   DynamicQueryBuilder,
   generateUniqueId,

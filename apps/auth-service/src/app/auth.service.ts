@@ -110,7 +110,6 @@ export class AuthService {
   }
 
   async getMe(id: string): Promise<ProfileResponse> {
-    console.log('AuthService.getMe called with id:', id);
     const profile = await this.authRepository.getMe(id);
     return profile;
   }

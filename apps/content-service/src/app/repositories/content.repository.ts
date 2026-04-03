@@ -68,8 +68,6 @@ export class ContentRepository implements IContentRepository {
       }
     );
 
-    console.log('Raw content data:', content.data); // Debug log for raw data
-
     const meta: PageMeta = {
       page: options.page || 1,
       pageSize: options.pageSize || 10,

@@ -370,6 +370,13 @@ export class AuthRepository implements IAuthRepository {
         customer?.uniqueId || admin?.uniqueId || student?.uniqueId || null,
       email: user.email,
       active: user.active,
+      branchId:
+        customer?.branchId || student?.branchId || admin?.branchId || null,
+      branchName:
+        customer?.branchName ||
+        student?.branchName ||
+        admin?.branchName ||
+        null,
       roles: user.UserOnRole.map((ur) => ({
         id: ur.role.id,
         name: ur.role.name,

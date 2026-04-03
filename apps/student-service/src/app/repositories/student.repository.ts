@@ -28,6 +28,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+import { BranchNotFoundError } from 'apps/branch-service/src/app/error/branch.error';
 
 @Injectable()
 export class StudentRepository implements IStudentRepository {
@@ -88,11 +89,21 @@ export class StudentRepository implements IStudentRepository {
   async registerStudent(
     options: RegisterStudentRequest
   ): Promise<RegisterStudentResponse> {
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: options.branchId },
+    });
+
+    if (!branch) {
+      BranchNotFoundError(options.branchId);
+    }
+
     const student = await this.prisma.student.create({
       data: {
         userId: options.userId,
         uniqueId: generateUniqueId('STU'),
         fullName: options.fullName,
+        branchId: options.branchId,
+        branchName: branch?.name || null,
         ...(options.phoneNumber ? { phoneNumber: options.phoneNumber } : {}),
         ...(options.dateOfBirth
           ? { dateOfBirth: new Date(options.dateOfBirth) }
@@ -105,7 +116,7 @@ export class StudentRepository implements IStudentRepository {
     });
 
     return {
-      student: transformResponse<Student>(student as any),
+      student: transformResponse(student),
     };
   }
 
