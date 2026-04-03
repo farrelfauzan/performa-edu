@@ -16,6 +16,17 @@ services:
     networks:
       - performa-network
 
+  # Init: reset Nx cache before starting services
+  nx-reset:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+      target: development
+    container_name: performa-edu-nx-reset
+    command: ["pnpm", "nx", "reset"]
+    networks:
+      - performa-network
+
   # Application Services
   api-gateway:
     build:
@@ -42,6 +53,10 @@ services:
       STUDENT_SERVICE_GRPC_PORT: ${STUDENT_SERVICE_GRPC_PORT:-50054}
       QUIZ_SERVICE_GRPC_HOST: quiz-service
       QUIZ_SERVICE_GRPC_PORT: ${QUIZ_SERVICE_GRPC_PORT:-50055}
+      CLASS_SERVICE_GRPC_HOST: class-service
+      CLASS_SERVICE_GRPC_PORT: ${CLASS_SERVICE_GRPC_PORT:-50056}
+      BRANCH_SERVICE_GRPC_HOST: branch-service
+      BRANCH_SERVICE_GRPC_PORT: ${BRANCH_SERVICE_GRPC_PORT:-50057}
       REDIS_URL: redis://redis:6379
     ports:
       - "${API_GATEWAY_PORT:-3000}:${API_GATEWAY_PORT:-3000}"
@@ -51,6 +66,8 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
+      nx-reset:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       auth-service:
@@ -62,6 +79,10 @@ services:
       student-service:
         condition: service_started
       quiz-service:
+        condition: service_started
+      class-service:
+        condition: service_started
+      branch-service:
         condition: service_started
     networks:
       - performa-network
@@ -92,6 +113,8 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
+      nx-reset:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     networks:
@@ -124,6 +147,8 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
+      nx-reset:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     networks:
@@ -150,6 +175,8 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
+      nx-reset:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     networks:
@@ -182,6 +209,8 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
+      nx-reset:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     networks:
@@ -212,6 +241,64 @@ services:
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro
     depends_on:
+      nx-reset:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks:
+      - performa-network
+
+  class-service:
+    build:
+      context: .
+      dockerfile: apps/class-service/Dockerfile
+      target: development
+    container_name: performa-edu-class-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      CLASS_SERVICE_GRPC_HOST: 0.0.0.0
+      CLASS_SERVICE_GRPC_PORT: ${CLASS_SERVICE_GRPC_PORT:-50056}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${CLASS_SERVICE_GRPC_PORT:-50056}:${CLASS_SERVICE_GRPC_PORT:-50056}"
+    volumes:
+      - ./apps/class-service/src:/app/apps/class-service/src:ro
+      - ./libs/src:/app/libs/src:ro
+      - ./proto:/app/proto:ro
+      - ./types:/app/types:ro
+    depends_on:
+      nx-reset:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks:
+      - performa-network
+
+  branch-service:
+    build:
+      context: .
+      dockerfile: apps/branch-service/Dockerfile
+      target: development
+    container_name: performa-edu-branch-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      BRANCH_SERVICE_GRPC_HOST: 0.0.0.0
+      BRANCH_SERVICE_GRPC_PORT: ${BRANCH_SERVICE_GRPC_PORT:-50057}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${BRANCH_SERVICE_GRPC_PORT:-50057}:${BRANCH_SERVICE_GRPC_PORT:-50057}"
+    volumes:
+      - ./apps/branch-service/src:/app/apps/branch-service/src:ro
+      - ./libs/src:/app/libs/src:ro
+      - ./proto:/app/proto:ro
+      - ./types:/app/types:ro
+    depends_on:
+      nx-reset:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     networks:

@@ -19,6 +19,7 @@
       "@performa-edu/auth-service/*": ["apps/auth-service/src/*"],
       "@performa-edu/customer-service/*": ["apps/customer-service/src/*"],
       "@performa-edu/student-service/*": ["apps/student-service/src/*"],
+      "@performa-edu/class-service/*": ["apps/class-service/src/*"],
       "@performa-edu/libs": ["libs/src/index.ts"],
       "@performa-edu/proto-types/*": ["types/proto/*"]
     }
