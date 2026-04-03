@@ -115,7 +115,9 @@ model Admin {
   uniqueId          String       @unique @map("unique_id")
   userId            String       @unique @map("user_id")
   email             String       @unique
-  profilePictureUrl String?       @map("profile_picture_url") @db.VarChar(500)
+  profilePictureUrl  String?      @map("profile_picture_url") @db.VarChar(500)
+  branchId          String?      @map("branch_id")
+  branchName        String?      @map("branch_name") @db.VarChar(255)
   active            ActiveStatus @default(ACTIVE)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz
@@ -131,11 +133,17 @@ model Customer {
   fullName          String    @map("full_name")
   phoneNumber       String    @map("phone_number") @db.VarChar(15)
   dateOfBirth       DateTime? @map("date_of_birth") @db.Date
-  profilePictureUrl String?    @map("profile_picture_url") @db.VarChar(500)
+  profilePictureUrl  String?   @map("profile_picture_url") @db.VarChar(500)
+  branchId          String?   @map("branch_id")
+  branchName        String?   @map("branch_name") @db.VarChar(255)
+  active            ActiveStatus @default(ACTIVE)
   bio               String?   @map("bio") @db.Text
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+
+  classes  ClassTeacher[]
+  branches BranchCustomer[]
 
   @@map("customers")
 }
@@ -150,12 +158,17 @@ model Student {
   profilePictureUrl String?      @map("profile_picture_url") @db.VarChar(500)
   bio               String?      @db.Text
   active            ActiveStatus @default(ACTIVE)
+  branchId          String?      @map("branch_id")
+  branchName        String?      @map("branch_name") @db.VarChar(255)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime     @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt         DateTime?    @map("deleted_at") @db.Timestamptz
 
-  assignments       Assignment[]
+  branch      Branch?        @relation(fields: [branchId], references: [id])
+  assignments Assignment[]
+  classes     ClassStudent[]
 
+  @@index([branchId])
   @@map("students")
 }
 
@@ -173,7 +186,7 @@ model Assignment {
   createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
-  student     Student          @relation(fields: [studentId], references: [id])
+  student      Student       @relation(fields: [studentId], references: [id])
   progressLogs ProgressLog[]
 
   @@unique([studentId, contentId])
@@ -190,7 +203,7 @@ model ProgressLog {
   action       ProgressAction
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
 
-  assignment   Assignment     @relation(fields: [assignmentId], references: [id])
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
 
   @@unique([assignmentId, sectionId, action])
   @@unique([assignmentId, questionId, action])
@@ -262,8 +275,8 @@ model ContentMedia {
   previewUrl       String?               @map("preview_url") @db.VarChar(500)
   bucketName       String                @map("bucket_name") @db.VarChar(255)
   objectPath       String                @map("object_path") @db.VarChar(500)
-  fileName          String                 @map("file_name") @db.VarChar(255)
-  fileSize          BigInt                 @map("file_size")
+  fileName         String                @map("file_name") @db.VarChar(255)
+  fileSize         BigInt                @map("file_size")
   mimeType         String                @map("mime_type") @db.VarChar(100)
   duration         Int? // Duration in seconds (for video/audio)
   width            Int? // Width in pixels (for image/video)
@@ -304,17 +317,17 @@ model Quiz {
 }
 
 model Question {
-  id              String       @id @default(cuid())
-  quizId          String       @map("quiz_id")
-  quiz            Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  type            QuestionType
-  text            String       @db.Text
-  explanation     String?      @db.Text
-  pictureUrl      String?      @map("picture_url")
-  points          Int          @default(1)
-  sortOrder       Int          @default(0) @map("sort_order")
-  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  id          String       @id @default(cuid())
+  quizId      String       @map("quiz_id")
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  type        QuestionType
+  text        String       @db.Text
+  explanation String?      @db.Text
+  pictureUrl  String?      @map("picture_url")
+  points      Int          @default(1)
+  sortOrder   Int          @default(0) @map("sort_order")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
   options QuestionOption[]
   answers AttemptAnswer[]
@@ -324,12 +337,12 @@ model Question {
 }
 
 model QuestionOption {
-  id         String  @id @default(cuid())
-  questionId String  @map("question_id")
+  id         String   @id @default(cuid())
+  questionId String   @map("question_id")
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  text       String  @db.Text
-  isCorrect  Boolean @default(false) @map("is_correct")
-  sortOrder  Int     @default(0) @map("sort_order")
+  text       String   @db.Text
+  isCorrect  Boolean  @default(false) @map("is_correct")
+  sortOrder  Int      @default(0) @map("sort_order")
 
   @@index([questionId])
   @@map("question_options")
@@ -354,17 +367,103 @@ model QuizAttempt {
 }
 
 model AttemptAnswer {
-  id              String  @id @default(cuid())
-  attemptId       String  @map("attempt_id")
+  id              String      @id @default(cuid())
+  attemptId       String      @map("attempt_id")
   attempt         QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  questionId      String  @map("question_id")
-  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOptions String[] @map("selected_options")
-  textAnswer      String? @map("text_answer") @db.Text
-  isCorrect       Boolean @default(false) @map("is_correct")
-  pointsEarned    Float   @default(0) @map("points_earned")
+  questionId      String      @map("question_id")
+  question        Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOptions String[]    @map("selected_options")
+  textAnswer      String?     @map("text_answer") @db.Text
+  isCorrect       Boolean     @default(false) @map("is_correct")
+  pointsEarned    Float       @default(0) @map("points_earned")
 
   @@unique([attemptId, questionId])
   @@index([attemptId])
   @@map("attempt_answers")
+}
+
+// Branch Models
+model Branch {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  address   String?   @db.Text
+  phone     String?   @map("phone") @db.VarChar(15)
+  adminId   String    @map("admin_id")
+  adminName String    @map("admin_name") @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  classes   Class[]
+  students  Student[]
+  customers BranchCustomer[]
+
+  @@map("branches")
+}
+
+model BranchCustomer {
+  id         String   @id @default(cuid())
+  branchId   String   @map("branch_id")
+  customerId String   @map("customer_id")
+  joinedAt   DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, customerId])
+  @@index([branchId])
+  @@index([customerId])
+  @@map("branch_customers")
+}
+
+// Class Models
+model Class {
+  id          String       @id @default(cuid())
+  uniqueId    String       @unique @map("unique_id")
+  createdBy   String       @map("created_by")
+  branchId    String?      @map("branch_id")
+  name        String       @db.VarChar(255)
+  description String?      @db.Text
+  active      ActiveStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime?    @map("deleted_at") @db.Timestamptz
+
+  branch   Branch?        @relation(fields: [branchId], references: [id])
+  teachers ClassTeacher[]
+  students ClassStudent[]
+
+  @@index([createdBy])
+  @@index([branchId])
+  @@map("classes")
+}
+
+model ClassTeacher {
+  id         String   @id @default(cuid())
+  classId    String   @map("class_id")
+  customerId String   @map("customer_id")
+  joinedAt   DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  class    Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, customerId])
+  @@index([classId])
+  @@index([customerId])
+  @@map("class_teachers")
+}
+
+model ClassStudent {
+  id        String   @id @default(cuid())
+  classId   String   @map("class_id")
+  studentId String   @map("student_id")
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, studentId])
+  @@index([classId])
+  @@index([studentId])
+  @@map("class_students")
 }
