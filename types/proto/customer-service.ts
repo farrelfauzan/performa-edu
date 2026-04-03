@@ -54,6 +54,8 @@ export interface Customer {
   phoneNumber: string;
   dateOfBirth?: string | undefined;
   user?: User | undefined;
+  branchId?: string | undefined;
+  branchName?: string | undefined;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | undefined;
@@ -63,6 +65,8 @@ export interface CreateCustomerRequest {
   userId: string;
   fullName: string;
   phoneNumber: string;
+  branchId: string;
+  branchName: string;
   dateOfBirth?: string | undefined;
 }
 
@@ -83,6 +87,8 @@ export interface UpdateCustomerRequest {
   fullName?: string | undefined;
   phoneNumber?: string | undefined;
   dateOfBirth?: string | undefined;
+  branchId?: string | undefined;
+  branchName?: string | undefined;
 }
 
 export interface UpdateCustomerResponse {

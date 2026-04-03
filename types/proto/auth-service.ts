@@ -115,6 +115,8 @@ export interface ProfileResponse {
   profilePicture?: string | undefined;
   dateOfBirth?: string | undefined;
   phoneNumber?: string | undefined;
+  branchId?: string | undefined;
+  branchName?: string | undefined;
   createdAt?: string | undefined;
   updatedAt?: string | undefined;
   deletedAt?: string | undefined;

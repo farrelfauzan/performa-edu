@@ -54,6 +54,8 @@ export interface Student {
   dateOfBirth?: string | undefined;
   profilePictureUrl?: string | undefined;
   bio?: string | undefined;
+  branchId?: string | undefined;
+  branchName?: string | undefined;
   active: string;
   createdAt: string;
   updatedAt: string;
@@ -64,6 +66,7 @@ export interface Student {
 export interface RegisterStudentRequest {
   userId: string;
   fullName: string;
+  branchId: string;
   phoneNumber?: string | undefined;
   dateOfBirth?: string | undefined;
   profilePictureUrl?: string | undefined;

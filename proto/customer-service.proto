@@ -54,16 +54,20 @@ message Customer {
     string phone_number = 4;
     optional string date_of_birth = 5;
     optional User user = 6;
-    string created_at = 7;
-    string updated_at = 8;
-    optional string deleted_at = 9;
+    optional string branch_id = 7;
+    optional string branch_name = 8;
+    string created_at = 9;
+    string updated_at = 10;
+    optional string deleted_at = 11;
 }
 
 message CreateCustomerRequest {
     string user_id = 1;
     string full_name = 2;
     string phone_number = 3;
-    optional string date_of_birth = 4;
+    string branch_id = 4;
+    string branch_name = 5;
+    optional string date_of_birth = 6;
 }
 
 message CreateCustomerResponse {
@@ -83,6 +87,8 @@ message UpdateCustomerRequest {
     optional string full_name = 2;
     optional string phone_number = 3;
     optional string date_of_birth = 4;
+    optional string branch_id = 5;
+    optional string branch_name = 6;
 }
 
 message UpdateCustomerResponse {
