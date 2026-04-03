@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package branchservice;
+
+service BranchService {
+  // Branch CRUD
+  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
+  rpc GetBranchById(GetBranchByIdRequest) returns (GetBranchByIdResponse);
+  rpc UpdateBranch(UpdateBranchRequest) returns (UpdateBranchResponse);
+  rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse);
+  rpc GetAllBranches(GetAllBranchesRequest) returns (GetAllBranchesResponse);
+
+  // Customer (Teacher) membership
+  rpc AssignCustomerToBranch(AssignCustomerToBranchRequest) returns (AssignCustomerToBranchResponse);
+  rpc UnassignCustomerFromBranch(UnassignCustomerFromBranchRequest) returns (UnassignCustomerFromBranchResponse);
+  rpc GetBranchCustomers(GetBranchCustomersRequest) returns (GetBranchCustomersResponse);
+
+  // Student membership
+  rpc AssignStudentToBranch(AssignStudentToBranchRequest) returns (AssignStudentToBranchResponse);
+  rpc UnassignStudentFromBranch(UnassignStudentFromBranchRequest) returns (UnassignStudentFromBranchResponse);
+  rpc GetBranchStudents(GetBranchStudentsRequest) returns (GetBranchStudentsResponse);
+}
+
+// --- Shared ---
+
+enum Order {
+  ASC = 0;
+  DESC = 1;
+}
+
+message Filter {
+  map<string, string> values = 1;
+}
+
+message PageMeta {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 count = 3;
+  optional int32 page_count = 4;
+  optional bool has_previous_page = 5;
+  optional bool has_next_page = 6;
+}
+
+// --- Messages ---
+
+message BranchCustomer {
+  string id = 1;
+  string customer_id = 2;
+  string full_name = 3;
+  optional string profile_picture_url = 4;
+  string joined_at = 5;
+}
+
+message BranchStudent {
+  string id = 1;
+  string student_id = 2;
+  string full_name = 3;
+  optional string profile_picture_url = 4;
+}
+
+message Branch {
+  string id = 1;
+  string name = 2;
+  optional string address = 3;
+  optional string phone = 4;
+  string admin_id = 5;
+  string admin_name = 6;
+  int32 customer_count = 7;
+  int32 student_count = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  optional string deleted_at = 11;
+  repeated BranchCustomer customers = 12;
+  repeated BranchStudent students = 13;
+}
+
+// --- Branch CRUD ---
+
+message CreateBranchRequest {
+  string name = 1;
+  optional string address = 2;
+  optional string phone = 3;
+  string admin_id = 4;
+  string admin_name = 5;
+}
+
+message CreateBranchResponse {
+  Branch branch = 1;
+}
+
+message GetBranchByIdRequest {
+  string id = 1;
+}
+
+message GetBranchByIdResponse {
+  Branch branch = 1;
+}
+
+message UpdateBranchRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string address = 3;
+  optional string phone = 4;
+  optional string admin_id = 5;
+  optional string admin_name = 6;
+}
+
+message UpdateBranchResponse {
+  Branch branch = 1;
+}
+
+message DeleteBranchRequest {
+  string id = 1;
+}
+
+message DeleteBranchResponse {
+  string message = 1;
+}
+
+message GetAllBranchesRequest {
+  optional int32 page = 1;
+  optional int32 page_size = 2;
+  optional string sort_by = 3;
+  optional Order order = 4;
+  optional Filter filter = 5;
+  optional string search = 6;
+}
+
+message GetAllBranchesResponse {
+  repeated Branch branches = 1;
+  PageMeta meta = 2;
+}
+
+// --- Customer (Teacher) Membership ---
+
+message AssignCustomerToBranchRequest {
+  string branch_id = 1;
+  repeated string customer_ids = 2;
+}
+
+message AssignCustomerToBranchResponse {
+  string message = 1;
+  int32 added_count = 2;
+}
+
+message UnassignCustomerFromBranchRequest {
+  string branch_id = 1;
+  string customer_id = 2;
+}
+
+message UnassignCustomerFromBranchResponse {
+  string message = 1;
+}
+
+message GetBranchCustomersRequest {
+  string branch_id = 1;
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+  optional string search = 4;
+}
+
+message GetBranchCustomersResponse {
+  repeated BranchCustomer customers = 1;
+  PageMeta meta = 2;
+}
+
+// --- Student Membership ---
+
+message AssignStudentToBranchRequest {
+  string branch_id = 1;
+  repeated string student_ids = 2;
+}
+
+message AssignStudentToBranchResponse {
+  string message = 1;
+  int32 added_count = 2;
+}
+
+message UnassignStudentFromBranchRequest {
+  string branch_id = 1;
+  string student_id = 2;
+}
+
+message UnassignStudentFromBranchResponse {
+  string message = 1;
+}
+
+message GetBranchStudentsRequest {
+  string branch_id = 1;
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+  optional string search = 4;
+}
+
+message GetBranchStudentsResponse {
+  repeated BranchStudent students = 1;
+  PageMeta meta = 2;
+}

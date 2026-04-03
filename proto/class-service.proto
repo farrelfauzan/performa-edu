@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+package classservice;
+
+service ClassService {
+  // Class CRUD
+  rpc CreateClass(CreateClassRequest) returns (CreateClassResponse);
+  rpc GetClassById(GetClassByIdRequest) returns (GetClassByIdResponse);
+  rpc UpdateClass(UpdateClassRequest) returns (UpdateClassResponse);
+  rpc DeleteClass(DeleteClassRequest) returns (DeleteClassResponse);
+  rpc GetAllClasses(GetAllClassesRequest) returns (GetAllClassesResponse);
+
+  // Teacher membership
+  rpc AddTeacherToClass(AddTeacherToClassRequest) returns (AddTeacherToClassResponse);
+  rpc RemoveTeacherFromClass(RemoveTeacherFromClassRequest) returns (RemoveTeacherFromClassResponse);
+  rpc GetClassTeachers(GetClassTeachersRequest) returns (GetClassTeachersResponse);
+
+  // Student membership
+  rpc AddStudentToClass(AddStudentToClassRequest) returns (AddStudentToClassResponse);
+  rpc RemoveStudentFromClass(RemoveStudentFromClassRequest) returns (RemoveStudentFromClassResponse);
+  rpc GetClassStudents(GetClassStudentsRequest) returns (GetClassStudentsResponse);
+  rpc GetStudentClasses(GetStudentClassesRequest) returns (GetStudentClassesResponse);
+}
+
+// --- Shared ---
+
+enum Order {
+  ASC = 0;
+  DESC = 1;
+}
+
+message Filter {
+  map<string, string> values = 1;
+}
+
+message PageMeta {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 count = 3;
+  optional int32 page_count = 4;
+  optional bool has_previous_page = 5;
+  optional bool has_next_page = 6;
+}
+
+// --- Messages ---
+
+message ClassTeacher {
+  string id = 1;
+  string customer_id = 2;
+  string full_name = 3;
+  optional string profile_picture_url = 4;
+  string joined_at = 5;
+}
+
+message ClassStudent {
+  string id = 1;
+  string student_id = 2;
+  string full_name = 3;
+  optional string profile_picture_url = 4;
+  string joined_at = 5;
+}
+
+message Class {
+  string id = 1;
+  string unique_id = 2;
+  string created_by = 3;
+  string name = 4;
+  optional string description = 5;
+  string active = 6;
+  int32 teacher_count = 7;
+  int32 student_count = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  optional string deleted_at = 11;
+  repeated ClassTeacher teachers = 12;
+  repeated ClassStudent students = 13;
+}
+
+// --- Class CRUD ---
+
+message CreateClassRequest {
+  string created_by = 1;
+  string name = 2;
+  optional string description = 3;
+}
+
+message CreateClassResponse {
+  Class class = 1;
+}
+
+message GetClassByIdRequest {
+  string id = 1;
+}
+
+message GetClassByIdResponse {
+  Class class = 1;
+}
+
+message UpdateClassRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string active = 4;
+}
+
+message UpdateClassResponse {
+  Class class = 1;
+}
+
+message DeleteClassRequest {
+  string id = 1;
+}
+
+message DeleteClassResponse {
+  string message = 1;
+}
+
+message GetAllClassesRequest {
+  optional int32 page = 1;
+  optional int32 page_size = 2;
+  optional string sort_by = 3;
+  optional Order order = 4;
+  optional Filter filter = 5;
+  optional string teacher_id = 6;
+  optional string search = 7;
+}
+
+message GetAllClassesResponse {
+  repeated Class classes = 1;
+  PageMeta meta = 2;
+}
+
+// --- Teacher Membership ---
+
+message AddTeacherToClassRequest {
+  string class_id = 1;
+  repeated string customer_ids = 2;
+}
+
+message AddTeacherToClassResponse {
+  string message = 1;
+  int32 added_count = 2;
+}
+
+message RemoveTeacherFromClassRequest {
+  string class_id = 1;
+  string customer_id = 2;
+}
+
+message RemoveTeacherFromClassResponse {
+  string message = 1;
+}
+
+message GetClassTeachersRequest {
+  string class_id = 1;
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+  optional string search = 4;
+}
+
+message GetClassTeachersResponse {
+  repeated ClassTeacher teachers = 1;
+  PageMeta meta = 2;
+}
+
+// --- Student Membership ---
+
+message AddStudentToClassRequest {
+  string class_id = 1;
+  repeated string student_ids = 2;
+}
+
+message AddStudentToClassResponse {
+  string message = 1;
+  int32 added_count = 2;
+}
+
+message RemoveStudentFromClassRequest {
+  string class_id = 1;
+  string student_id = 2;
+}
+
+message RemoveStudentFromClassResponse {
+  string message = 1;
+}
+
+message GetClassStudentsRequest {
+  string class_id = 1;
+  optional int32 page = 2;
+  optional int32 page_size = 3;
+  optional string search = 4;
+}
+
+message GetClassStudentsResponse {
+  repeated ClassStudent students = 1;
+  PageMeta meta = 2;
+}
+
+message GetStudentClassesRequest {
+  string student_id = 1;
+}
+
+message GetStudentClassesResponse {
+  repeated Class classes = 1;
+}
