@@ -49,7 +49,7 @@ export interface Admin {
   deletedAt: string;
 }
 
-export interface Customer {
+export interface Teacher {
   id: string;
   uniqueId: string;
   email: string;
@@ -85,7 +85,7 @@ export interface RegisterAdminResponse {
   user?: User | undefined;
 }
 
-export interface RegisterCustomerRequest {
+export interface RegisterTeacherRequest {
   username: string;
   email: string;
   password: string;
@@ -95,9 +95,9 @@ export interface RegisterCustomerRequest {
   profilePicture?: string | undefined;
 }
 
-export interface RegisterCustomerResponse {
+export interface RegisterTeacherResponse {
   user?: User | undefined;
-  customer?: Customer | undefined;
+  teacher?: Teacher | undefined;
 }
 
 export interface ProfileRequest {
@@ -214,9 +214,9 @@ export interface AuthServiceClient {
 
   registerAdmin(request: RegisterAdminRequest): Observable<RegisterAdminResponse>;
 
-  /** Registers a new customer user with profile information */
+  /** Registers a new teacher user with profile information */
 
-  registerCustomer(request: RegisterCustomerRequest): Observable<RegisterCustomerResponse>;
+  registerTeacher(request: RegisterTeacherRequest): Observable<RegisterTeacherResponse>;
 
   /** Retrieves the authenticated user's profile information */
 
@@ -268,11 +268,11 @@ export interface AuthServiceController {
     request: RegisterAdminRequest,
   ): Promise<RegisterAdminResponse> | Observable<RegisterAdminResponse> | RegisterAdminResponse;
 
-  /** Registers a new customer user with profile information */
+  /** Registers a new teacher user with profile information */
 
-  registerCustomer(
-    request: RegisterCustomerRequest,
-  ): Promise<RegisterCustomerResponse> | Observable<RegisterCustomerResponse> | RegisterCustomerResponse;
+  registerTeacher(
+    request: RegisterTeacherRequest,
+  ): Promise<RegisterTeacherResponse> | Observable<RegisterTeacherResponse> | RegisterTeacherResponse;
 
   /** Retrieves the authenticated user's profile information */
 
@@ -333,7 +333,7 @@ export function AuthServiceControllerMethods() {
     const grpcMethods: string[] = [
       "login",
       "registerAdmin",
-      "registerCustomer",
+      "registerTeacher",
       "getMe",
       "getUserById",
       "createUser",

@@ -10,12 +10,12 @@ import {
   GetBranchByIdResponse,
   UpdateBranchRequest,
   UpdateBranchResponse,
-  AssignCustomerToBranchRequest,
-  AssignCustomerToBranchResponse,
-  UnassignCustomerFromBranchRequest,
-  UnassignCustomerFromBranchResponse,
-  GetBranchCustomersRequest,
-  GetBranchCustomersResponse,
+  AssignTeacherToBranchRequest,
+  AssignTeacherToBranchResponse,
+  UnassignTeacherFromBranchRequest,
+  UnassignTeacherFromBranchResponse,
+  GetBranchTeachersRequest,
+  GetBranchTeachersResponse,
   AssignStudentToBranchRequest,
   AssignStudentToBranchResponse,
   UnassignStudentFromBranchRequest,
@@ -61,23 +61,23 @@ export class BranchService {
     return await this.branchRepository.deleteBranch(options);
   }
 
-  // Customer (Teacher) membership
-  async assignCustomerToBranch(
-    options: AssignCustomerToBranchRequest
-  ): Promise<AssignCustomerToBranchResponse> {
-    return await this.branchRepository.assignCustomerToBranch(options);
+  // Teacher membership
+  async assignTeacherToBranch(
+    options: AssignTeacherToBranchRequest
+  ): Promise<AssignTeacherToBranchResponse> {
+    return await this.branchRepository.assignTeacherToBranch(options);
   }
 
-  async unassignCustomerFromBranch(
-    options: UnassignCustomerFromBranchRequest
-  ): Promise<UnassignCustomerFromBranchResponse> {
-    return await this.branchRepository.unassignCustomerFromBranch(options);
+  async unassignTeacherFromBranch(
+    options: UnassignTeacherFromBranchRequest
+  ): Promise<UnassignTeacherFromBranchResponse> {
+    return await this.branchRepository.unassignTeacherFromBranch(options);
   }
 
-  async getBranchCustomers(
-    options: GetBranchCustomersRequest
-  ): Promise<GetBranchCustomersResponse> {
-    return await this.branchRepository.getBranchCustomers(options);
+  async getBranchTeachers(
+    options: GetBranchTeachersRequest
+  ): Promise<GetBranchTeachersResponse> {
+    return await this.branchRepository.getBranchTeachers(options);
   }
 
   // Student membership

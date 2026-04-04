@@ -15,10 +15,10 @@ export function ClassAlreadyExistsError(name: string) {
   });
 }
 
-export function TeacherAlreadyInClassError(customerId: string) {
+export function TeacherAlreadyInClassError(teacherId: string) {
   throw new RpcException({
     code: status.ALREADY_EXISTS,
-    message: `Teacher "${customerId}" is already in this class`,
+    message: `Teacher "${teacherId}" is already in this class`,
   });
 }
 

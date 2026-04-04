@@ -8,8 +8,8 @@ service AuthService {
     rpc Login(LoginRequest) returns (LoginResponse);
     // Registers a new admin user with specified roles
     rpc RegisterAdmin(RegisterAdminRequest) returns (RegisterAdminResponse);
-    // Registers a new customer user with profile information
-    rpc RegisterCustomer(RegisterCustomerRequest) returns (RegisterCustomerResponse);
+    // Registers a new teacher user with profile information
+    rpc RegisterTeacher(RegisterTeacherRequest) returns (RegisterTeacherResponse);
     // Retrieves the authenticated user's profile information
     rpc GetMe(ProfileRequest) returns (ProfileResponse);
     // Retrieves basic user information by user ID
@@ -69,7 +69,7 @@ message Admin {
     string deleted_at = 7;
 }
 
-message Customer {
+message Teacher {
     string id = 1;
     string unique_id = 2;
     string email = 3;
@@ -105,7 +105,7 @@ message RegisterAdminResponse {
     User user = 2;
 }
 
-message RegisterCustomerRequest {
+message RegisterTeacherRequest {
     string username = 1;
     string email = 2;
     string password = 3;
@@ -115,9 +115,9 @@ message RegisterCustomerRequest {
     optional string profile_picture = 7;
 }
 
-message RegisterCustomerResponse {
+message RegisterTeacherResponse {
     User user = 1;
-    Customer customer = 2;
+    Teacher teacher = 2;
 }
     
 

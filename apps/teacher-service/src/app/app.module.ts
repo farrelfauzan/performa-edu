@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { CustomerController } from './customer.controller';
-import { CustomerService } from './customer.service';
+import { TeacherController } from './teacher.controller';
+import { TeacherService } from './teacher.service';
 import {
   DynamicQueryBuilder,
   GrpcErrorHandler,
@@ -9,7 +9,7 @@ import {
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AUTHSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/auth-service';
 import { join } from 'path';
-import { CustomerRepository } from './repositories/customer.repository';
+import { TeacherRepository } from './repositories/teacher.repository';
 
 @Module({
   imports: [
@@ -28,10 +28,10 @@ import { CustomerRepository } from './repositories/customer.repository';
       },
     ]),
   ],
-  controllers: [CustomerController],
+  controllers: [TeacherController],
   providers: [
-    CustomerService,
-    CustomerRepository,
+    TeacherService,
+    TeacherRepository,
     DynamicQueryBuilder,
     GrpcErrorHandler,
   ],

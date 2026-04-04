@@ -1,19 +1,19 @@
 syntax = "proto3";
 
-package customerservice;
+package teacherservice;
 
-// Customer Service Definition
-service CustomerService {
-    // Customer CRUD Operations
-    rpc CreateCustomer(CreateCustomerRequest) returns (CreateCustomerResponse);
-    // Retrieve a customer by their unique ID
-    rpc GetCustomerById(GetCustomerByIdRequest) returns (GetCustomerByIdResponse);
-    // Update an existing customer's information
-    rpc UpdateCustomer(UpdateCustomerRequest) returns (UpdateCustomerResponse);
-    // Delete a customer by their unique ID
-    rpc DeleteCustomer(DeleteCustomerRequest) returns (DeleteCustomerResponse);
-    // Retrieve all customers with optional pagination, filtering, and sorting
-    rpc GetAllCustomers(GetAllCustomersRequest) returns (GetAllCustomersResponse);
+// Teacher Service Definition
+service TeacherService {
+    // Teacher CRUD Operations
+    rpc CreateTeacher(CreateTeacherRequest) returns (CreateTeacherResponse);
+    // Retrieve a teacher by their unique ID
+    rpc GetTeacherById(GetTeacherByIdRequest) returns (GetTeacherByIdResponse);
+    // Update an existing teacher's information
+    rpc UpdateTeacher(UpdateTeacherRequest) returns (UpdateTeacherResponse);
+    // Delete a teacher by their unique ID
+    rpc DeleteTeacher(DeleteTeacherRequest) returns (DeleteTeacherResponse);
+    // Retrieve all teachers with optional pagination, filtering, and sorting
+    rpc GetAllTeachers(GetAllTeachersRequest) returns (GetAllTeachersResponse);
 }
 
 enum Order {
@@ -47,7 +47,7 @@ message User {
     repeated Role roles = 4;
 }
 
-message Customer {
+message Teacher {
     string id = 1;
     string unique_id = 2;
     string full_name = 3;
@@ -61,7 +61,7 @@ message Customer {
     optional string deleted_at = 11;
 }
 
-message CreateCustomerRequest {
+message CreateTeacherRequest {
     string user_id = 1;
     string full_name = 2;
     string phone_number = 3;
@@ -70,19 +70,19 @@ message CreateCustomerRequest {
     optional string date_of_birth = 6;
 }
 
-message CreateCustomerResponse {
-    Customer customer = 1;
+message CreateTeacherResponse {
+    Teacher teacher = 1;
 }
 
-message GetCustomerByIdRequest {
+message GetTeacherByIdRequest {
     string id = 1;
 }
 
-message GetCustomerByIdResponse {
-    Customer customer = 1;
+message GetTeacherByIdResponse {
+    Teacher teacher = 1;
 }
 
-message UpdateCustomerRequest {
+message UpdateTeacherRequest {
     string id = 1;
     optional string full_name = 2;
     optional string phone_number = 3;
@@ -91,19 +91,19 @@ message UpdateCustomerRequest {
     optional string branch_name = 6;
 }
 
-message UpdateCustomerResponse {
-    Customer customer = 1;
+message UpdateTeacherResponse {
+    Teacher teacher = 1;
 }
 
-message DeleteCustomerRequest {
+message DeleteTeacherRequest {
     string id = 1;
 }
 
-message DeleteCustomerResponse {
+message DeleteTeacherResponse {
     string message = 1;
 }
 
-message GetAllCustomersRequest {
+message GetAllTeachersRequest {
     optional int32 page = 1;
     optional int32 page_size = 2;
     optional Order order = 3;
@@ -114,8 +114,7 @@ message GetAllCustomersRequest {
     optional string search = 8;
 }
 
-message GetAllCustomersResponse {
-    repeated Customer customers = 1;
+message GetAllTeachersResponse {
+    repeated Teacher teachers = 1;
     PageMeta meta = 2;
 }
-

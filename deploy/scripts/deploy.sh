@@ -94,17 +94,17 @@ docker build \
     . &
 PID_CONTENT=$!
 
-log_info "Building customer-service..."
+log_info "Building teacher-service..."
 docker build \
-    -t "gcr.io/$PROJECT_ID/customer-service:$TAG" \
-    -t "gcr.io/$PROJECT_ID/customer-service:latest" \
-    -f apps/customer-service/Dockerfile \
+    -t "gcr.io/$PROJECT_ID/teacher-service:$TAG" \
+    -t "gcr.io/$PROJECT_ID/teacher-service:latest" \
+    -f apps/teacher-service/Dockerfile \
     --target production \
     . &
-PID_CUSTOMER=$!
+PID_TEACHER=$!
 
 # Wait for all builds to complete
-wait $PID_API $PID_AUTH $PID_CONTENT $PID_CUSTOMER
+wait $PID_API $PID_AUTH $PID_CONTENT $PID_TEACHER
 log_success "All images built successfully"
 
 # =============================================================================
@@ -118,8 +118,8 @@ docker push "gcr.io/$PROJECT_ID/auth-service:$TAG" &
 docker push "gcr.io/$PROJECT_ID/auth-service:latest" &
 docker push "gcr.io/$PROJECT_ID/content-service:$TAG" &
 docker push "gcr.io/$PROJECT_ID/content-service:latest" &
-docker push "gcr.io/$PROJECT_ID/customer-service:$TAG" &
-docker push "gcr.io/$PROJECT_ID/customer-service:latest" &
+docker push "gcr.io/$PROJECT_ID/teacher-service:$TAG" &
+docker push "gcr.io/$PROJECT_ID/teacher-service:latest" &
 
 wait
 log_success "All images pushed successfully"
@@ -173,10 +173,10 @@ gcloud run deploy content-service \
     --project="$PROJECT_ID" \
     --quiet
 
-# Deploy Customer Service
-log_info "Deploying customer-service..."
-gcloud run deploy customer-service \
-    --image="gcr.io/$PROJECT_ID/customer-service:$TAG" \
+# Deploy Teacher Service
+log_info "Deploying teacher-service..."
+gcloud run deploy teacher-service \
+    --image="gcr.io/$PROJECT_ID/teacher-service:$TAG" \
     --region="$REGION" \
     --platform=managed \
     --no-allow-unauthenticated \
@@ -187,11 +187,11 @@ gcloud run deploy customer-service \
     --cpu=1 \
     --min-instances=0 \
     --max-instances=5 \
-    --set-env-vars="NODE_ENV=production,CUSTOMER_SERVICE_GRPC_HOST=0.0.0.0,CUSTOMER_SERVICE_GRPC_PORT=5003" \
+    --set-env-vars="NODE_ENV=production,TEACHER_SERVICE_GRPC_HOST=0.0.0.0,TEACHER_SERVICE_GRPC_PORT=5003" \
     --set-secrets="DATABASE_URL=database-url:latest,REDIS_URL=redis-url:latest" \
     --vpc-connector="$VPC_CONNECTOR" \
     --set-cloudsql-instances="$SQL_INSTANCE" \
-    --service-account="customer-service-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+    --service-account="teacher-service-sa@$PROJECT_ID.iam.gserviceaccount.com" \
     --project="$PROJECT_ID" \
     --quiet
 
@@ -204,16 +204,16 @@ log_info "Getting service URLs..."
 
 AUTH_URL=$(gcloud run services describe auth-service --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')
 CONTENT_URL=$(gcloud run services describe content-service --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')
-CUSTOMER_URL=$(gcloud run services describe customer-service --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')
+TEACHER_URL=$(gcloud run services describe teacher-service --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')
 
 # Extract hostnames (remove https://)
 AUTH_HOST="${AUTH_URL#https://}"
 CONTENT_HOST="${CONTENT_URL#https://}"
-CUSTOMER_HOST="${CUSTOMER_URL#https://}"
+TEACHER_HOST="${TEACHER_URL#https://}"
 
 log_info "Auth Service:     $AUTH_URL"
 log_info "Content Service:  $CONTENT_URL"
-log_info "Customer Service: $CUSTOMER_URL"
+log_info "Teacher Service: $TEACHER_URL"
 
 # =============================================================================
 # Deploy API Gateway
@@ -230,7 +230,7 @@ gcloud run deploy api-gateway \
     --cpu=1 \
     --min-instances=0 \
     --max-instances=10 \
-    --set-env-vars="NODE_ENV=production,PORT=3000,AUTH_SERVICE_GRPC_HOST=${AUTH_HOST},AUTH_SERVICE_GRPC_PORT=443,CONTENT_SERVICE_GRPC_HOST=${CONTENT_HOST},CONTENT_SERVICE_GRPC_PORT=443,CUSTOMER_SERVICE_GRPC_HOST=${CUSTOMER_HOST},CUSTOMER_SERVICE_GRPC_PORT=443" \
+    --set-env-vars="NODE_ENV=production,PORT=3000,AUTH_SERVICE_GRPC_HOST=${AUTH_HOST},AUTH_SERVICE_GRPC_PORT=443,CONTENT_SERVICE_GRPC_HOST=${CONTENT_HOST},CONTENT_SERVICE_GRPC_PORT=443,TEACHER_SERVICE_GRPC_HOST=${TEACHER_HOST},TEACHER_SERVICE_GRPC_PORT=443" \
     --set-secrets="DATABASE_URL=database-url:latest,JWT_SECRET=jwt-secret:latest,REDIS_URL=redis-url:latest" \
     --vpc-connector="$VPC_CONNECTOR" \
     --set-cloudsql-instances="$SQL_INSTANCE" \
@@ -256,7 +256,7 @@ echo ""
 echo "🔧 Internal Services (gRPC):"
 echo "   Auth Service:     $AUTH_URL"
 echo "   Content Service:  $CONTENT_URL"
-echo "   Customer Service: $CUSTOMER_URL"
+echo "   Teacher Service: $TEACHER_URL"
 echo ""
 echo "📝 Test the API:"
 echo "   curl $API_URL/api/health"

@@ -14,12 +14,12 @@ import {
   GetAllBranchesRequest,
   UpdateBranchRequest,
   UpdateBranchResponse,
-  AssignCustomerToBranchRequest,
-  AssignCustomerToBranchResponse,
-  UnassignCustomerFromBranchRequest,
-  UnassignCustomerFromBranchResponse,
-  GetBranchCustomersRequest,
-  GetBranchCustomersResponse,
+  AssignTeacherToBranchRequest,
+  AssignTeacherToBranchResponse,
+  UnassignTeacherFromBranchRequest,
+  UnassignTeacherFromBranchResponse,
+  GetBranchTeachersRequest,
+  GetBranchTeachersResponse,
   AssignStudentToBranchRequest,
   AssignStudentToBranchResponse,
   UnassignStudentFromBranchRequest,
@@ -50,16 +50,16 @@ export class BranchRepository implements IBranchRepository {
         ...(options.phone ? { phone: options.phone } : {}),
       },
       include: {
-        _count: { select: { customers: true, students: true } },
+        _count: { select: { teachers: true, students: true } },
       },
     });
 
     return {
       branch: {
         ...transformResponse(branch),
-        customerCount: branch._count.customers,
+        teacherCount: branch._count.teachers,
         studentCount: branch._count.students,
-        customers: [],
+        teachers: [],
         students: [],
       },
     };
@@ -79,7 +79,7 @@ export class BranchRepository implements IBranchRepository {
           }),
         },
         include: {
-          _count: { select: { customers: true, students: true } },
+          _count: { select: { teachers: true, students: true } },
         },
       }
     );
@@ -92,9 +92,9 @@ export class BranchRepository implements IBranchRepository {
 
     const data = branches.data.map((b) => ({
       ...transformResponse(b),
-      customerCount: b._count.customers,
+      teacherCount: b._count.teachers,
       studentCount: b._count.students,
-      customers: [],
+      teachers: [],
       students: [],
     }));
 
@@ -105,9 +105,9 @@ export class BranchRepository implements IBranchRepository {
     const branch = await this.prisma.branch.findFirst({
       where: { id, deletedAt: null },
       include: {
-        _count: { select: { customers: true, students: true } },
-        customers: {
-          include: { customer: true },
+        _count: { select: { teachers: true, students: true } },
+        teachers: {
+          include: { teacher: true },
           orderBy: { joinedAt: 'asc' },
         },
         students: true,
@@ -120,13 +120,13 @@ export class BranchRepository implements IBranchRepository {
 
     const data: Branch = {
       ...transformResponse(branch),
-      customerCount: branch._count.customers,
+      teacherCount: branch._count.teachers,
       studentCount: branch._count.students,
-      customers: branch.customers.map((bc) => ({
+      teachers: branch.teachers.map((bc) => ({
         id: bc.id,
-        customerId: bc.customerId,
-        fullName: bc.customer.fullName,
-        profilePictureUrl: bc.customer.profilePictureUrl || undefined,
+        teacherId: bc.teacherId,
+        fullName: bc.teacher.fullName,
+        profilePictureUrl: bc.teacher.profilePictureUrl || undefined,
         joinedAt: bc.joinedAt.toISOString(),
       })),
       students: branch.students.map((s) => ({
@@ -162,16 +162,16 @@ export class BranchRepository implements IBranchRepository {
         ...(options.adminName ? { adminName: options.adminName } : {}),
       },
       include: {
-        _count: { select: { customers: true, students: true } },
+        _count: { select: { teachers: true, students: true } },
       },
     });
 
     return {
       branch: {
         ...transformResponse(updatedBranch),
-        customerCount: updatedBranch._count.customers,
+        teacherCount: updatedBranch._count.teachers,
         studentCount: updatedBranch._count.students,
-        customers: [],
+        teachers: [],
         students: [],
       },
     };
@@ -196,11 +196,11 @@ export class BranchRepository implements IBranchRepository {
     return { message: 'Branch deleted successfully' };
   }
 
-  // --- Customer (Teacher) Membership ---
+  // --- Teacher Membership ---
 
-  async assignCustomerToBranch(
-    options: AssignCustomerToBranchRequest
-  ): Promise<AssignCustomerToBranchResponse> {
+  async assignTeacherToBranch(
+    options: AssignTeacherToBranchRequest
+  ): Promise<AssignTeacherToBranchResponse> {
     const existing = await this.prisma.branch.findFirst({
       where: { id: options.branchId, deletedAt: null },
     });
@@ -209,38 +209,38 @@ export class BranchRepository implements IBranchRepository {
       BranchNotFoundError(options.branchId);
     }
 
-    const result = await this.prisma.branchCustomer.createMany({
-      data: options.customerIds.map((customerId) => ({
+    const result = await this.prisma.branchTeacher.createMany({
+      data: options.teacherIds.map((teacherId) => ({
         branchId: options.branchId,
-        customerId,
+        teacherId,
       })),
       skipDuplicates: true,
     });
 
     return {
-      message: `${result.count} customer(s) assigned to branch`,
+      message: `${result.count} teacher(s) assigned to branch`,
       addedCount: result.count,
     };
   }
 
-  async unassignCustomerFromBranch(
-    options: UnassignCustomerFromBranchRequest
-  ): Promise<UnassignCustomerFromBranchResponse> {
-    await this.prisma.branchCustomer.delete({
+  async unassignTeacherFromBranch(
+    options: UnassignTeacherFromBranchRequest
+  ): Promise<UnassignTeacherFromBranchResponse> {
+    await this.prisma.branchTeacher.delete({
       where: {
-        branchId_customerId: {
+        branchId_teacherId: {
           branchId: options.branchId,
-          customerId: options.customerId,
+          teacherId: options.teacherId,
         },
       },
     });
 
-    return { message: 'Customer removed from branch' };
+    return { message: 'Teacher removed from branch' };
   }
 
-  async getBranchCustomers(
-    options: GetBranchCustomersRequest
-  ): Promise<GetBranchCustomersResponse> {
+  async getBranchTeachers(
+    options: GetBranchTeachersRequest
+  ): Promise<GetBranchTeachersResponse> {
     const page = options.page || 1;
     const pageSize = options.pageSize || 10;
     const skip = (page - 1) * pageSize;
@@ -250,28 +250,28 @@ export class BranchRepository implements IBranchRepository {
     };
 
     if (options.search) {
-      where.customer = {
+      where.teacher = {
         fullName: { contains: options.search, mode: 'insensitive' },
       };
     }
 
-    const [customers, count] = await Promise.all([
-      this.prisma.branchCustomer.findMany({
+    const [teachers, count] = await Promise.all([
+      this.prisma.branchTeacher.findMany({
         where,
         skip,
         take: pageSize,
-        include: { customer: true },
+        include: { teacher: true },
         orderBy: { joinedAt: 'asc' },
       }),
-      this.prisma.branchCustomer.count({ where }),
+      this.prisma.branchTeacher.count({ where }),
     ]);
 
     return {
-      customers: customers.map((bc) => ({
+      teachers: teachers.map((bc) => ({
         id: bc.id,
-        customerId: bc.customerId,
-        fullName: bc.customer.fullName,
-        profilePictureUrl: bc.customer.profilePictureUrl || undefined,
+        teacherId: bc.teacherId,
+        fullName: bc.teacher.fullName,
+        profilePictureUrl: bc.teacher.profilePictureUrl || undefined,
         joinedAt: bc.joinedAt.toISOString(),
       })),
       meta: { page, pageSize, count },

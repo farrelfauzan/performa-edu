@@ -30,7 +30,7 @@ export class GetAllClassesDto extends createZodDto(GetAllClassesSchema) {}
 
 export const AddTeachersToClassSchema = z
   .object({
-    customerIds: z.array(z.string()).min(1, 'At least one teacher is required'),
+    teacherIds: z.array(z.string()).min(1, 'At least one teacher is required'),
   })
   .meta({ className: 'AddTeachersToClassDto' });
 

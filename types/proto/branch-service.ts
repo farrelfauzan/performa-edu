@@ -34,9 +34,9 @@ export interface PageMeta {
   hasNextPage?: boolean | undefined;
 }
 
-export interface BranchCustomer {
+export interface BranchTeacher {
   id: string;
-  customerId: string;
+  teacherId: string;
   fullName: string;
   profilePictureUrl?: string | undefined;
   joinedAt: string;
@@ -56,12 +56,12 @@ export interface Branch {
   phone?: string | undefined;
   adminId: string;
   adminName: string;
-  customerCount: number;
+  teacherCount: number;
   studentCount: number;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | undefined;
-  customers: BranchCustomer[];
+  teachers: BranchTeacher[];
   students: BranchStudent[];
 }
 
@@ -120,34 +120,34 @@ export interface GetAllBranchesResponse {
   meta?: PageMeta | undefined;
 }
 
-export interface AssignCustomerToBranchRequest {
+export interface AssignTeacherToBranchRequest {
   branchId: string;
-  customerIds: string[];
+  teacherIds: string[];
 }
 
-export interface AssignCustomerToBranchResponse {
+export interface AssignTeacherToBranchResponse {
   message: string;
   addedCount: number;
 }
 
-export interface UnassignCustomerFromBranchRequest {
+export interface UnassignTeacherFromBranchRequest {
   branchId: string;
-  customerId: string;
+  teacherId: string;
 }
 
-export interface UnassignCustomerFromBranchResponse {
+export interface UnassignTeacherFromBranchResponse {
   message: string;
 }
 
-export interface GetBranchCustomersRequest {
+export interface GetBranchTeachersRequest {
   branchId: string;
   page?: number | undefined;
   pageSize?: number | undefined;
   search?: string | undefined;
 }
 
-export interface GetBranchCustomersResponse {
-  customers: BranchCustomer[];
+export interface GetBranchTeachersResponse {
+  teachers: BranchTeacher[];
   meta?: PageMeta | undefined;
 }
 
@@ -197,15 +197,15 @@ export interface BranchServiceClient {
 
   getAllBranches(request: GetAllBranchesRequest): Observable<GetAllBranchesResponse>;
 
-  /** Customer (Teacher) membership */
+  /** Teacher membership */
 
-  assignCustomerToBranch(request: AssignCustomerToBranchRequest): Observable<AssignCustomerToBranchResponse>;
+  assignTeacherToBranch(request: AssignTeacherToBranchRequest): Observable<AssignTeacherToBranchResponse>;
 
-  unassignCustomerFromBranch(
-    request: UnassignCustomerFromBranchRequest,
-  ): Observable<UnassignCustomerFromBranchResponse>;
+  unassignTeacherFromBranch(
+    request: UnassignTeacherFromBranchRequest,
+  ): Observable<UnassignTeacherFromBranchResponse>;
 
-  getBranchCustomers(request: GetBranchCustomersRequest): Observable<GetBranchCustomersResponse>;
+  getBranchTeachers(request: GetBranchTeachersRequest): Observable<GetBranchTeachersResponse>;
 
   /** Student membership */
 
@@ -239,25 +239,25 @@ export interface BranchServiceController {
     request: GetAllBranchesRequest,
   ): Promise<GetAllBranchesResponse> | Observable<GetAllBranchesResponse> | GetAllBranchesResponse;
 
-  /** Customer (Teacher) membership */
+  /** Teacher membership */
 
-  assignCustomerToBranch(
-    request: AssignCustomerToBranchRequest,
+  assignTeacherToBranch(
+    request: AssignTeacherToBranchRequest,
   ):
-    | Promise<AssignCustomerToBranchResponse>
-    | Observable<AssignCustomerToBranchResponse>
-    | AssignCustomerToBranchResponse;
+    | Promise<AssignTeacherToBranchResponse>
+    | Observable<AssignTeacherToBranchResponse>
+    | AssignTeacherToBranchResponse;
 
-  unassignCustomerFromBranch(
-    request: UnassignCustomerFromBranchRequest,
+  unassignTeacherFromBranch(
+    request: UnassignTeacherFromBranchRequest,
   ):
-    | Promise<UnassignCustomerFromBranchResponse>
-    | Observable<UnassignCustomerFromBranchResponse>
-    | UnassignCustomerFromBranchResponse;
+    | Promise<UnassignTeacherFromBranchResponse>
+    | Observable<UnassignTeacherFromBranchResponse>
+    | UnassignTeacherFromBranchResponse;
 
-  getBranchCustomers(
-    request: GetBranchCustomersRequest,
-  ): Promise<GetBranchCustomersResponse> | Observable<GetBranchCustomersResponse> | GetBranchCustomersResponse;
+  getBranchTeachers(
+    request: GetBranchTeachersRequest,
+  ): Promise<GetBranchTeachersResponse> | Observable<GetBranchTeachersResponse> | GetBranchTeachersResponse;
 
   /** Student membership */
 
@@ -285,9 +285,9 @@ export function BranchServiceControllerMethods() {
       "updateBranch",
       "deleteBranch",
       "getAllBranches",
-      "assignCustomerToBranch",
-      "unassignCustomerFromBranch",
-      "getBranchCustomers",
+      "assignTeacherToBranch",
+      "unassignTeacherFromBranch",
+      "getBranchTeachers",
       "assignStudentToBranch",
       "unassignStudentFromBranch",
       "getBranchStudents",

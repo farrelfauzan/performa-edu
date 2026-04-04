@@ -18,7 +18,7 @@ help:
 	@echo "  make api-gateway  - Start only api-gateway service"
 	@echo "  make auth         - Start only auth-service"
 	@echo "  make content      - Start only content-service"
-	@echo "  make customer     - Start only customer-service"
+	@echo "  make teacher     - Start only teacher-service"
 	@echo "  make student      - Start only student-service"
 	@echo ""
 	@echo "Database:"
@@ -74,8 +74,8 @@ auth:
 content:
 	docker-compose up -d postgres redis content-service
 
-customer:
-	docker-compose up -d postgres redis customer-service
+teacher:
+	docker-compose up -d postgres redis teacher-service
 
 student:
 	docker-compose up -d postgres redis student-service
@@ -124,8 +124,8 @@ shell-auth:
 shell-content:
 	docker-compose exec content-service sh
 
-shell-customer:
-	docker-compose exec customer-service sh
+shell-teacher:
+	docker-compose exec teacher-service sh
 
 shell-student:
 	docker-compose exec student-service sh

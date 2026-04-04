@@ -47,8 +47,8 @@ services:
       AUTH_SERVICE_GRPC_PORT: ${AUTH_SERVICE_GRPC_PORT:-50051}
       CONTENT_SERVICE_GRPC_HOST: content-service
       CONTENT_SERVICE_GRPC_PORT: ${CONTENT_SERVICE_GRPC_PORT:-50052}
-      CUSTOMER_SERVICE_GRPC_HOST: customer-service
-      CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+      TEACHER_SERVICE_GRPC_HOST: teacher-service
+      TEACHER_SERVICE_GRPC_PORT: ${TEACHER_SERVICE_GRPC_PORT:-50053}
       STUDENT_SERVICE_GRPC_HOST: student-service
       STUDENT_SERVICE_GRPC_PORT: ${STUDENT_SERVICE_GRPC_PORT:-50054}
       QUIZ_SERVICE_GRPC_HOST: quiz-service
@@ -74,7 +74,7 @@ services:
         condition: service_started
       content-service:
         condition: service_started
-      customer-service:
+      teacher-service:
         condition: service_started
       student-service:
         condition: service_started
@@ -154,23 +154,23 @@ services:
     networks:
       - performa-network
 
-  customer-service:
+  teacher-service:
     build:
       context: .
-      dockerfile: apps/customer-service/Dockerfile
+      dockerfile: apps/teacher-service/Dockerfile
       target: development
-    container_name: performa-edu-customer-service
+    container_name: performa-edu-teacher-service
     restart: unless-stopped
     environment:
       NODE_ENV: development
-      CUSTOMER_SERVICE_GRPC_HOST: 0.0.0.0
-      CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+      TEACHER_SERVICE_GRPC_HOST: 0.0.0.0
+      TEACHER_SERVICE_GRPC_PORT: ${TEACHER_SERVICE_GRPC_PORT:-50053}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
     ports:
-      - "${CUSTOMER_SERVICE_GRPC_PORT:-50053}:${CUSTOMER_SERVICE_GRPC_PORT:-50053}"
+      - "${TEACHER_SERVICE_GRPC_PORT:-50053}:${TEACHER_SERVICE_GRPC_PORT:-50053}"
     volumes:
-      - ./apps/customer-service/src:/app/apps/customer-service/src:ro
+      - ./apps/teacher-service/src:/app/apps/teacher-service/src:ro
       - ./libs/src:/app/libs/src:ro
       - ./proto:/app/proto:ro
       - ./types:/app/types:ro

@@ -179,7 +179,7 @@ export class ClassController implements OnModuleInit {
     const result = await handleGrpcCall(
       this.classService.addTeacherToClass({
         classId: id,
-        customerIds: body.customerIds,
+        teacherIds: body.teacherIds,
       }),
       this.grpcErrorHandler,
       'Failed to add teachers to class'
@@ -189,17 +189,17 @@ export class ClassController implements OnModuleInit {
   }
 
   @Auth([{ action: AclAction.UPDATE, subject: AclSubject.CLASS }])
-  @Delete(':id/teachers/:customerId')
+  @Delete(':id/teachers/:teacherId')
   async removeTeacherFromClass(
     @Param('id') id: string,
-    @Param('customerId') customerId: string
+    @Param('teacherId') teacherId: string
   ): Promise<{
     data: RemoveTeacherFromClassResponse;
   }> {
     const result = await handleGrpcCall(
       this.classService.removeTeacherFromClass({
         classId: id,
-        customerId,
+        teacherId,
       }),
       this.grpcErrorHandler,
       'Failed to remove teacher from class'

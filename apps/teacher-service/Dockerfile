@@ -30,10 +30,10 @@ COPY . .
 RUN pnpm exec prisma generate --schema=./libs/src/prisma/schema.prisma || true
 
 # Expose gRPC port
-EXPOSE ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+EXPOSE ${TEACHER_SERVICE_GRPC_PORT:-50053}
 
 # Run in development mode with hot reload
-CMD ["pnpm", "nx", "serve", "customer-service"]
+CMD ["pnpm", "nx", "serve", "teacher-service"]
 
 # ===== Build Stage =====
 FROM base AS build
@@ -50,7 +50,7 @@ COPY . .
 RUN pnpm exec prisma generate --schema=./libs/src/prisma/schema.prisma || true
 
 # Build the application
-RUN pnpm nx build customer-service --configuration=production
+RUN pnpm nx build teacher-service --configuration=production
 
 # ===== Production Stage =====
 FROM node:20-alpine AS production
@@ -66,7 +66,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs
 
 # Copy built application
-COPY --from=build --chown=nestjs:nodejs /app/dist/apps/customer-service ./
+COPY --from=build --chown=nestjs:nodejs /app/dist/apps/teacher-service ./
 COPY --from=build --chown=nestjs:nodejs /app/proto ./proto
 
 # Install production dependencies
@@ -76,11 +76,11 @@ RUN npm install --omit=dev
 USER nestjs
 
 # Expose gRPC port
-EXPOSE ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+EXPOSE ${TEACHER_SERVICE_GRPC_PORT:-50053}
 
 # Health check using gRPC health probe
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD /bin/grpc_health_probe -addr=:${CUSTOMER_SERVICE_GRPC_PORT:-50053} || exit 1
+    CMD /bin/grpc_health_probe -addr=:${TEACHER_SERVICE_GRPC_PORT:-50053} || exit 1
 
 # Run the application
 CMD ["node", "main.js"]

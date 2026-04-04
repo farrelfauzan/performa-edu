@@ -42,7 +42,7 @@ echo "⚠️  Performa-Edu GCP Infrastructure Teardown"
 echo "=========================================="
 echo ""
 echo -e "${RED}WARNING: This will DELETE the following resources:${NC}"
-echo "  • Cloud Run services (api-gateway, auth-service, content-service, customer-service)"
+echo "  • Cloud Run services (api-gateway, auth-service, content-service, teacher-service)"
 echo "  • Cloud SQL Instance: $DB_INSTANCE_NAME (INCLUDING ALL DATA)"
 echo "  • Redis Instance: $REDIS_INSTANCE_NAME"
 echo "  • VPC Connector: $VPC_CONNECTOR_NAME"
@@ -75,7 +75,7 @@ gcloud config set project "$PROJECT_ID"
 # =============================================================================
 log_info "Deleting Cloud Run services..."
 
-SERVICES=("api-gateway" "auth-service" "content-service" "customer-service")
+SERVICES=("api-gateway" "auth-service" "content-service" "teacher-service")
 for SERVICE in "${SERVICES[@]}"; do
     if gcloud run services describe "$SERVICE" --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
         gcloud run services delete "$SERVICE" --region="$REGION" --project="$PROJECT_ID" --quiet
@@ -158,7 +158,7 @@ done
 # =============================================================================
 log_info "Deleting service accounts..."
 
-SERVICE_ACCOUNTS=("api-gateway-sa" "auth-service-sa" "content-service-sa" "customer-service-sa")
+SERVICE_ACCOUNTS=("api-gateway-sa" "auth-service-sa" "content-service-sa" "teacher-service-sa")
 for SA in "${SERVICE_ACCOUNTS[@]}"; do
     SA_EMAIL="${SA}@${PROJECT_ID}.iam.gserviceaccount.com"
     if gcloud iam service-accounts describe "$SA_EMAIL" --project="$PROJECT_ID" &>/dev/null; then

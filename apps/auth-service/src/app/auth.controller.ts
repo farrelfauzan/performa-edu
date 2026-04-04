@@ -18,8 +18,8 @@ import {
   ProfilePictureUploadUrlResponse,
   RegisterAdminRequest,
   RegisterAdminResponse,
-  RegisterCustomerRequest,
-  RegisterCustomerResponse,
+  RegisterTeacherRequest,
+  RegisterTeacherResponse,
   RequestPasswordResetRequest,
   RequestPasswordResetResponse,
   ResetPasswordRequest,
@@ -62,9 +62,9 @@ export class AuthController implements AuthServiceController {
     return profile;
   }
 
-  async registerCustomer(
-    request: RegisterCustomerRequest
-  ): Promise<RegisterCustomerResponse> {
+  async registerTeacher(
+    request: RegisterTeacherRequest
+  ): Promise<RegisterTeacherResponse> {
     throw new Error('Method not implemented.');
   }
 

@@ -36,7 +36,7 @@ export interface PageMeta {
 
 export interface ClassTeacher {
   id: string;
-  customerId: string;
+  teacherId: string;
   fullName: string;
   profilePictureUrl?: string | undefined;
   joinedAt: string;
@@ -120,7 +120,7 @@ export interface GetAllClassesResponse {
 
 export interface AddTeacherToClassRequest {
   classId: string;
-  customerIds: string[];
+  teacherIds: string[];
 }
 
 export interface AddTeacherToClassResponse {
@@ -130,7 +130,7 @@ export interface AddTeacherToClassResponse {
 
 export interface RemoveTeacherFromClassRequest {
   classId: string;
-  customerId: string;
+  teacherId: string;
 }
 
 export interface RemoveTeacherFromClassResponse {

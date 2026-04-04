@@ -19,7 +19,7 @@ import {
   GetAllBranchesDto,
   CreateBranchDto,
   UpdateBranchDto,
-  AssignCustomersToBranchDto,
+  AssignTeachersToBranchDto,
   AssignStudentsToBranchDto,
 } from '@performa-edu/libs';
 import {
@@ -31,9 +31,9 @@ import {
   CreateBranchResponse,
   UpdateBranchResponse,
   DeleteBranchResponse,
-  AssignCustomerToBranchResponse,
-  UnassignCustomerFromBranchResponse,
-  GetBranchCustomersResponse,
+  AssignTeacherToBranchResponse,
+  UnassignTeacherFromBranchResponse,
+  GetBranchTeachersResponse,
   AssignStudentToBranchResponse,
   UnassignStudentFromBranchResponse,
   GetBranchStudentsResponse,
@@ -144,66 +144,66 @@ export class BranchController implements OnModuleInit {
     return { data: result };
   }
 
-  // --- Customer (Teacher) membership ---
+  // --- Teacher membership ---
 
   @Auth([{ action: AclAction.READ, subject: AclSubject.BRANCH }])
-  @Get(':id/customers')
-  async getBranchCustomers(
+  @Get(':id/teachers')
+  async getBranchTeachers(
     @Param('id') id: string,
     @Query() query: { page?: number; pageSize?: number; search?: string }
   ): Promise<{
-    data: GetBranchCustomersResponse['customers'];
-    meta: GetBranchCustomersResponse['meta'];
+    data: GetBranchTeachersResponse['teachers'];
+    meta: GetBranchTeachersResponse['meta'];
   }> {
     const result = await handleGrpcCall(
-      this.branchService.getBranchCustomers({
+      this.branchService.getBranchTeachers({
         branchId: id,
         page: query.page,
         pageSize: query.pageSize,
         search: query.search,
       }),
       this.grpcErrorHandler,
-      'Failed to fetch branch customers'
+      'Failed to fetch branch teachers'
     );
 
-    return { data: result.customers, meta: result.meta };
+    return { data: result.teachers, meta: result.meta };
   }
 
   @Auth([{ action: AclAction.UPDATE, subject: AclSubject.BRANCH }])
-  @Post(':id/customers')
-  async assignCustomerToBranch(
+  @Post(':id/teachers')
+  async assignTeacherToBranch(
     @Param('id') id: string,
-    @Body() body: AssignCustomersToBranchDto
+    @Body() body: AssignTeachersToBranchDto
   ): Promise<{
-    data: AssignCustomerToBranchResponse;
+    data: AssignTeacherToBranchResponse;
   }> {
     const result = await handleGrpcCall(
-      this.branchService.assignCustomerToBranch({
+      this.branchService.assignTeacherToBranch({
         branchId: id,
-        customerIds: body.customerIds,
+        teacherIds: body.teacherIds,
       }),
       this.grpcErrorHandler,
-      'Failed to assign customers to branch'
+      'Failed to assign teachers to branch'
     );
 
     return { data: result };
   }
 
   @Auth([{ action: AclAction.UPDATE, subject: AclSubject.BRANCH }])
-  @Delete(':id/customers/:customerId')
-  async unassignCustomerFromBranch(
+  @Delete(':id/teachers/:teacherId')
+  async unassignTeacherFromBranch(
     @Param('id') id: string,
-    @Param('customerId') customerId: string
+    @Param('teacherId') teacherId: string
   ): Promise<{
-    data: UnassignCustomerFromBranchResponse;
+    data: UnassignTeacherFromBranchResponse;
   }> {
     const result = await handleGrpcCall(
-      this.branchService.unassignCustomerFromBranch({
+      this.branchService.unassignTeacherFromBranch({
         branchId: id,
-        customerId,
+        teacherId,
       }),
       this.grpcErrorHandler,
-      'Failed to unassign customer from branch'
+      'Failed to unassign teacher from branch'
     );
 
     return { data: result };

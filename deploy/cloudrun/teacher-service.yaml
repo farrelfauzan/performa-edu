@@ -1,12 +1,12 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: customer-service
+  name: teacher-service
   labels:
     cloud.googleapis.com/location: asia-southeast1
   annotations:
     run.googleapis.com/ingress: internal
-    run.googleapis.com/description: "Performa-Edu Customer Service - Internal gRPC customer management service"
+    run.googleapis.com/description: "Performa-Edu Teacher Service - Internal gRPC teacher management service"
 spec:
   template:
     metadata:
@@ -21,9 +21,9 @@ spec:
     spec:
       containerConcurrency: 50
       timeoutSeconds: 300
-      serviceAccountName: customer-service-sa@PROJECT_ID.iam.gserviceaccount.com
+      serviceAccountName: teacher-service-sa@PROJECT_ID.iam.gserviceaccount.com
       containers:
-        - image: gcr.io/PROJECT_ID/customer-service:latest
+        - image: gcr.io/PROJECT_ID/teacher-service:latest
           ports:
             - containerPort: 5003
               name: h2c
@@ -34,9 +34,9 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: CUSTOMER_SERVICE_GRPC_HOST
+            - name: TEACHER_SERVICE_GRPC_HOST
               value: "0.0.0.0"
-            - name: CUSTOMER_SERVICE_GRPC_PORT
+            - name: TEACHER_SERVICE_GRPC_PORT
               value: "5003"
             - name: DATABASE_URL
               valueFrom:

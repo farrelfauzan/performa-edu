@@ -12,7 +12,7 @@ export enum AclSubject {
   USER = 'User',
   ROLE = 'Role',
   ADMIN = 'Admin',
-  CUSTOMER = 'Customer',
+  TEACHER = 'Teacher',
   CONTENT = 'Content',
   STUDENT = 'Student',
   ASSIGNMENT = 'Assignment',

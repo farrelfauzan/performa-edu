@@ -10,10 +10,10 @@ service BranchService {
   rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse);
   rpc GetAllBranches(GetAllBranchesRequest) returns (GetAllBranchesResponse);
 
-  // Customer (Teacher) membership
-  rpc AssignCustomerToBranch(AssignCustomerToBranchRequest) returns (AssignCustomerToBranchResponse);
-  rpc UnassignCustomerFromBranch(UnassignCustomerFromBranchRequest) returns (UnassignCustomerFromBranchResponse);
-  rpc GetBranchCustomers(GetBranchCustomersRequest) returns (GetBranchCustomersResponse);
+  // Teacher membership
+  rpc AssignTeacherToBranch(AssignTeacherToBranchRequest) returns (AssignTeacherToBranchResponse);
+  rpc UnassignTeacherFromBranch(UnassignTeacherFromBranchRequest) returns (UnassignTeacherFromBranchResponse);
+  rpc GetBranchTeachers(GetBranchTeachersRequest) returns (GetBranchTeachersResponse);
 
   // Student membership
   rpc AssignStudentToBranch(AssignStudentToBranchRequest) returns (AssignStudentToBranchResponse);
@@ -43,9 +43,9 @@ message PageMeta {
 
 // --- Messages ---
 
-message BranchCustomer {
+message BranchTeacher {
   string id = 1;
-  string customer_id = 2;
+  string teacher_id = 2;
   string full_name = 3;
   optional string profile_picture_url = 4;
   string joined_at = 5;
@@ -65,12 +65,12 @@ message Branch {
   optional string phone = 4;
   string admin_id = 5;
   string admin_name = 6;
-  int32 customer_count = 7;
+  int32 teacher_count = 7;
   int32 student_count = 8;
   string created_at = 9;
   string updated_at = 10;
   optional string deleted_at = 11;
-  repeated BranchCustomer customers = 12;
+  repeated BranchTeacher teachers = 12;
   repeated BranchStudent students = 13;
 }
 
@@ -131,36 +131,36 @@ message GetAllBranchesResponse {
   PageMeta meta = 2;
 }
 
-// --- Customer (Teacher) Membership ---
+// --- Teacher Membership ---
 
-message AssignCustomerToBranchRequest {
+message AssignTeacherToBranchRequest {
   string branch_id = 1;
-  repeated string customer_ids = 2;
+  repeated string teacher_ids = 2;
 }
 
-message AssignCustomerToBranchResponse {
+message AssignTeacherToBranchResponse {
   string message = 1;
   int32 added_count = 2;
 }
 
-message UnassignCustomerFromBranchRequest {
+message UnassignTeacherFromBranchRequest {
   string branch_id = 1;
-  string customer_id = 2;
+  string teacher_id = 2;
 }
 
-message UnassignCustomerFromBranchResponse {
+message UnassignTeacherFromBranchResponse {
   string message = 1;
 }
 
-message GetBranchCustomersRequest {
+message GetBranchTeachersRequest {
   string branch_id = 1;
   optional int32 page = 2;
   optional int32 page_size = 3;
   optional string search = 4;
 }
 
-message GetBranchCustomersResponse {
-  repeated BranchCustomer customers = 1;
+message GetBranchTeachersResponse {
+  repeated BranchTeacher teachers = 1;
   PageMeta meta = 2;
 }
 

@@ -47,12 +47,12 @@ async function seedRoles() {
         // User management
         createPermission(AclSubject.USER, AclAction.READ),
         createPermission(AclSubject.USER, AclAction.VIEW),
-        // Customer management
-        createPermission(AclSubject.CUSTOMER, AclAction.CREATE),
-        createPermission(AclSubject.CUSTOMER, AclAction.READ),
-        createPermission(AclSubject.CUSTOMER, AclAction.UPDATE),
-        createPermission(AclSubject.CUSTOMER, AclAction.DELETE),
-        createPermission(AclSubject.CUSTOMER, AclAction.VIEW),
+        // Teacher management
+        createPermission(AclSubject.TEACHER, AclAction.CREATE),
+        createPermission(AclSubject.TEACHER, AclAction.READ),
+        createPermission(AclSubject.TEACHER, AclAction.UPDATE),
+        createPermission(AclSubject.TEACHER, AclAction.DELETE),
+        createPermission(AclSubject.TEACHER, AclAction.VIEW),
         // Content management
         createPermission(AclSubject.CONTENT, AclAction.CREATE),
         createPermission(AclSubject.CONTENT, AclAction.READ),
@@ -74,15 +74,15 @@ async function seedRoles() {
       ],
     },
     {
-      name: 'CUSTOMER',
+      name: 'TEACHER',
       permissions: [
         // Self management
         createPermission(AclSubject.USER, AclAction.READ),
         createPermission(AclSubject.USER, AclAction.VIEW),
         createPermission(AclSubject.USER, AclAction.UPDATE, { id: '{{ id }}' }),
-        // Access customer resources
-        createPermission(AclSubject.CUSTOMER, AclAction.READ),
-        createPermission(AclSubject.CUSTOMER, AclAction.VIEW),
+        // Access teacher resources
+        createPermission(AclSubject.TEACHER, AclAction.READ),
+        createPermission(AclSubject.TEACHER, AclAction.VIEW),
         createPermission(AclSubject.CONTENT, AclAction.READ),
         createPermission(AclSubject.CONTENT, AclAction.VIEW),
         createPermission(AclSubject.CONTENT, AclAction.CREATE),

@@ -148,7 +148,7 @@ quiz-service (port 50054, gRPC)
 
 | Advantage | Detail |
 |-----------|--------|
-| **Zero new infrastructure** | Same Postgres + Prisma used by auth/content/customer services |
+| **Zero new infrastructure** | Same Postgres + Prisma used by auth/content/teacher services |
 | **Referential integrity** | Foreign keys enforce quiz→content, attempt→user relationships |
 | **Transactional grading** | Submit attempt + grade all answers in a single transaction |
 | **Consistent tooling** | Same Prisma migrations, soft-delete patterns, query builder |

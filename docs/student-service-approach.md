@@ -9,14 +9,14 @@
 
 The platform is being rearchitected with a clear separation between **teachers** and **students**:
 
-- **Customer = Teacher** — creates content, creates quizzes, assigns them to students
+- **Teacher** — creates content, creates quizzes, assigns them to students
 - **Student** (new) — consumes assigned content, takes assigned quizzes, tracks progress
 - **No self-enrollment** — only teachers assign content/quizzes to students
 - **Admin / Super Admin** — system management, user oversight
 
 This requires:
 1. A new **student-service** (gRPC, port 50054)
-2. Renaming Customer → Teacher conceptually (model stays `Customer` to minimize migration)
+2. Renaming Teacher → Teacher conceptually (model renamed to `Teacher`)
 3. An **Assignment** model — the link between teacher, student, and content/quiz
 4. Changes to auth-service for STUDENT role + registration
 5. Future: quiz-service builds on this foundation
@@ -30,8 +30,8 @@ This requires:
 | Role | Model | Purpose |
 |------|-------|---------|
 | SUPER_ADMIN | Admin | Full system access |
-| ADMIN | Admin | Manage users, content, customers |
-| CUSTOMER | Customer | Create & publish content |
+| ADMIN | Admin | Manage users, content, teachers |
+| TEACHER | Teacher | Create & publish content |
 
 ### After (v2)
 
@@ -39,10 +39,10 @@ This requires:
 |------|-------|---------|----------|
 | SUPER_ADMIN | Admin | Full system access | performa-studio |
 | ADMIN | Admin | Manage users, content, teachers, students | performa-studio |
-| CUSTOMER (Teacher) | Customer | Create content, create quizzes, assign to students | performa-studio |
+| TEACHER (Teacher) | Teacher | Create content, create quizzes, assign to students | performa-studio |
 | **STUDENT** (new) | **Student** (new) | View assigned content, take assigned quizzes | **performa-app** |
 
-> **Note**: We keep the `Customer` model name in Prisma/DB to avoid a massive rename migration. The API and UI refer to them as "Teacher". The `CUSTOMER` role name in the DB also stays — it's just semantically "teacher" in the UI layer.
+> **Note**: We keep the `Teacher` model name in Prisma/DB to avoid a massive rename migration. The API and UI refer to them as "Teacher". The `TEACHER` role name in the DB also stays — it's just semantically "teacher" in the UI layer.
 
 ---
 
@@ -72,7 +72,7 @@ model Student {
 
 model Assignment {
   id          String           @id @default(cuid())
-  teacherId   String           @map("teacher_id")    // Customer.id (the teacher)
+  teacherId   String           @map("teacher_id")    // Teacher.id (the teacher)
   studentId   String           @map("student_id")    // Student.id
   contentId   String           @map("content_id")    // Content.id
   status      AssignmentStatus @default(ASSIGNED)
@@ -142,14 +142,14 @@ progress = (completedSections + answeredQuestions) / (totalSections + totalQuest
 
 ```
 User (login data only)
-  ├── userId referenced by: Admin, Customer, Student (string ref, no FK)
+  ├── userId referenced by: Admin, Teacher, Student (string ref, no FK)
   └── UsersOnRoles (FK — same auth-service DB)
 
 Admin      → userId (string ref) → User
-Customer   → userId (string ref) → User   (Teacher)
+Teacher   → userId (string ref) → User   (Teacher)
 Student    → userId (string ref) → User
 
-Customer (Teacher)
+Teacher (Teacher)
   └── creates Content
   └── creates Assignment ──> assigns Content to Student
 
@@ -159,7 +159,7 @@ Student
   └── takes assigned Quizzes (future: quiz-service)
 
 Assignment
-  ├── teacherId  → Customer.id  (string ref)
+  ├── teacherId  → Teacher.id  (string ref)
   ├── studentId  → Student.id   (string ref)
   ├── contentId  → Content.id   (string ref)
   ├── status     (ASSIGNED → IN_PROGRESS → COMPLETED)
@@ -178,7 +178,7 @@ export enum AclSubject {
   USER = 'User',
   ROLE = 'Role',
   ADMIN = 'Admin',
-  CUSTOMER = 'Customer',       // Teacher
+  TEACHER = 'Teacher',       // Teacher
   STUDENT = 'Student',         // NEW
   CONTENT = 'Content',
   ASSIGNMENT = 'Assignment',   // NEW
@@ -188,7 +188,7 @@ export enum AclSubject {
 
 ### 4.2 Role Permissions
 
-| Action | SUPER_ADMIN | ADMIN | CUSTOMER (Teacher) | STUDENT |
+| Action | SUPER_ADMIN | ADMIN | TEACHER (Teacher) | STUDENT |
 |--------|:-----------:|:-----:|:------------------:|:-------:|
 | **Student CRUD** | ✅ all | ✅ all | ✅ own students (via assignments) | Self read/update |
 | **Content create** | ✅ | ✅ | ✅ | ❌ |
@@ -261,7 +261,7 @@ apps/student-service/
 |---------|------|
 | auth-service | 50051 |
 | content-service | 50052 |
-| customer-service | 50053 |
+| teacher-service | 50053 |
 | **student-service** | **50054** |
 
 ### 5.3 Inter-Service Communication
@@ -274,7 +274,7 @@ apps/student-service/
          ┌──────────────────┘  │  │  └──────────────────┐
          ▼                     ▼  ▼                     ▼
    ┌───────────┐     ┌──────────┐ ┌──────────┐   ┌───────────┐
-   │   Auth    │     │ Content  │ │ Customer │   │  Student  │
+   │   Auth    │     │ Content  │ │ Teacher │   │  Student  │
    │  Service  │     │ Service  │ │ (Teacher)│   │  Service  │
    │  :50051   │     │  :50052  │ │  :50053  │   │  :50054   │
    └───────────┘     └──────────┘ └──────────┘   └───────────┘
@@ -412,7 +412,7 @@ message Assignment {
 }
 
 message CreateAssignmentRequest {
-  string teacher_id = 1;       // Customer.id (from auth)
+  string teacher_id = 1;       // Teacher.id (from auth)
   string student_id = 2;
   string content_id = 3;
   optional string due_date = 4;
@@ -601,7 +601,7 @@ export class AssignmentController {
   @Auth([{ action: AclAction.CREATE, subject: AclSubject.ASSIGNMENT }])
   @Post()
   async createAssignment(@AuthUser() user, @Body() body: CreateAssignmentDto) {
-    // teacherId = get Customer.id from user.userId
+    // teacherId = get Teacher.id from user.userId
   }
 
   // Teacher bulk assigns
@@ -655,7 +655,7 @@ export class AssignmentController {
 
 ## 8. Registration Flow (Teacher-Only)
 
-> **No self-registration.** Only teachers (CUSTOMER role) and admins can create student accounts.
+> **No self-registration.** Only teachers (TEACHER role) and admins can create student accounts.
 
 ### 8.1 Teacher Creates Student
 
@@ -664,7 +664,7 @@ export class AssignmentController {
      { username, email, password, fullName, phoneNumber?, dateOfBirth? }
 
 2. API Gateway (student.controller.ts):
-   a. Verify caller has CUSTOMER or ADMIN role
+   a. Verify caller has TEACHER or ADMIN role
    b. Call auth-service.CreateUser(username, email, password, roleIds=[STUDENT_ROLE_ID])
    c. Call student-service.RegisterStudent(userId, fullName, phoneNumber, dateOfBirth)
    d. If step (c) fails → rollback: auth-service.DeleteUserById(userId)
@@ -686,7 +686,7 @@ export class AssignmentController {
    c. Call student-service.RegisterStudent(userId, fullName, ...)
    d. Return { student }
 
-3. User now has both CUSTOMER + STUDENT roles
+3. User now has both TEACHER + STUDENT roles
 ```
 
 ---
@@ -762,7 +762,7 @@ export class AssignmentController {
 | Role | Can See |
 |------|---------|
 | SUPER_ADMIN / ADMIN | All content |
-| CUSTOMER (Teacher) | Own created content |
+| TEACHER (Teacher) | Own created content |
 | STUDENT | **Only content assigned to them** |
 
 The student's "content feed" is driven entirely by the `assignments` table:
@@ -783,7 +783,7 @@ ORDER BY a.assigned_at DESC
 
 ```typescript
 // auth.repository.ts → getMe()
-// Add STUDENT handling alongside CUSTOMER and ADMIN
+// Add STUDENT handling alongside TEACHER and ADMIN
 
 if (roles.includes('STUDENT')) {
   const student = await this.prisma.student.findFirst({
@@ -966,7 +966,7 @@ The Expo/React Native app (`performa-app`) is the student-facing frontend:
 
 | # | Question | Options |
 |---|----------|---------|---------|
-| 1 | **Can a teacher also be a student?** | ✅ **Yes** — multi-role. A User can have both CUSTOMER + STUDENT roles. | User gets both role entries in `users_on_roles`. Auth `getMe` returns combined profile. UI adapts based on active role. |
+| 1 | **Can a teacher also be a student?** | ✅ **Yes** — multi-role. A User can have both TEACHER + STUDENT roles. | User gets both role entries in `users_on_roles`. Auth `getMe` returns combined profile. UI adapts based on active role. |
 | 2 | **Student registration** — public or teacher-only? | ✅ **B: Teacher-only.** Teachers create student accounts. No public self-registration. | Remove `POST /auth/register-student` (public). Keep `POST /students` (teacher creates). Teacher provides credentials to student out-of-band. |
 | 3 | **Assignment notifications** — how to notify students? | ✅ **B: In-app polling** for now. Push + Email in future. | Student app polls `GET /assignments/my`. Future: add notification-service with FCM push + email (SendGrid/SES). |
 | 4 | **Content access control** — enforce at API gateway or content-service? | ✅ **A: API Gateway.** Gateway checks assignment before forwarding to content-service. | Gateway calls `student-service.GetAssignment(studentId, contentId)` → exists? forward to content-service → else 403. Content-service stays role-unaware. Use Redis cache to mitigate extra gRPC call. |
@@ -983,7 +983,7 @@ The Expo/React Native app (`performa-app`) is the student-facing frontend:
 
 ### Teacher-only Registration (Decision 2)
 - **Remove** `POST /api/v1/auth/register-student` from API gateway
-- **Keep** `POST /api/v1/students` — requires CUSTOMER (Teacher) or ADMIN auth
+- **Keep** `POST /api/v1/students` — requires TEACHER (Teacher) or ADMIN auth
 - Registration flow: Teacher creates student → student-service generates `STU_XXXXX` unique ID → teacher shares credentials with student
 - Student logs in via `POST /api/v1/auth/login` (existing endpoint)
 

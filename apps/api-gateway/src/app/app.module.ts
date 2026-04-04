@@ -12,13 +12,13 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { ClsModule } from 'nestjs-cls';
 import { GrpcErrorHandler } from '@performa-edu/libs';
-import { CUSTOMERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/customer-service';
+import { TEACHERSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/teacher-service';
 import { CONTENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/content-service';
 import { STUDENTSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/student-service';
 import { QUIZSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/quiz-service';
 import { CLASSSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/class-service';
 import { BRANCHSERVICE_PACKAGE_NAME } from '@performa-edu/proto-types/branch-service';
-import { CustomerController } from './customer/customer.controller';
+import { TeacherController } from './teacher/teacher.controller';
 import { ContentController } from './content/content.controller';
 import { StudentController } from './student/student.controller';
 import { AssignmentController } from './assignment/assignment.controller';
@@ -50,13 +50,13 @@ import { BranchController } from './branch/branch.controller';
         },
       },
       {
-        name: CUSTOMERSERVICE_PACKAGE_NAME,
+        name: TEACHERSERVICE_PACKAGE_NAME,
         transport: Transport.GRPC,
         options: {
-          package: CUSTOMERSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/customer-service.proto'),
-          url: `${process.env.CUSTOMER_SERVICE_GRPC_HOST || 'localhost'}:${
-            process.env.CUSTOMER_SERVICE_GRPC_PORT || '50052'
+          package: TEACHERSERVICE_PACKAGE_NAME,
+          protoPath: join(__dirname, 'proto/teacher-service.proto'),
+          url: `${process.env.TEACHER_SERVICE_GRPC_HOST || 'localhost'}:${
+            process.env.TEACHER_SERVICE_GRPC_PORT || '50052'
           }`,
         },
       },
@@ -120,7 +120,7 @@ import { BranchController } from './branch/branch.controller';
   controllers: [
     AppController,
     AuthController,
-    CustomerController,
+    TeacherController,
     ContentController,
     StudentController,
     AssignmentController,

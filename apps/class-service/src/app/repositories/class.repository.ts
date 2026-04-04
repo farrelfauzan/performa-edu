@@ -115,7 +115,7 @@ export class ClassRepository implements IClassRepository {
 
     // if (options.teacherId) {
     //   where.teachers = {
-    //     some: { customerId: options.teacherId },
+    //     some: { teacherId: options.teacherId },
     //   };
     // }
 
@@ -161,7 +161,7 @@ export class ClassRepository implements IClassRepository {
       include: {
         _count: { select: { teachers: true, students: true } },
         teachers: {
-          include: { customer: true },
+          include: { teacher: true },
           orderBy: { joinedAt: 'asc' },
         },
         students: {
@@ -181,9 +181,9 @@ export class ClassRepository implements IClassRepository {
       studentCount: classEntity._count.students,
       teachers: classEntity.teachers.map((t) => ({
         id: t.id,
-        customerId: t.customerId,
-        fullName: t.customer.fullName,
-        profilePictureUrl: t.customer.profilePictureUrl || undefined,
+        teacherId: t.teacherId,
+        fullName: t.teacher.fullName,
+        profilePictureUrl: t.teacher.profilePictureUrl || undefined,
         joinedAt: t.joinedAt.toISOString(),
       })),
       students: classEntity.students.map((s) => ({
@@ -266,9 +266,9 @@ export class ClassRepository implements IClassRepository {
     }
 
     const result = await this.prisma.classTeacher.createMany({
-      data: options.customerIds.map((customerId) => ({
+      data: options.teacherIds.map((teacherId) => ({
         classId: options.classId,
-        customerId,
+        teacherId,
       })),
       skipDuplicates: true,
     });
@@ -284,9 +284,9 @@ export class ClassRepository implements IClassRepository {
   ): Promise<RemoveTeacherFromClassResponse> {
     await this.prisma.classTeacher.delete({
       where: {
-        classId_customerId: {
+        classId_teacherId: {
           classId: options.classId,
-          customerId: options.customerId,
+          teacherId: options.teacherId,
         },
       },
     });
@@ -306,7 +306,7 @@ export class ClassRepository implements IClassRepository {
     };
 
     if (options.search) {
-      where.customer = {
+      where.teacher = {
         fullName: { contains: options.search, mode: 'insensitive' },
       };
     }
@@ -316,7 +316,7 @@ export class ClassRepository implements IClassRepository {
         where,
         skip,
         take: pageSize,
-        include: { customer: true },
+        include: { teacher: true },
         orderBy: { joinedAt: 'asc' },
       }),
       this.prisma.classTeacher.count({ where }),
@@ -325,9 +325,9 @@ export class ClassRepository implements IClassRepository {
     return {
       teachers: teachers.map((t) => ({
         id: t.id,
-        customerId: t.customerId,
-        fullName: t.customer.fullName,
-        profilePictureUrl: t.customer.profilePictureUrl || undefined,
+        teacherId: t.teacherId,
+        fullName: t.teacher.fullName,
+        profilePictureUrl: t.teacher.profilePictureUrl || undefined,
         joinedAt: t.joinedAt.toISOString(),
       })),
       meta: { page, pageSize, count },

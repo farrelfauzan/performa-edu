@@ -7,12 +7,12 @@ import {
   GetAllBranchesRequest,
   UpdateBranchRequest,
   UpdateBranchResponse,
-  AssignCustomerToBranchRequest,
-  AssignCustomerToBranchResponse,
-  UnassignCustomerFromBranchRequest,
-  UnassignCustomerFromBranchResponse,
-  GetBranchCustomersRequest,
-  GetBranchCustomersResponse,
+  AssignTeacherToBranchRequest,
+  AssignTeacherToBranchResponse,
+  UnassignTeacherFromBranchRequest,
+  UnassignTeacherFromBranchResponse,
+  GetBranchTeachersRequest,
+  GetBranchTeachersResponse,
   AssignStudentToBranchRequest,
   AssignStudentToBranchResponse,
   UnassignStudentFromBranchRequest,
@@ -34,15 +34,15 @@ export interface IBranchRepository {
     options: UpdateBranchRequest
   ): Promise<UpdateBranchResponse>;
   deleteBranch(options: DeleteBranchRequest): Promise<DeleteBranchResponse>;
-  assignCustomerToBranch(
-    options: AssignCustomerToBranchRequest
-  ): Promise<AssignCustomerToBranchResponse>;
-  unassignCustomerFromBranch(
-    options: UnassignCustomerFromBranchRequest
-  ): Promise<UnassignCustomerFromBranchResponse>;
-  getBranchCustomers(
-    options: GetBranchCustomersRequest
-  ): Promise<GetBranchCustomersResponse>;
+  assignTeacherToBranch(
+    options: AssignTeacherToBranchRequest
+  ): Promise<AssignTeacherToBranchResponse>;
+  unassignTeacherFromBranch(
+    options: UnassignTeacherFromBranchRequest
+  ): Promise<UnassignTeacherFromBranchResponse>;
+  getBranchTeachers(
+    options: GetBranchTeachersRequest
+  ): Promise<GetBranchTeachersResponse>;
   assignStudentToBranch(
     options: AssignStudentToBranchRequest
   ): Promise<AssignStudentToBranchResponse>;

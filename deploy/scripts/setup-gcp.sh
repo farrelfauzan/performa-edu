@@ -208,7 +208,7 @@ log_success "Secrets configured"
 # =============================================================================
 log_info "Creating service accounts..."
 
-SERVICE_ACCOUNTS=("api-gateway-sa" "auth-service-sa" "content-service-sa" "customer-service-sa")
+SERVICE_ACCOUNTS=("api-gateway-sa" "auth-service-sa" "content-service-sa" "teacher-service-sa")
 
 for SA in "${SERVICE_ACCOUNTS[@]}"; do
     if gcloud iam service-accounts describe "${SA}@${PROJECT_ID}.iam.gserviceaccount.com" --project="$PROJECT_ID" &>/dev/null; then

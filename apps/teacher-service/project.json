@@ -1,7 +1,7 @@
 {
-  "name": "customer-service",
+  "name": "teacher-service",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/customer-service/src",
+  "sourceRoot": "apps/teacher-service/src",
   "projectType": "application",
   "tags": [],
   "targets": {
@@ -10,7 +10,7 @@
       "options": {
         "command": "webpack-cli build",
         "args": ["--node-env=production"],
-        "cwd": "apps/customer-service"
+        "cwd": "apps/teacher-service"
       },
       "configurations": {
         "development": {
@@ -23,8 +23,8 @@
       "cache": true,
       "executor": "@nx/js:prune-lockfile",
       "outputs": [
-        "{workspaceRoot}/dist/apps/customer-service/package.json",
-        "{workspaceRoot}/dist/apps/customer-service/pnpm-lock.yaml"
+        "{workspaceRoot}/dist/apps/teacher-service/package.json",
+        "{workspaceRoot}/dist/apps/teacher-service/pnpm-lock.yaml"
       ],
       "options": {
         "buildTarget": "build"
@@ -34,7 +34,7 @@
       "dependsOn": ["build"],
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/dist/apps/customer-service/workspace_modules"
+        "{workspaceRoot}/dist/apps/teacher-service/workspace_modules"
       ],
       "executor": "@nx/js:copy-workspace-modules",
       "options": {
@@ -51,15 +51,15 @@
       "defaultConfiguration": "development",
       "dependsOn": ["build"],
       "options": {
-        "buildTarget": "customer-service:build",
+        "buildTarget": "teacher-service:build",
         "runBuildTargetDependencies": false
       },
       "configurations": {
         "development": {
-          "buildTarget": "customer-service:build:development"
+          "buildTarget": "teacher-service:build:development"
         },
         "production": {
-          "buildTarget": "customer-service:build:production"
+          "buildTarget": "teacher-service:build:production"
         }
       }
     }

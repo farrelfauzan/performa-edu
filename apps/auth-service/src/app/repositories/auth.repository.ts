@@ -7,7 +7,7 @@ import {
   UserType,
   generateUniqueId,
   transformResponse,
-  Customer,
+  Teacher,
   Student,
 } from '@performa-edu/libs';
 import {
@@ -308,7 +308,7 @@ export class AuthRepository implements IAuthRepository {
 
   async getMe(id: string): Promise<ProfileResponse> {
     let admin: Admin;
-    let customer: Customer;
+    let teacher: Teacher;
     let student: Student;
 
     const user = await this.prisma.user.findUnique({
@@ -339,9 +339,9 @@ export class AuthRepository implements IAuthRepository {
       });
     }
 
-    if (roles.includes('CUSTOMER')) {
-      customer = await this.prisma.findFirstActive<Customer>(
-        this.prisma.customer,
+    if (roles.includes('TEACHER')) {
+      teacher = await this.prisma.findFirstActive<Teacher>(
+        this.prisma.teacher,
         {
           where: { userId: id },
         }
@@ -358,8 +358,8 @@ export class AuthRepository implements IAuthRepository {
     }
 
     return {
-      id: roles.includes('CUSTOMER')
-        ? customer?.id
+      id: roles.includes('TEACHER')
+        ? teacher?.id
         : roles.includes('STUDENT')
         ? student?.id
         : roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
@@ -367,13 +367,13 @@ export class AuthRepository implements IAuthRepository {
         : null,
       username: user.username,
       uniqueId:
-        customer?.uniqueId || admin?.uniqueId || student?.uniqueId || null,
+        teacher?.uniqueId || admin?.uniqueId || student?.uniqueId || null,
       email: user.email,
       active: user.active,
       branchId:
-        customer?.branchId || student?.branchId || admin?.branchId || null,
+        teacher?.branchId || student?.branchId || admin?.branchId || null,
       branchName:
-        customer?.branchName ||
+        teacher?.branchName ||
         student?.branchName ||
         admin?.branchName ||
         null,
@@ -391,17 +391,17 @@ export class AuthRepository implements IAuthRepository {
           })
         ),
       })),
-      fullName: customer?.fullName || student?.fullName || null,
+      fullName: teacher?.fullName || student?.fullName || null,
       profilePicture:
-        customer?.profilePictureUrl ||
+        teacher?.profilePictureUrl ||
         admin?.profilePictureUrl ||
         student?.profilePictureUrl ||
         null,
       dateOfBirth:
-        customer?.dateOfBirth?.toISOString() ||
+        teacher?.dateOfBirth?.toISOString() ||
         student?.dateOfBirth?.toISOString() ||
         null,
-      phoneNumber: customer?.phoneNumber || student?.phoneNumber || null,
+      phoneNumber: teacher?.phoneNumber || student?.phoneNumber || null,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
       deletedAt: user.deletedAt?.toISOString() ?? null,
@@ -524,8 +524,8 @@ export class AuthRepository implements IAuthRepository {
 
     const roles = user.UserOnRole.map((ur) => ur.role.name);
 
-    if (roles.includes('CUSTOMER')) {
-      await this.prisma.customer.update({
+    if (roles.includes('TEACHER')) {
+      await this.prisma.teacher.update({
         where: { userId: options.userId },
         data: {
           ...(options.fullName !== undefined && { fullName: options.fullName }),

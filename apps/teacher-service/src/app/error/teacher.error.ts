@@ -6,26 +6,26 @@ import { status } from '@grpc/grpc-js';
 import { RpcException } from '@nestjs/microservices';
 
 /* ============================
-  Customer Errors
+  Teacher Errors
 ============================ */
 
-export function CustomerNotFoundError(customerId: string) {
+export function TeacherNotFoundError(teacherId: string) {
   throw new RpcException({
     code: status.NOT_FOUND,
-    message: `Customer with id "${customerId}" not found`,
+    message: `Teacher with id "${teacherId}" not found`,
   });
 }
 
-export function CustomerEmailAlreadyExistsError(email: string) {
+export function TeacherEmailAlreadyExistsError(email: string) {
   throw new RpcException({
     code: status.ALREADY_EXISTS,
-    message: `Customer with email "${email}" already exists`,
+    message: `Teacher with email "${email}" already exists`,
   });
 }
 
-export function CustomerPhoneNumberAlreadyExistsError(phoneNumber: string) {
+export function TeacherPhoneNumberAlreadyExistsError(phoneNumber: string) {
   throw new RpcException({
     code: status.ALREADY_EXISTS,
-    message: `Customer with phone number "${phoneNumber}" already exists`,
+    message: `Teacher with phone number "${phoneNumber}" already exists`,
   });
 }

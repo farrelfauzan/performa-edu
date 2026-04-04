@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 
-const CreateCustomerSchema = z
+const CreateTeacherSchema = z
   .object({
     user: z.object({
       email: z
@@ -18,7 +18,7 @@ const CreateCustomerSchema = z
         ),
       roleIds: z.array(z.string()).min(1, 'At least one role is required'),
     }),
-    customer: z.object({
+    teacher: z.object({
       fullName: z.string().min(1, 'Full name is required'),
       phoneNumber: z.string().min(1, 'Phone number is required'),
       dateOfBirth: z.string().optional(),
@@ -26,8 +26,8 @@ const CreateCustomerSchema = z
       branchName: z.string().optional(),
     }),
   })
-  .meta({ className: 'CreateCustomerDto' });
+  .meta({ className: 'CreateTeacherDto' });
 
-export class CreateCustomerDto extends createZodDto(CreateCustomerSchema) {}
+export class CreateTeacherDto extends createZodDto(CreateTeacherSchema) {}
 
-export type CreateCustomerType = z.infer<typeof CreateCustomerSchema>;
+export type CreateTeacherType = z.infer<typeof CreateTeacherSchema>;

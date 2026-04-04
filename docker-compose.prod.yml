@@ -22,8 +22,8 @@ services:
       AUTH_SERVICE_GRPC_PORT: ${AUTH_SERVICE_GRPC_PORT:-50051}
       CONTENT_SERVICE_GRPC_HOST: content-service
       CONTENT_SERVICE_GRPC_PORT: ${CONTENT_SERVICE_GRPC_PORT:-50052}
-      CUSTOMER_SERVICE_GRPC_HOST: customer-service
-      CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+      TEACHER_SERVICE_GRPC_HOST: teacher-service
+      TEACHER_SERVICE_GRPC_PORT: ${TEACHER_SERVICE_GRPC_PORT:-50053}
       REDIS_URL: ${REDIS_URL}
     volumes: []
     deploy:
@@ -87,14 +87,14 @@ services:
           cpus: '0.1'
           memory: 128M
 
-  customer-service:
+  teacher-service:
     build:
       target: production
     restart: always
     environment:
       NODE_ENV: production
-      CUSTOMER_SERVICE_GRPC_HOST: 0.0.0.0
-      CUSTOMER_SERVICE_GRPC_PORT: ${CUSTOMER_SERVICE_GRPC_PORT:-50053}
+      TEACHER_SERVICE_GRPC_HOST: 0.0.0.0
+      TEACHER_SERVICE_GRPC_PORT: ${TEACHER_SERVICE_GRPC_PORT:-50053}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
     volumes: []

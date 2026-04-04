@@ -30,16 +30,16 @@ export const GetAllBranchesSchema = pageOptionsSchema.extend({
 
 export class GetAllBranchesDto extends createZodDto(GetAllBranchesSchema) {}
 
-export const AssignCustomersToBranchSchema = z
+export const AssignTeachersToBranchSchema = z
   .object({
-    customerIds: z
+    teacherIds: z
       .array(z.string())
-      .min(1, 'At least one customer is required'),
+      .min(1, 'At least one teacher is required'),
   })
-  .meta({ className: 'AssignCustomersToBranchDto' });
+  .meta({ className: 'AssignTeachersToBranchDto' });
 
-export class AssignCustomersToBranchDto extends createZodDto(
-  AssignCustomersToBranchSchema
+export class AssignTeachersToBranchDto extends createZodDto(
+  AssignTeachersToBranchSchema
 ) {}
 
 export const AssignStudentsToBranchSchema = z

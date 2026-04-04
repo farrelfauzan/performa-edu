@@ -10,7 +10,7 @@ deploy/
 │   ├── api-gateway.yaml
 │   ├── auth-service.yaml
 │   ├── content-service.yaml
-│   └── customer-service.yaml
+│   └── teacher-service.yaml
 └── scripts/                # Deployment scripts
     ├── setup-gcp.sh        # Initial GCP infrastructure setup
     ├── deploy.sh           # Manual deployment script

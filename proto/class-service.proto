@@ -46,7 +46,7 @@ message PageMeta {
 
 message ClassTeacher {
   string id = 1;
-  string customer_id = 2;
+  string teacher_id = 2;
   string full_name = 3;
   optional string profile_picture_url = 4;
   string joined_at = 5;
@@ -134,7 +134,7 @@ message GetAllClassesResponse {
 
 message AddTeacherToClassRequest {
   string class_id = 1;
-  repeated string customer_ids = 2;
+  repeated string teacher_ids = 2;
 }
 
 message AddTeacherToClassResponse {
@@ -144,7 +144,7 @@ message AddTeacherToClassResponse {
 
 message RemoveTeacherFromClassRequest {
   string class_id = 1;
-  string customer_id = 2;
+  string teacher_id = 2;
 }
 
 message RemoveTeacherFromClassResponse {

@@ -11,8 +11,8 @@ import { ClientGrpc } from '@nestjs/microservices';
 import {
   Auth,
   AuthUser,
-  CreateCustomerDto,
-  CreateCustomerResponseDto,
+  CreateTeacherDto,
+  CreateTeacherResponseDto,
   GrpcErrorHandler,
   handleGrpcCall,
   LoggedUserType,
@@ -27,10 +27,10 @@ import {
   UpdateProfileDto,
 } from '@performa-edu/libs';
 import {
-  CUSTOMER_SERVICE_NAME,
-  CUSTOMERSERVICE_PACKAGE_NAME,
-  CustomerServiceClient,
-} from '@performa-edu/proto-types/customer-service';
+  TEACHER_SERVICE_NAME,
+  TEACHERSERVICE_PACKAGE_NAME,
+  TeacherServiceClient,
+} from '@performa-edu/proto-types/teacher-service';
 import {
   AUTH_SERVICE_NAME,
   AUTHSERVICE_PACKAGE_NAME,
@@ -46,22 +46,22 @@ import {
 })
 export class AuthController implements OnModuleInit {
   private authService: AuthServiceClient;
-  private customerService: CustomerServiceClient;
+  private teacherService: TeacherServiceClient;
 
   constructor(
     @Inject(AUTHSERVICE_PACKAGE_NAME)
     private authClient: ClientGrpc,
-    @Inject(CUSTOMERSERVICE_PACKAGE_NAME)
-    private customerClient: ClientGrpc,
+    @Inject(TEACHERSERVICE_PACKAGE_NAME)
+    private teacherClient: ClientGrpc,
     private readonly grpcErrorHandler: GrpcErrorHandler
   ) {}
 
   onModuleInit() {
     this.authService =
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
-    this.customerService =
-      this.customerClient.getService<CustomerServiceClient>(
-        CUSTOMER_SERVICE_NAME
+    this.teacherService =
+      this.teacherClient.getService<TeacherServiceClient>(
+        TEACHER_SERVICE_NAME
       );
   }
 
@@ -103,13 +103,13 @@ export class AuthController implements OnModuleInit {
     };
   }
 
-  @Post('register-customer')
-  async registerCustomer(@Body() options: CreateCustomerDto): Promise<{
-    data: CreateCustomerResponseDto;
+  @Post('register-teacher')
+  async registerTeacher(@Body() options: CreateTeacherDto): Promise<{
+    data: CreateTeacherResponseDto;
   }> {
     let createdUserId: string | null = null;
     try {
-      const { customer, user } = options;
+      const { teacher, user } = options;
 
       const createUser = await handleGrpcCall(
         this.authService.createUser({
@@ -124,21 +124,21 @@ export class AuthController implements OnModuleInit {
 
       createdUserId = createUser.id;
 
-      const createCustomer = await handleGrpcCall(
-        this.customerService.createCustomer({
-          ...customer,
+      const createTeacher = await handleGrpcCall(
+        this.teacherService.createTeacher({
+          ...teacher,
           userId: createUser.id,
-          branchId: customer.branchId || null,
-          branchName: customer.branchName || null,
+          branchId: teacher.branchId || null,
+          branchName: teacher.branchName || null,
         }),
         this.grpcErrorHandler,
-        'Customer creation failed'
+        'Teacher creation failed'
       );
 
       return {
         data: {
           user: createUser,
-          customer: createCustomer.customer,
+          teacher: createTeacher.teacher,
         },
       };
     } catch (error) {
@@ -154,7 +154,7 @@ export class AuthController implements OnModuleInit {
         }
       }
 
-      console.error('Register customer error:', error);
+      console.error('Register teacher error:', error);
       throw error;
     }
   }

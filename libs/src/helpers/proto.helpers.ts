@@ -5,16 +5,16 @@
  *
  * @example
  * // Define defaults schema
- * const customerDefaults = {
+ * const teacherDefaults = {
  *   addresses: [],
  *   deletedAt: null,
  * };
  *
  * // Normalize single item
- * const normalized = ProtoHelper.normalize<Customer>(data, customerDefaults);
+ * const normalized = ProtoHelper.normalize<Teacher>(data, teacherDefaults);
  *
  * // Normalize array
- * const normalizedMany = ProtoHelper.normalizeMany<Customer>(items, customerDefaults);
+ * const normalizedMany = ProtoHelper.normalizeMany<Teacher>(items, teacherDefaults);
  *
  * // With nested objects
  * const result = ProtoHelper.normalize<Order>(order, {

@@ -44,20 +44,20 @@ steps:
       - '.'
     id: 'build-content-service'
 
-  # Build Customer Service
+  # Build Teacher Service
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/customer-service:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/teacher-service:$COMMIT_SHA'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/customer-service:latest'
+      - 'gcr.io/$PROJECT_ID/teacher-service:latest'
       - '-f'
-      - 'apps/customer-service/Dockerfile'
+      - 'apps/teacher-service/Dockerfile'
       - '--target'
       - 'production'
       - '.'
-    id: 'build-customer-service'
+    id: 'build-teacher-service'
 
   # Push images in parallel
   - name: 'gcr.io/cloud-builders/docker'
@@ -88,13 +88,13 @@ steps:
     waitFor: ['build-content-service']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/customer-service:$COMMIT_SHA']
-    id: 'push-customer-service'
-    waitFor: ['build-customer-service']
+    args: ['push', 'gcr.io/$PROJECT_ID/teacher-service:$COMMIT_SHA']
+    id: 'push-teacher-service'
+    waitFor: ['build-teacher-service']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/customer-service:latest']
-    waitFor: ['build-customer-service']
+    args: ['push', 'gcr.io/$PROJECT_ID/teacher-service:latest']
+    waitFor: ['build-teacher-service']
 
   # Deploy Auth Service (internal gRPC)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -146,14 +146,14 @@ steps:
     id: 'deploy-content-service'
     waitFor: ['push-content-service']
 
-  # Deploy Customer Service (internal gRPC)
+  # Deploy Teacher Service (internal gRPC)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'customer-service'
-      - '--image=gcr.io/$PROJECT_ID/customer-service:$COMMIT_SHA'
+      - 'teacher-service'
+      - '--image=gcr.io/$PROJECT_ID/teacher-service:$COMMIT_SHA'
       - '--region=$_REGION'
       - '--platform=managed'
       - '--no-allow-unauthenticated'
@@ -163,13 +163,13 @@ steps:
       - '--cpu=1'
       - '--min-instances=0'
       - '--max-instances=5'
-      - '--set-env-vars=NODE_ENV=production,CUSTOMER_SERVICE_GRPC_HOST=0.0.0.0,CUSTOMER_SERVICE_GRPC_PORT=5003'
+      - '--set-env-vars=NODE_ENV=production,TEACHER_SERVICE_GRPC_HOST=0.0.0.0,TEACHER_SERVICE_GRPC_PORT=5003'
       - '--set-secrets=DATABASE_URL=database-url:latest,REDIS_URL=redis-url:latest'
       - '--vpc-connector=$_VPC_CONNECTOR'
       - '--set-cloudsql-instances=$_SQL_INSTANCE'
-      - '--service-account=customer-service-sa@$PROJECT_ID.iam.gserviceaccount.com'
-    id: 'deploy-customer-service'
-    waitFor: ['push-customer-service']
+      - '--service-account=teacher-service-sa@$PROJECT_ID.iam.gserviceaccount.com'
+    id: 'deploy-teacher-service'
+    waitFor: ['push-teacher-service']
 
   # Deploy API Gateway (public-facing)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -193,7 +193,7 @@ steps:
       - '--set-cloudsql-instances=$_SQL_INSTANCE'
       - '--service-account=api-gateway-sa@$PROJECT_ID.iam.gserviceaccount.com'
     id: 'deploy-api-gateway'
-    waitFor: ['deploy-auth-service', 'deploy-content-service', 'deploy-customer-service', 'push-api-gateway']
+    waitFor: ['deploy-auth-service', 'deploy-content-service', 'deploy-teacher-service', 'push-api-gateway']
 
   # Update API Gateway with service URLs
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -203,11 +203,11 @@ steps:
       - |
         AUTH_URL=$(gcloud run services describe auth-service --region=$_REGION --format='value(status.url)')
         CONTENT_URL=$(gcloud run services describe content-service --region=$_REGION --format='value(status.url)')
-        CUSTOMER_URL=$(gcloud run services describe customer-service --region=$_REGION --format='value(status.url)')
+        TEACHER_URL=$(gcloud run services describe teacher-service --region=$_REGION --format='value(status.url)')
         
         gcloud run services update api-gateway \
           --region=$_REGION \
-          --update-env-vars="AUTH_SERVICE_GRPC_HOST=${AUTH_URL#https://},AUTH_SERVICE_GRPC_PORT=443,CONTENT_SERVICE_GRPC_HOST=${CONTENT_URL#https://},CONTENT_SERVICE_GRPC_PORT=443,CUSTOMER_SERVICE_GRPC_HOST=${CUSTOMER_URL#https://},CUSTOMER_SERVICE_GRPC_PORT=443"
+          --update-env-vars="AUTH_SERVICE_GRPC_HOST=${AUTH_URL#https://},AUTH_SERVICE_GRPC_PORT=443,CONTENT_SERVICE_GRPC_HOST=${CONTENT_URL#https://},CONTENT_SERVICE_GRPC_PORT=443,TEACHER_SERVICE_GRPC_HOST=${TEACHER_URL#https://},TEACHER_SERVICE_GRPC_PORT=443"
     id: 'update-api-gateway-env'
     waitFor: ['deploy-api-gateway']
 
@@ -227,7 +227,7 @@ images:
   - 'gcr.io/$PROJECT_ID/auth-service:latest'
   - 'gcr.io/$PROJECT_ID/content-service:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/content-service:latest'
-  - 'gcr.io/$PROJECT_ID/customer-service:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/customer-service:latest'
+  - 'gcr.io/$PROJECT_ID/teacher-service:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/teacher-service:latest'
 
 timeout: '1800s'

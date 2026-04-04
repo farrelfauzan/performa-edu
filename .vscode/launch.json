@@ -40,9 +40,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug customer-service with Nx",
+      "name": "Debug teacher-service with Nx",
       "runtimeExecutable": "pnpm exec",
-      "runtimeArgs": ["nx", "serve", "customer-service"],
+      "runtimeArgs": ["nx", "serve", "teacher-service"],
       "env": {
         "NODE_OPTIONS": "--inspect=9230"
       },
@@ -51,7 +51,7 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/apps/customer-service/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/teacher-service/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
     },
