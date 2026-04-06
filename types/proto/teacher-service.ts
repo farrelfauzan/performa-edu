@@ -49,25 +49,29 @@ export interface User {
 
 export interface Teacher {
   id: string;
+  userId: string;
   uniqueId: string;
   fullName: string;
   phoneNumber: string;
   dateOfBirth?: string | undefined;
-  user?: User | undefined;
+  profilePictureUrl?: string | undefined;
   branchId?: string | undefined;
   branchName?: string | undefined;
+  active: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | undefined;
+  user?: User | undefined;
 }
 
 export interface CreateTeacherRequest {
   userId: string;
   fullName: string;
-  phoneNumber: string;
   branchId: string;
-  branchName: string;
+  phoneNumber: string;
+  branchName?: string | undefined;
   dateOfBirth?: string | undefined;
+  profilePictureUrl?: string | undefined;
 }
 
 export interface CreateTeacherResponse {
@@ -119,6 +123,24 @@ export interface GetAllTeachersResponse {
   meta?: PageMeta | undefined;
 }
 
+export interface ProfilePictureUploadUrlRequest {
+  filename: string;
+  contentType: string;
+}
+
+export interface ProfilePictureUploadUrlResponse {
+  uploadUrl: string;
+  fields: { [key: string]: string };
+  s3Key: string;
+  publicUrl: string;
+  expiresIn: number;
+}
+
+export interface ProfilePictureUploadUrlResponse_FieldsEntry {
+  key: string;
+  value: string;
+}
+
 export const TEACHERSERVICE_PACKAGE_NAME = "teacherservice";
 
 /** Teacher Service Definition */
@@ -143,6 +165,10 @@ export interface TeacherServiceClient {
   /** Retrieve all teachers with optional pagination, filtering, and sorting */
 
   getAllTeachers(request: GetAllTeachersRequest): Observable<GetAllTeachersResponse>;
+
+  /** Get pre-signed URL for profile picture upload */
+
+  getProfilePictureUploadUrl(request: ProfilePictureUploadUrlRequest): Observable<ProfilePictureUploadUrlResponse>;
 }
 
 /** Teacher Service Definition */
@@ -177,6 +203,15 @@ export interface TeacherServiceController {
   getAllTeachers(
     request: GetAllTeachersRequest,
   ): Promise<GetAllTeachersResponse> | Observable<GetAllTeachersResponse> | GetAllTeachersResponse;
+
+  /** Get pre-signed URL for profile picture upload */
+
+  getProfilePictureUploadUrl(
+    request: ProfilePictureUploadUrlRequest,
+  ):
+    | Promise<ProfilePictureUploadUrlResponse>
+    | Observable<ProfilePictureUploadUrlResponse>
+    | ProfilePictureUploadUrlResponse;
 }
 
 export function TeacherServiceControllerMethods() {
@@ -187,6 +222,7 @@ export function TeacherServiceControllerMethods() {
       "updateTeacher",
       "deleteTeacher",
       "getAllTeachers",
+      "getProfilePictureUploadUrl",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

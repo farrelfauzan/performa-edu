@@ -201,9 +201,7 @@ export interface BranchServiceClient {
 
   assignTeacherToBranch(request: AssignTeacherToBranchRequest): Observable<AssignTeacherToBranchResponse>;
 
-  unassignTeacherFromBranch(
-    request: UnassignTeacherFromBranchRequest,
-  ): Observable<UnassignTeacherFromBranchResponse>;
+  unassignTeacherFromBranch(request: UnassignTeacherFromBranchRequest): Observable<UnassignTeacherFromBranchResponse>;
 
   getBranchTeachers(request: GetBranchTeachersRequest): Observable<GetBranchTeachersResponse>;
 
@@ -243,10 +241,7 @@ export interface BranchServiceController {
 
   assignTeacherToBranch(
     request: AssignTeacherToBranchRequest,
-  ):
-    | Promise<AssignTeacherToBranchResponse>
-    | Observable<AssignTeacherToBranchResponse>
-    | AssignTeacherToBranchResponse;
+  ): Promise<AssignTeacherToBranchResponse> | Observable<AssignTeacherToBranchResponse> | AssignTeacherToBranchResponse;
 
   unassignTeacherFromBranch(
     request: UnassignTeacherFromBranchRequest,

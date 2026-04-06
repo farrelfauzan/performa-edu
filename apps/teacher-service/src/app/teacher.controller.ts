@@ -13,6 +13,8 @@ import {
   GetTeacherByIdResponse,
   UpdateTeacherRequest,
   UpdateTeacherResponse,
+  ProfilePictureUploadUrlResponse,
+  ProfilePictureUploadUrlRequest,
 } from '@performa-edu/proto-types/teacher-service';
 
 @Controller()
@@ -41,13 +43,16 @@ export class TeacherController implements TeacherServiceController {
     return result;
   }
 
+  async getProfilePictureUploadUrl(
+    options: ProfilePictureUploadUrlRequest
+  ): Promise<ProfilePictureUploadUrlResponse> {
+    return this.teacherService.getProfilePictureUploadUrl(options);
+  }
+
   async updateTeacher(
     options: UpdateTeacherRequest
   ): Promise<UpdateTeacherResponse> {
-    const result = await this.teacherService.updateTeacher(
-      options.id,
-      options
-    );
+    const result = await this.teacherService.updateTeacher(options.id, options);
     return result;
   }
 

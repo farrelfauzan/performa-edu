@@ -32,9 +32,7 @@ export class GetAllBranchesDto extends createZodDto(GetAllBranchesSchema) {}
 
 export const AssignTeachersToBranchSchema = z
   .object({
-    teacherIds: z
-      .array(z.string())
-      .min(1, 'At least one teacher is required'),
+    teacherIds: z.array(z.string()).min(1, 'At least one teacher is required'),
   })
   .meta({ className: 'AssignTeachersToBranchDto' });
 

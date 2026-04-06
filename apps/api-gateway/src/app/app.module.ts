@@ -43,7 +43,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: AUTHSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/auth-service.proto'),
+          protoPath: join(process.cwd(), 'proto/auth-service.proto'),
           url: `${process.env.AUTH_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.AUTH_SERVICE_GRPC_PORT || '50051'
           }`,
@@ -54,7 +54,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: TEACHERSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/teacher-service.proto'),
+          protoPath: join(process.cwd(), 'proto/teacher-service.proto'),
           url: `${process.env.TEACHER_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.TEACHER_SERVICE_GRPC_PORT || '50052'
           }`,
@@ -65,7 +65,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: CONTENTSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/content-service.proto'),
+          protoPath: join(process.cwd(), 'proto/content-service.proto'),
           url: `${process.env.CONTENT_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.CONTENT_SERVICE_GRPC_PORT || '50053'
           }`,
@@ -76,7 +76,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: STUDENTSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/student-service.proto'),
+          protoPath: join(process.cwd(), 'proto/student-service.proto'),
           url: `${process.env.STUDENT_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.STUDENT_SERVICE_GRPC_PORT || '50054'
           }`,
@@ -87,7 +87,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: QUIZSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/quiz-service.proto'),
+          protoPath: join(process.cwd(), 'proto/quiz-service.proto'),
           url: `${process.env.QUIZ_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.QUIZ_SERVICE_GRPC_PORT || '50055'
           }`,
@@ -98,7 +98,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: CLASSSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/class-service.proto'),
+          protoPath: join(process.cwd(), 'proto/class-service.proto'),
           url: `${process.env.CLASS_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.CLASS_SERVICE_GRPC_PORT || '50056'
           }`,
@@ -109,7 +109,7 @@ import { BranchController } from './branch/branch.controller';
         transport: Transport.GRPC,
         options: {
           package: BRANCHSERVICE_PACKAGE_NAME,
-          protoPath: join(__dirname, 'proto/branch-service.proto'),
+          protoPath: join(process.cwd(), 'proto/branch-service.proto'),
           url: `${process.env.BRANCH_SERVICE_GRPC_HOST || 'localhost'}:${
             process.env.BRANCH_SERVICE_GRPC_PORT || '50057'
           }`,

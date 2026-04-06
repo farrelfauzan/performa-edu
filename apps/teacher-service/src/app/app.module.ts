@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TeacherController } from './teacher.controller';
 import { TeacherService } from './teacher.service';
 import {
@@ -13,6 +14,7 @@ import { TeacherRepository } from './repositories/teacher.repository';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     ClientsModule.register([
       {

@@ -60,9 +60,7 @@ export class AuthController implements OnModuleInit {
     this.authService =
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
     this.teacherService =
-      this.teacherClient.getService<TeacherServiceClient>(
-        TEACHER_SERVICE_NAME
-      );
+      this.teacherClient.getService<TeacherServiceClient>(TEACHER_SERVICE_NAME);
   }
 
   @PublicRoute()

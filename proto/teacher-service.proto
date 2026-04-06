@@ -14,6 +14,8 @@ service TeacherService {
     rpc DeleteTeacher(DeleteTeacherRequest) returns (DeleteTeacherResponse);
     // Retrieve all teachers with optional pagination, filtering, and sorting
     rpc GetAllTeachers(GetAllTeachersRequest) returns (GetAllTeachersResponse);
+    // Get pre-signed URL for profile picture upload
+    rpc GetProfilePictureUploadUrl(ProfilePictureUploadUrlRequest) returns (ProfilePictureUploadUrlResponse);
 }
 
 enum Order {
@@ -48,26 +50,30 @@ message User {
 }
 
 message Teacher {
-    string id = 1;
-    string unique_id = 2;
-    string full_name = 3;
-    string phone_number = 4;
-    optional string date_of_birth = 5;
-    optional User user = 6;
-    optional string branch_id = 7;
-    optional string branch_name = 8;
-    string created_at = 9;
-    string updated_at = 10;
-    optional string deleted_at = 11;
+  string id = 1;
+  string user_id = 2;
+  string unique_id = 3;
+  string full_name = 4;
+  string phone_number = 5;
+  optional string date_of_birth = 6;
+  optional string profile_picture_url = 7;
+  optional string branch_id = 8;
+  optional string branch_name = 9;
+  string active = 10;
+  string created_at = 11;
+  string updated_at = 12;
+  optional string deleted_at = 13;
+  optional User user = 14;
 }
 
 message CreateTeacherRequest {
     string user_id = 1;
     string full_name = 2;
-    string phone_number = 3;
     string branch_id = 4;
-    string branch_name = 5;
+    string phone_number = 3;
+    optional string branch_name = 5;
     optional string date_of_birth = 6;
+    optional string profile_picture_url = 7;
 }
 
 message CreateTeacherResponse {
@@ -117,4 +123,17 @@ message GetAllTeachersRequest {
 message GetAllTeachersResponse {
     repeated Teacher teachers = 1;
     PageMeta meta = 2;
+}
+
+message ProfilePictureUploadUrlRequest {
+    string filename = 1;
+    string content_type = 2;
+}
+
+message ProfilePictureUploadUrlResponse {
+  string upload_url = 1;
+  map<string, string> fields = 2;
+  string s3_key = 3;
+  string public_url = 4;
+  int32 expires_in = 5;
 }

@@ -10,6 +10,8 @@ import {
   GetTeacherByIdResponse,
   UpdateTeacherRequest,
   UpdateTeacherResponse,
+  ProfilePictureUploadUrlRequest,
+  ProfilePictureUploadUrlResponse,
 } from '@performa-edu/proto-types/teacher-service';
 import {
   Teacher,
@@ -44,9 +46,7 @@ export class TeacherService implements OnModuleInit {
   async getAllTeachers(
     options: GetAllTeachersRequest
   ): Promise<GetAllTeachersResponse> {
-    const { data, meta } = await this.teacherRepository.getAllTeachers(
-      options
-    );
+    const { data, meta } = await this.teacherRepository.getAllTeachers(options);
 
     const transformedData = transformResponse<Teacher[]>(data);
 
@@ -91,6 +91,12 @@ export class TeacherService implements OnModuleInit {
     return {
       teacher: data.teacher,
     };
+  }
+
+  async getProfilePictureUploadUrl(
+    options: ProfilePictureUploadUrlRequest
+  ): Promise<ProfilePictureUploadUrlResponse> {
+    return await this.teacherRepository.getProfilePictureUploadUrl(options);
   }
 
   async updateTeacher(

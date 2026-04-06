@@ -42,6 +42,4 @@ export class CreateTeacherResponseDto extends createZodDto(
   CreateTeacherResponseSchema
 ) {}
 
-export type CreateTeacherResponse = z.infer<
-  typeof CreateTeacherResponseSchema
->;
+export type CreateTeacherResponse = z.infer<typeof CreateTeacherResponseSchema>;

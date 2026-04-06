@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Inject,
+  Logger,
   OnModuleInit,
   Param,
   Post,
@@ -13,15 +14,20 @@ import {
 import { ClientGrpc, GrpcMethod } from '@nestjs/microservices';
 import {
   Auth,
+  CreateTeacherDto,
   GetAllTeacherDto,
   GrpcErrorHandler,
   handleGrpcCall,
+  StorageClient,
   UpdateTeacherDto,
 } from '@performa-edu/libs';
+import { ConfigService } from '@nestjs/config';
 import {
-  CreateTeacherRequest,
-  CreateTeacherResponse,
-  Teacher,
+  AUTH_SERVICE_NAME,
+  AUTHSERVICE_PACKAGE_NAME,
+  AuthServiceClient,
+} from '@performa-edu/proto-types/auth-service';
+import {
   TEACHER_SERVICE_NAME,
   TEACHERSERVICE_PACKAGE_NAME,
   TeacherServiceClient,
@@ -29,8 +35,10 @@ import {
   GetAllTeachersResponse,
   GetTeacherByIdResponse,
   UpdateTeacherResponse,
+  ProfilePictureUploadUrlRequest,
 } from '@performa-edu/proto-types/teacher-service';
 import { AclAction, AclSubject } from 'libs/src/constant';
+import { RegisterTeacherDto } from 'libs/src/zod-dtos/teacher-dtos/register-teacher.dto';
 
 @Controller({
   version: '1',
@@ -38,17 +46,26 @@ import { AclAction, AclSubject } from 'libs/src/constant';
 })
 export class TeacherController implements OnModuleInit {
   private teacherService: TeacherServiceClient;
+  private authService: AuthServiceClient;
+  private storageClient: StorageClient;
+  private readonly logger = new Logger(TeacherController.name);
 
   constructor(
     @Inject(TEACHERSERVICE_PACKAGE_NAME)
     private client: ClientGrpc,
-    private readonly grpcErrorHandler: GrpcErrorHandler
-  ) {}
+    @Inject(AUTHSERVICE_PACKAGE_NAME)
+    private authClient: ClientGrpc,
+    private readonly grpcErrorHandler: GrpcErrorHandler,
+    private readonly configService: ConfigService
+  ) {
+    this.storageClient = new StorageClient(this.configService);
+  }
 
   onModuleInit() {
-    this.teacherService = this.client.getService<TeacherServiceClient>(
-      TEACHER_SERVICE_NAME
-    );
+    this.teacherService =
+      this.client.getService<TeacherServiceClient>(TEACHER_SERVICE_NAME);
+    this.authService =
+      this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
   }
 
   @Auth([
@@ -81,17 +98,85 @@ export class TeacherController implements OnModuleInit {
     },
   ])
   @Post()
-  async createTeacher(@Body() options: CreateTeacherRequest): Promise<{
-    data: CreateTeacherResponse['teacher'];
-  }> {
+  async createTeacher(@Body() options: RegisterTeacherDto) {
+    let createdUserId: string | null = null;
+    try {
+      const { roles } = await handleGrpcCall(
+        this.authService.getRoles({ name: 'TEACHER' }),
+        this.grpcErrorHandler,
+        'Failed to fetch roles'
+      );
+
+      const createUser = await handleGrpcCall(
+        this.authService.createUser({
+          username: options.username,
+          email: options.email,
+          password: options.password,
+          roleIds: roles.map((role) => role.id),
+        }),
+        this.grpcErrorHandler,
+        'User creation failed'
+      );
+
+      createdUserId = createUser.id;
+
+      const result = await handleGrpcCall(
+        this.teacherService.createTeacher({
+          userId: createUser.id,
+          fullName: options.fullName,
+          phoneNumber: options.phoneNumber,
+          dateOfBirth: options.dateOfBirth,
+          profilePictureUrl: options.profilePictureUrl,
+          branchId: options.branchId,
+        }),
+        this.grpcErrorHandler,
+        'Teacher registration failed'
+      );
+
+      return {
+        data: {
+          user: createUser,
+          teacher: result.teacher,
+        },
+      };
+    } catch (error) {
+      // Rollback: delete uploaded profile picture from S3
+      if (options.profilePictureUrl) {
+        try {
+          await this.storageClient.deleteFile(options.profilePictureUrl);
+        } catch (s3Error) {
+          this.logger.error('Failed to rollback S3 profile picture:', s3Error);
+        }
+      }
+      // Rollback: delete created user
+      if (createdUserId) {
+        try {
+          await handleGrpcCall(
+            this.authService.deleteUserById({ id: createdUserId }),
+            this.grpcErrorHandler,
+            'Failed to rollback user creation'
+          );
+        } catch (rollbackError) {
+          this.logger.error('Rollback failed:', rollbackError);
+        }
+      }
+      throw error;
+    }
+  }
+
+  @Auth([{ action: AclAction.READ, subject: AclSubject.TEACHER }])
+  @Post('profile/upload-url')
+  async getProfilePictureUploadUrl(
+    @Body() options: ProfilePictureUploadUrlRequest
+  ) {
     const result = await handleGrpcCall(
-      this.teacherService.createTeacher(options),
+      this.teacherService.getProfilePictureUploadUrl(options),
       this.grpcErrorHandler,
-      'Failed to create teacher'
+      'Failed to get profile picture upload URL'
     );
 
     return {
-      data: result.teacher,
+      data: result,
     };
   }
 

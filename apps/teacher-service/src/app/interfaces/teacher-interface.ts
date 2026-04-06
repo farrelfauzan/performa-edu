@@ -11,9 +11,7 @@ import {
 
 export interface ITeacherRepository {
   // Define repository methods here
-  createTeacher(
-    options: CreateTeacherRequest
-  ): Promise<CreateTeacherResponse>;
+  createTeacher(options: CreateTeacherRequest): Promise<CreateTeacherResponse>;
   getAllTeachers(options: GetAllTeachersRequest): Promise<{
     data: Teacher[];
     meta: PageMetaDto;
@@ -25,7 +23,5 @@ export interface ITeacherRepository {
     id: string,
     options: UpdateTeacherRequest
   ): Promise<UpdateTeacherResponse>;
-  deleteTeacher(
-    options: DeleteTeacherRequest
-  ): Promise<DeleteTeacherResponse>;
+  deleteTeacher(options: DeleteTeacherRequest): Promise<DeleteTeacherResponse>;
 }
